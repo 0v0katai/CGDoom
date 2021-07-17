@@ -1,10 +1,10 @@
-CC=sh3eb-elf-gcc
-CPP=sh3eb-elf-g++
-OBJCOPY=sh3eb-elf-objcopy
+CC=sh-elf-gcc
+CPP=sh-elf-g++
+OBJCOPY=sh-elf-objcopy
 MKG3A=mkg3a
 RM=rm
-CFLAGS=-m4a-nofpu -mb -fgcse-sm -fgcse-las -fgcse-after-reload -Isrc -O3 -fmerge-all-constants -mhitachi -flto -fuse-linker-plugin -Wall -Wextra -I../../../../include -lgcc -L../../../../lib -I./ -I../../cgdoom
-LDFLAGS=$(CFLAGS) -nostartfiles -T../../../../toolchain/prizm.x -Wl,-static -Wl,-gc-sections -lgcc
+CFLAGS=-m4a-nofpu -mb -fgcse-sm -fgcse-las -fgcse-after-reload -Isrc -O3 -fmerge-all-constants -mhitachi -fuse-linker-plugin -Wall -Wextra -I../../../../include -lgcc -L../../../../lib -I./ -I../../cgdoom -D_FXCG_MINICOMPAT
+LDFLAGS=$(CFLAGS) -nostartfiles -T../../../../toolchain/prizm.x -Wl,-static -lfxcg -lgcc -Wl,-Map=$(PROJ_NAME).map
 CSOURCES=$(wildcard ../../cgdoom/*.c)
 OBJECTS=$(CSOURCES:.c=.o)
 PROJ_NAME=CG_Doom
