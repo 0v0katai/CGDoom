@@ -20,7 +20,9 @@ void * CGDCalloc(int iSize)
 	void *p = CGDMalloc(iSize);
 	if(p != NULL)
 	{
-		memset(p,0,iSize);
+		/* volatile here prevents GCC from calling memset(), which
+		   doesn't seem to work for some obscure reason... */
+		for(int i = 0; i < iSize; i++) ((volatile char *)p)[i] = 0;
 	}
 	return p;
 }
@@ -609,7 +611,7 @@ void main(void){
 	default:
 		break;
 	}
-	D_DoomMain(); 
+	D_DoomMain();
 }
 
 //todo: wrapper pro (patch_t*), + flash
