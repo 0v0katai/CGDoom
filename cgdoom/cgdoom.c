@@ -48,8 +48,6 @@ void * CGDRealloc (void *p, int iSize)
 #ifdef CG_EMULATOR
 unsigned char aSaveVRAMBuffer[SAVE_VRAM_SIZE]; //for screens[2] (2x64KB) + WAD file mapping
 unsigned char aSystemStack[SYSTEM_STACK_SIZE]; //for RAM_I_Zone
-#else
-unsigned char __attribute__ ((aligned (4))) aSystemStack[SYSTEM_STACK_SIZE]; //for RAM_I_Zone
 #endif 
 unsigned short *VRAM;
 unsigned char *SaveVRAMBuffer; //for screens[2]
@@ -583,11 +581,13 @@ void main(void){
 	InitFlashSimu(wadfile); //load wad file to flash simulation on simulator, do nothing on real HW
 #ifdef CG_EMULATOR
 	SaveVRAMBuffer = aSaveVRAMBuffer;
+	SystemStack = aSystemStack;
 #else 
 	unsigned tmp=((unsigned)getSecondaryVramAddress()+3)&(~3);
 	SaveVRAMBuffer = (unsigned char*)tmp;
+	/* Graph 90+E: RAM starts at 0x0c000000 in physical memory */
+	SystemStack = (void *)0xac0f0000;
 #endif 
-	SystemStack = aSystemStack;
 	VRAM = (unsigned short*)GetVRAMAddress();
 	EnableColor(1);
 	memset(VRAM,0,WIDTH*HEIGHT*2);
