@@ -127,10 +127,10 @@ void I_ErrorI (char *error, int i1,int i2,int i3,int i4)
     PrintLine( "ERROR:", 21 );
     locate_OS( 1, 2 );
     PrintLine( (unsigned char *)error, 21 );
-    locate_OS( 1, 3 );CGDAppendNum0_999("i1",i1,0,buf);PrintLine( (unsigned char *)buf, 21 );
-    locate_OS( 1, 4 );CGDAppendNum0_999("i2",i2,0,buf);PrintLine( (unsigned char *)buf, 21 );
-    locate_OS( 1, 5 );CGDAppendNum0_999("i3",i3,0,buf);PrintLine( (unsigned char *)buf, 21 );
-    locate_OS( 1, 6 );CGDAppendNum0_999("i4",i4,0,buf);PrintLine( (unsigned char *)buf, 21 );
+    locate_OS( 1, 3 );CGDAppendHex32("i1:",i1,8,buf);PrintLine( (unsigned char *)buf, 21 );
+    locate_OS( 1, 4 );CGDAppendHex32("i2:",i2,8,buf);PrintLine( (unsigned char *)buf, 21 );
+    locate_OS( 1, 5 );CGDAppendHex32("i3:",i3,8,buf);PrintLine( (unsigned char *)buf, 21 );
+    locate_OS( 1, 6 );CGDAppendHex32("i4:",i4,8,buf);PrintLine( (unsigned char *)buf, 21 );
     {
         if(key == 31)GetKey( &key );
     }

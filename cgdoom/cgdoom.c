@@ -125,6 +125,19 @@ void CGDAppendNum0_999(const char *pszText,int iNum,int iMinDigits,char *pszBuf)
 	pszBuf[i+1] = 0;
 }
 
+void CGDAppendHex32(const char *pszText,int iNum,int iDigits,char *pszBuf)
+{
+	CGDstrcpy(pszBuf, pszText);
+	pszBuf += CGDstrlen(pszText);
+	for(int i = 0; i < iDigits; i++)
+	{
+		int c = (iNum >> (i * 4)) & 0xf;
+		c = c + '0' + 7 * (c > 9);
+		pszBuf[iDigits-i-1] = c;
+	}
+	pszBuf[iDigits] = 0;
+}
+
 
 int CGDstrlen(const char *pszText)
 {
