@@ -1,1 +1,28 @@
 This repository is a fork of CGDOOM which was ported originally by MPoupe.
+
+Credit goes to:
+* MPoupe for the original fx-CG 10/20 port of DOOM.
+* ProgrammerNerd for attempts at an fx-CG 50 port, which this repository is
+  based on.
+* Lephenixnoir for the final fixes and fx-CG 50 version.
+
+TODO:
+-> Reenable LTO if possible
+-> HUD glitches?
+-> Try and use more memory regions in z_zone.c
+-> Overclocking etc.
+
+CGDOOM used to be compiled with the mini-SDK. However, it's become quite
+difficult to get a copy of that. Instead, this port is built with a slightly
+modified PrizmSDK from Jonimoose/libfxcg.
+
+The differences are (I might push it later):
+* TOOLCHAIN_PREFIX=sh-elf- (in libc/ and libfxcg/)
+* Syscall 0x1B0B, getSecondaryVramAddress() is added in libfxcg/
+* abort() is removed from libc/ (CGDOOM has its own)
+* calloc() defined in libc/ (just a call to sys_calloc)
+* Linker script outputs in elf32-sh format
+* Linker script sets 500k of RAM instead of 64k
+* LTO disabled (hopefully it could be reenabled later)
+
+[1] https://github.com/Jonimoose/libfxcg/
