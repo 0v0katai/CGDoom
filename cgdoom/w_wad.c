@@ -339,6 +339,11 @@ static void* W_CacheLumpNumCommon( int lump, int tag,int iEnableFlash)
   /*if (lump==1203)
   printf("sky access, returning %x \n",lumpcache[lump]);*/
 
+  int p1 = ((unsigned int)lumpcache[lump] & 0xf0000000) == 0x80000000;
+  int p2 = ((unsigned int)lumpcache[lump] & 0xf0000000) == 0xa0000000;
+  if(lumpcache[lump] == NULL || (!p1 && !p2))
+    I_ErrorI("W_CacheLumpNumCommon", lumpcache[lump], lump, 0, 0);
+
   return lumpcache[lump];
 }
 
