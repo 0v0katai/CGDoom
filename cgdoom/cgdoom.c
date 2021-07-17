@@ -20,9 +20,7 @@ void * CGDCalloc(int iSize)
 	void *p = CGDMalloc(iSize);
 	if(p != NULL)
 	{
-		/* volatile here prevents GCC from calling memset(), which
-		   doesn't seem to work for some obscure reason... */
-		for(int i = 0; i < iSize; i++) ((volatile char *)p)[i] = 0;
+		memset(p,0,iSize);
 	}
 	return p;
 }

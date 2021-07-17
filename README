@@ -21,6 +21,7 @@ The differences are (I might push it later):
 * Syscall 0x1B0B, getSecondaryVramAddress() is added in libfxcg/
 * abort() is removed from libc/ (CGDOOM has its own)
 * calloc() defined in libc/ (just a call to sys_calloc)
+* sys_calloc() fixed in libfxcg/ to use memset (memsetZero is broken)
 * Linker script outputs in elf32-sh format
 * Linker script sets 500k of RAM instead of 64k
 * LTO disabled (hopefully it could be reenabled later)
