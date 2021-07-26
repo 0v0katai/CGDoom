@@ -56,7 +56,7 @@ typedef struct{
 #define dbgprint4(a,b,c,d,e)
 
 //#define VRAM ((unsigned short *)0xA8000000)
-#define NULL 0
+//#define NULL 0
 
 #define KEY_PRGM_OPTN 68
 #define KEY_PRGM_MENU 48
