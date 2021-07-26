@@ -490,9 +490,14 @@ int Flash_ReadFile(void *buf, int size, int readpos)
 	while(size >0)
 	{
 		int i = FindInFlash(&pSrc,size, readpos);
-		if(i<0)
+		if(i<0) {
+			I_ErrorI ("Flash_ReadFile", size, readpos, 0, i);
 			return i;
-		memcpy(buf,pSrc,i);
+		}
+		for(int n = 0; n < i; n++) {
+			((char *)buf)[n] = ((char *)pSrc)[n];
+		}
+//		memcpy(buf,pSrc,i);
 		buf = ((char*)buf)+i;
 		readpos +=i;
 		size -=i;
