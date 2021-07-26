@@ -11,6 +11,7 @@ TODO:
 -> HUD glitches?
 -> Try and use more memory regions in z_zone.c
 -> Overclocking etc.
+-> Improve file mapping speed
 
 CGDOOM used to be compiled with the mini-SDK. However, it's become quite
 difficult to get a copy of that. Instead, this port is built with a slightly

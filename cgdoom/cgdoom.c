@@ -301,7 +301,7 @@ const unsigned short wadfile[] = {'\\','\\','f','l','s','0','\\','d','o','o','m'
 //descriptor for 1 fragment
 typedef struct
 {
-	short msOffset;//page index (0 ~ 8K)
+	unsigned short msOffset;//page index (0 ~ 64K)
 	short msCount;//count of pages in this fragment
 }FileMappingItem;
 
@@ -400,7 +400,7 @@ int CreateFileMapping(const unsigned short *pFileName,FileMapping *pMap){
 			iResult = -3;
 			goto lbExit;
 		}
-		pMap->mTable[pMap->miItemCount-1].msOffset = (short)iPageIndx;
+		pMap->mTable[pMap->miItemCount-1].msOffset = (unsigned short)iPageIndx;
 		pMap->mTable[pMap->miItemCount-1].msCount = 0;
 		//assume fragment has more pages
 		for(;;)

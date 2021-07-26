@@ -88,11 +88,11 @@ extern TSysCallFuncPtr fnSysCallFuncPtr;
 #define ASSERT(x)
 
 //flash file mapping
-#define FLASH_START (0xA0B60000) //0x80000000 //0xA0000000  
+#define FLASH_START (0xA0000000)
 #define FLASH_END   (0xA2000000)
-//page has 4 KB (I hope)
-#define FLASH_PAGE_SIZE 4096
-#define FLASH_PAGE_SIZE_LOG2 12
+//Lephe: Yatis established that allocation is in sectors of 512 bytes
+#define FLASH_PAGE_SIZE 512
+#define FLASH_PAGE_SIZE_LOG2 9
 #define FLASH_PAGE_OFFSET_MASK (FLASH_PAGE_SIZE - 1)
 
 //
