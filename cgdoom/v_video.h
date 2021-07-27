@@ -41,16 +41,12 @@
 
 #define CENTERY			(SCREENHEIGHT/2)
 
-// Screen 0 is the screen updated by I_Update screen.
-// Screen 1 is an extra buffer.
-
-// Background and foreground screen numbers
-//
-#define BG 1	//4
+// Screen numbers
+#define BG 4
 #define FG 0
 
 
-#define SCREEN_COUNT	2
+#define SCREEN_COUNT	5
 extern	byte*	screens[SCREEN_COUNT];
 
 extern  int	dirtybox[4];

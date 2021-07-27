@@ -8,10 +8,10 @@ Credit goes to:
 
 TODO:
 -> Reenable LTO if possible
--> HUD glitches?
+-> Include a proper fast, version of memcpy
 -> Try and use more memory regions in z_zone.c
 -> Overclocking etc.
--> Improve file mapping speed
+-> Improve file mapping speed (DMA)
 
 CGDOOM used to be compiled with the mini-SDK. However, it's become quite
 difficult to get a copy of that. Instead, this port is built with a slightly

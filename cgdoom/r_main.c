@@ -558,8 +558,6 @@ void R_SetViewSize( int		blocks)
   setblocks = blocks;
 }
 
-void V_Clear();
-
 //
 // R_ExecuteSetViewSize
 //
@@ -573,7 +571,6 @@ void R_ExecuteSetViewSize (void)
   int		startmap; 	
 
   setsizeneeded = false;
-  V_Clear();
 
   if (setblocks == 11)
   {

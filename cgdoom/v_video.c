@@ -171,7 +171,8 @@ void V_CopyRect(int srcx,int srcy,int srcscrn,int width,int height,int destx,int
   dest = screens[destscrn]+SCREENWIDTH*desty+destx; 
   for ( ; height>0 ; height--) 
   { 
-    memcpy (dest, src, width); 
+    for(int n = 0; n < width; n++) dest[n] = src[n];
+//    memcpy (dest, src, width);
     src += SCREENWIDTH; 
     dest += SCREENWIDTH; 
   } 
@@ -355,18 +356,8 @@ void V_Init (void)
   for (i=0 ; i< SCREEN_COUNT; i++)
   screens[i] = CGDMalloc(SCREENWIDTH*SCREENHEIGHT);*/
   screens[0] = SaveVRAMBuffer;
-  screens[1] = SaveVRAMBuffer + SCREENWIDTH*SCREENHEIGHT;
-  ASSERT(SAVE_VRAM_SIZE >= 2 * SCREENWIDTH*SCREENHEIGHT);
-  ASSERT(SCREEN_COUNT == 2);
 
   //Blank the screen, to indicate on real hardware that SOMETHING is going on
   //Done since loading on real hardware takes so damn long
 //  I_PrepScreen();
-}
-
-//CGD: hack to clear screen (except lower part) when changing details
-void V_Clear()
-{
-    memset(screens[0],0,320*(200-32));
-    memset(screens[1],0,320*200);
 }

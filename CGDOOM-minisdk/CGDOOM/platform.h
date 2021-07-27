@@ -6,11 +6,13 @@
 // WAD file access method (enable exactly one)
 //---
 
-/* Use BFile dynamically (slow but entirely accurate, a good reference) */
+/* Use BFile (100% accurate but slows down the game quite a bit because of
+   reads happening all the time; mostly a good reference for testing) */
 // #define CGDOOM_WAD_BFILE
-/* Search fragments in physical ROM and copy by hand (faster) */
+/* Search fragments in physical ROM when loading the game, and copy by hand
+   from ROM to RAM during accesses (much faster) */
 #define CGDOOM_WAD_MAPPING
-/* Search fragments in phyiscal ROM and copy with DMA (even faster) */
+/* Idem, but copy copy with DMA (even faster) */
 // #define CGDOOM_WAD_MAPPING_DMA
 
 /* Settings for file mappings: traverse the whole 32-MiB Flash */

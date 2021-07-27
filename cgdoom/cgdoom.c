@@ -309,7 +309,27 @@ void ResetData(FileMapping *pMap)
 	pMap->miCurrentLength = 0;
 }
 
-int CreateFileMapping(const unsigned short *pFileName,FileMapping *pMap){
+
+void I_Error (char *error, ...);
+
+#ifdef CGDOOM_WAD_BFILE
+
+int FindInFlash(void **buf, int size, int readpos)
+{
+	return 0;
+}
+
+int Flash_ReadFile(void *buf, int size, int readpos)
+{
+	return Bfile_ReadFile_OS(cgdoom_wad_fd, buf, size, readpos);
+}
+
+#else /* CGDOOM_WAD_MAPPING, CGDOOM_WAD_MAPPING_DMA */
+
+static FileMapping *gpWADMap = 0;
+
+int CreateFileMapping(const unsigned short *pFileName,FileMapping *pMap)
+{
 	int iResult = 0;
 	char cBuffer[FLASH_PAGE_SIZE];
 	int hFile = Bfile_OpenFile_OS(pFileName,0,0);
@@ -322,7 +342,7 @@ int CreateFileMapping(const unsigned short *pFileName,FileMapping *pMap){
 	while(iLength > 0)
 	{
 		//do not optimize (= do not move these 2 variables before loop)!
-		// fx-cg allocates pages for file in <random> order so page from the end of the file 
+		// fx-cg allocates pages for file in <random> order so page from the end of the file
 		//can have lower index than page from the beginning
 		const char *pTgt = pFlashFS;
 		int iPageIndx = 0;
@@ -392,24 +412,7 @@ int CreateFileMapping(const unsigned short *pFileName,FileMapping *pMap){
 lbExit:
 	Bfile_CloseFile_OS(hFile);
 	return iResult;
-
 }
-void I_Error (char *error, ...);
-static FileMapping *gpWADMap = 0;
-
-#ifdef CGDOOM_WAD_BFILE
-
-int FindInFlash(void **buf, int size, int readpos)
-{
-	return 0;
-}
-
-int Flash_ReadFile(void *buf, int size, int readpos)
-{
-	return Bfile_ReadFile_OS(cgdoom_wad_fd, buf, size, readpos);
-}
-
-#else /* CGDOOM_WAD_MAPPING, CGDOOM_WAD_MAPPING_DMA */
 
 int FindInFlash(void **buf, int size, int readpos)
 {
