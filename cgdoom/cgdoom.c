@@ -478,7 +478,7 @@ void abort(void){
 		GetKey(&key);
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-void main(void){
+int main(void){
 	InitFlashSimu(cgdoom_wad_path); //load wad file to flash simulation on simulator, do nothing on real HW
 #ifdef CG_EMULATOR
 	SaveVRAMBuffer = aSaveVRAMBuffer;
@@ -503,23 +503,24 @@ void main(void){
 
 	if(size == -1) {
 		I_Error ("File read error");
-		return;
+		return 1;
 	}
 	else if(size == -2) {
 		I_Error ("Page not found");
-		return;
+		return 1;
 	}
 	else if(size == -3) {
 		I_Error ("File too fragmented");
-		return;
+		return 1;
 	}
 	else if(size < 0) {
 		I_ErrorI ("CreateFileMapping", size, 0, 0, 0);
-		return;
+		return 1;
 	}
 #endif
 
 	D_DoomMain();
+	return 1;
 }
 
 //todo: wrapper pro (patch_t*), + flash

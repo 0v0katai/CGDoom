@@ -117,7 +117,7 @@ int toupper_int(int i)
 // I_Error
 //
 static int key = 31;
-void I_ErrorI (char *error, int i1,int i2,int i3,int i4)
+void I_ErrorI (const char *error, int i1,int i2,int i3,int i4)
 {
   #ifndef CG_EMULATOR
 
@@ -126,11 +126,11 @@ void I_ErrorI (char *error, int i1,int i2,int i3,int i4)
     locate_OS( 1, 1 );
     PrintLine( "ERROR:", 21 );
     locate_OS( 1, 2 );
-    PrintLine( (unsigned char *)error, 21 );
-    locate_OS( 1, 3 );CGDAppendHex32("i1:",i1,8,buf);PrintLine( (unsigned char *)buf, 21 );
-    locate_OS( 1, 4 );CGDAppendHex32("i2:",i2,8,buf);PrintLine( (unsigned char *)buf, 21 );
-    locate_OS( 1, 5 );CGDAppendHex32("i3:",i3,8,buf);PrintLine( (unsigned char *)buf, 21 );
-    locate_OS( 1, 6 );CGDAppendHex32("i4:",i4,8,buf);PrintLine( (unsigned char *)buf, 21 );
+    PrintLine( error, 21 );
+    locate_OS( 1, 3 );CGDAppendHex32("i1:",i1,8,buf);PrintLine( buf, 21 );
+    locate_OS( 1, 4 );CGDAppendHex32("i2:",i2,8,buf);PrintLine( buf, 21 );
+    locate_OS( 1, 5 );CGDAppendHex32("i3:",i3,8,buf);PrintLine( buf, 21 );
+    locate_OS( 1, 6 );CGDAppendHex32("i4:",i4,8,buf);PrintLine( buf, 21 );
     GetKey( &key );
 #else
       I_Error (error,i1,i2,i3,i4);
@@ -157,7 +157,7 @@ void I_Error (char *error, ...)
     locate_OS( 1, 1 );
     PrintLine( "ERROR:", 21 );
     locate_OS( 1, 2 );
-    PrintLine( (unsigned char *)error, 21 );
+    PrintLine( error, 21 );
     GetKey( &key );
 #endif //#ifdef CG_EMULATOR
     //I_Quit();

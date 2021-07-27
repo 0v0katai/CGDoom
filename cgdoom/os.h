@@ -29,8 +29,11 @@ int CGDstrnicmp (const char*s1,const char*s2,int iLen);
 void CGDstrncpy(char *pszBuf,const char *pszText,int iLen);
 
 void CGDAppendNum0_999(const char *pszText,int iNum,int iMinDigits,char *pszBuf);
+void CGDAppendHex32(const char *pszText,int iNum, int iDigits,char *pszBuf);
 
 int abs(int x);
+
+void I_ErrorI(const char *str, int i1, int i2, int i3, int i4);
 
 //force compiler error on use following:
 #define strcpy 12
