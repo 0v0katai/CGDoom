@@ -276,24 +276,34 @@ return i;
 }
 */
 
-int gWADHandle;
-const unsigned short wadfile[] = {'\\','\\','f','l','s','0','\\','d','o','o','m','.','w','a','d',0};
+///////////////////////////////////////////////////////////////////////////////
+// WAD file access mechanism
+//
+// Since BFile is too slow to access the WAD file in real-time, the fragments
+// are searched in ROM and their physical addresses are stored for direct
+// access later. This is similar to mmap() except that a manual translation is
+// used instead of the MMU. As far as I know, the first version of this system
+// was implemented by Martin Poupe.
+//
+// The file is obviously fragmented and Yatis reverse-engineered Fugue enough
+// to determine that storage units are sectors of 512 bytes. While clusters of
+// 4 kiB are used too, a file might not start on the first sector of a cluster,
+// and some sectors might also be dysfunctional.
+//
+// See <platform.h> for Flash traversal parameters.
+///////////////////////////////////////////////////////////////////////////////
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////////////
+static uint16_t const *cgdoom_wad_path = u"\\\\fls0\\doom.wad";
+
+#ifdef CGDOOM_WAD_BFILE
+/* File descriptor to WAD file, used in Flash_ReadFile calls from w_wad.c. */
+static int cgdoom_wad_fd = -1;
+#endif
+
 //The whole sound doesn't fir onto the RAM.
 //Reading per partes is not possible as this is synchronnous player (there would be silences when reading).
 //So I read each page (4KB)of the wav file and try to find it in the flash. 
 //Simply finding start of the file is not enough because of fragmentation.
-
-//Seach the whole flash, do not assume FS start at 0xA1000000 
-//(already tried interval 0xA1000000 - 0xA1FFFFFF, but some parts of the file were outside of this interval)
-// move this to platform.h, simulator will use static buffer
-//#define FLASH_START 0xA0000000	
-//page has 4 KB (I hope)
-//#define FLASH_PAGE_SIZE 4096
-//8K pages
-//#define FLASH_PAGE_COUNT (4096*2)
 
 //allocate 1024 items for max 1024 fragments of the file.
 // 640 KB should to be enough for everyone ;-)
@@ -449,6 +459,20 @@ lbExit:
 void I_Error (char *error, ...);
 static FileMapping *gpWADMap = 0;
 
+#ifdef CGDOOM_WAD_BFILE
+
+int FindInFlash(void **buf, int size, int readpos)
+{
+	return 0;
+}
+
+int Flash_ReadFile(void *buf, int size, int readpos)
+{
+	return Bfile_ReadFile_OS(cgdoom_wad_fd, buf, size, readpos);
+}
+
+#else /* CGDOOM_WAD_MAPPING, CGDOOM_WAD_MAPPING_DMA */
+
 int FindInFlash(void **buf, int size, int readpos)
 {
 	int iPageReq = readpos >>FLASH_PAGE_SIZE_LOG2;
@@ -506,71 +530,7 @@ int Flash_ReadFile(void *buf, int size, int readpos)
 	return iRet;
 }
 
-
-int Flash_ReadFileX(void *buf, int size, int readpos)
-{
-	int iRet = 0;
-	if(gpWADMap->miTotalLength - readpos < size)
-	{
-		size = gpWADMap->miTotalLength - readpos;
-	}
-	/*
-	typedef struct
-	{
-	short msOffset;//page index (0 ~ 8K)
-	short msCount;//count of pages in this fragment
-	}FileMappingItem;
-
-	typedef struct
-	{
-	FileMappingItem mTable[MAX_FRAGMENTS];//table of fragments
-	int miItemCount;
-	int miTotalLength;//length of the file
-
-	}FileMapping;*/
-	ASSERT(readpos >=0);
-	ASSERT(FLASH_PAGE_SIZE == 1<< FLASH_PAGE_SIZE_LOG2);
-	for(;;)
-	{
-		int iPageReq = readpos >>FLASH_PAGE_SIZE_LOG2;
-		int iPageIndx = 0;
-		int iCurrOffset = 0, iCurrLen;
-		int iSubOffset;
-		//find item
-		for(;;)
-		{
-			if(iPageIndx >= gpWADMap->miItemCount)
-			{
-				return -1;
-			}
-			if(iPageReq < gpWADMap->mTable[iPageIndx].msCount)
-			{
-				ASSERT(iCurrOffset <= readpos);
-				break;
-			}
-			iPageReq -= gpWADMap->mTable[iPageIndx].msCount;
-			iCurrOffset += ((int)gpWADMap->mTable[iPageIndx].msCount) << FLASH_PAGE_SIZE_LOG2;
-			iPageIndx++;
-		}
-		iSubOffset = readpos - iCurrOffset;
-		iCurrLen = (gpWADMap->mTable[iPageIndx].msCount * FLASH_PAGE_SIZE) - iSubOffset;
-		ASSERT(iCurrLen > 0);
-		if(iCurrLen > size)
-		{
-			iCurrLen = size;
-		}
-		memcpy(buf,((char *)FLASH_START)+(gpWADMap->mTable[iPageIndx].msOffset << FLASH_PAGE_SIZE_LOG2)+iSubOffset,iCurrLen);
-		readpos += iCurrLen;
-		size -= iCurrLen;
-		buf = ((char *)buf) +iCurrLen;
-		iRet += iCurrLen;
-		if(size ==0)
-		{
-			break;
-		}
-	}
-	return iRet;
-}
+#endif /* CGDOOM_WAD_* access method */
 
 void abort(void){
 	int x=0,y=160;
@@ -581,7 +541,7 @@ void abort(void){
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 void main(void){
-	InitFlashSimu(wadfile); //load wad file to flash simulation on simulator, do nothing on real HW
+	InitFlashSimu(cgdoom_wad_path); //load wad file to flash simulation on simulator, do nothing on real HW
 #ifdef CG_EMULATOR
 	SaveVRAMBuffer = aSaveVRAMBuffer;
 	SystemStack = aSystemStack;
@@ -594,26 +554,33 @@ void main(void){
 	VRAM = (unsigned short*)GetVRAMAddress();
 	EnableColor(1);
 	memset(VRAM,0,WIDTH*HEIGHT*2);
+
+	/* Setup access to WAD file */
+#ifdef CGDOOM_WAD_BFILE
+	cgdoom_wad_fd = Bfile_OpenFile_OS(cgdoom_wad_path, 0, 0);
+#else
 	gpWADMap = (FileMapping *)(SaveVRAMBuffer + 2*65536);
 	ASSERT(2*65536 + sizeof(FileMapping) < SAVE_VRAM_SIZE);
-	gWADHandle =	CreateFileMapping(wadfile,gpWADMap);
-	switch(gWADHandle)
-	{
-	case -1:
+	int size = CreateFileMapping(cgdoom_wad_path,gpWADMap);
+
+	if(size == -1) {
 		I_Error ("File read error");
 		return;
-		break;
-	case -2:
+	}
+	else if(size == -2) {
 		I_Error ("Page not found");
 		return;
-		break;
-	case -3:
+	}
+	else if(size == -3) {
 		I_Error ("File too fragmented");
 		return;
-		break;
-	default:
-		break;
 	}
+	else if(size < 0) {
+		I_ErrorI ("CreateFileMapping", size, 0, 0, 0);
+		return;
+	}
+#endif
+
 	D_DoomMain();
 }
 

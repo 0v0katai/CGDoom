@@ -2,6 +2,27 @@
 #define PLATFORM_H
 // real Casio fx-CG HW
 
+//---
+// WAD file access method (enable exactly one)
+//---
+
+/* Use BFile dynamically (slow but entirely accurate, a good reference) */
+// #define CGDOOM_WAD_BFILE
+/* Search fragments in physical ROM and copy by hand (faster) */
+#define CGDOOM_WAD_MAPPING
+/* Search fragments in phyiscal ROM and copy with DMA (even faster) */
+// #define CGDOOM_WAD_MAPPING_DMA
+
+/* Settings for file mappings: traverse the whole 32-MiB Flash */
+#define FLASH_START (0xA0000000)
+#define FLASH_END   (0xA2000000)
+/* Storage unit is a cluster of 512 bytes */
+#define FLASH_PAGE_SIZE 512
+#define FLASH_PAGE_SIZE_LOG2 9
+#define FLASH_PAGE_COUNT ((FLASH_END-FLASH_START) / FLASH_PAGE_SIZE)
+
+//---
+
 typedef struct{
     int x;
     int y;
@@ -44,7 +65,7 @@ typedef struct{
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include <stdint.h>
 
 
 #define WIDTH 384
@@ -87,16 +108,6 @@ extern TSysCallFuncPtr fnSysCallFuncPtr;
 
 #define ASSERT(x)
 
-//flash file mapping
-#define FLASH_START (0xA0000000)
-#define FLASH_END   (0xA2000000)
-//Lephe: Yatis established that allocation is in sectors of 512 bytes
-#define FLASH_PAGE_SIZE 512
-#define FLASH_PAGE_SIZE_LOG2 9
-#define FLASH_PAGE_OFFSET_MASK (FLASH_PAGE_SIZE - 1)
-
-//
-#define FLASH_PAGE_COUNT ((FLASH_END-FLASH_START) >> FLASH_PAGE_SIZE_LOG2)
 #define InitFlashSimu(filename)
 
 #endif //#ifndef PLATFORM_H

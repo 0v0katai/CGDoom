@@ -91,16 +91,9 @@ static int W_AddFile ()
   filelump_t*  fileinfo;
   filelump_t*  fileinfo_mem;
 
-  if (gWADHandle < 0)
-  {
-    I_Error("Couldn't open doom.wad");
-    return 0; // CX port
-  }
-
   //printf ("Adding %s\n",filename);
   startlump = numlumps;
 
-  //Bfile_ReadFile_OS(gWADHandle, &header, sizeof(header),0);
   Flash_ReadFile(&header, sizeof(header),0);
   if (CGDstrncmp(header.identification,"IWAD",4))
   {
@@ -113,7 +106,6 @@ static int W_AddFile ()
   header.infotableofs = LONG(header.infotableofs);
   length = header.numlumps * sizeof(filelump_t);
   fileinfo = fileinfo_mem= (filelump_t *)CGDMalloc(length);
-  //Bfile_ReadFile_OS(gWADHandle, fileinfo, length,header.infotableofs);
   Flash_ReadFile(fileinfo, length,header.infotableofs);
   numlumps += header.numlumps;
 
@@ -271,7 +263,6 @@ void W_ReadLump(int lump, void* dest )
   }
 
   l = lumpinfo+lump;
-  //c = Bfile_ReadFile_OS(gWADHandle,dest, l->size,l->position);
   c = Flash_ReadFile(dest, l->size,l->position);
 
 

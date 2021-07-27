@@ -32,8 +32,6 @@ void CGDAppendNum0_999(const char *pszText,int iNum,int iMinDigits,char *pszBuf)
 
 int abs(int x);
 
-extern int gWADHandle;
-
 //force compiler error on use following:
 #define strcpy 12
 #define strnicmp 22
