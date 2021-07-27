@@ -1,4 +1,3 @@
-
 #include "platform.h"
 #include "os.h"
 
@@ -173,7 +172,6 @@ void CGDstrncpy(char *pszBuf,const char *pszText,int iLen)
 	pszBuf[i] = 0;
 }
 
-
 int CGDstrcmp (const char*s1,const char*s2)
 {
 	while(s1[0])
@@ -189,13 +187,6 @@ int CGDstrcmp (const char*s1,const char*s2)
 	}
 	return (unsigned char)s2[0]>0;
 }
-/*int CGDstrcmp (const char*s1,const char*s2)
-{
-int i = CGDstrcmpX(s1,s2);
-ASSERT(!i==!strcmp(s1,s2));
-return i;
-}*/
-
 
 int CGDstrncmp (const char*s1,const char*s2,int iLen)
 {
@@ -224,12 +215,6 @@ int CGDstrncmp (const char*s1,const char*s2,int iLen)
 	}
 	return (unsigned char)s2[0]>0;
 }
-/*int CGDstrncmp (const char*s1,const char*s2,int iLen)
-{
-int i = CGDstrncmpX(s1,s2,iLen);
-ASSERT(!i==!strncmp(s1,s2,iLen));
-return i;
-}*/
 
 static unsigned char Upper(unsigned char c)
 {
@@ -266,15 +251,6 @@ int CGDstrnicmp (const char*s1,const char*s2,int iLen)
 	}
 	return (unsigned char)s2[0]>0;
 }
-
-/*int CGDstrnicmp (const char*s1,const char*s2,int iLen)
-{
-int i = CGDstrnicmpX(s1,s2,iLen);
-int j = strnicmp(s1,s2,iLen);
-ASSERT(!i==!j);
-return i;
-}
-*/
 
 ///////////////////////////////////////////////////////////////////////////////
 // WAD file access mechanism
@@ -333,44 +309,6 @@ void ResetData(FileMapping *pMap)
 	pMap->miCurrentLength = 0;
 }
 
-
-static int memcmp32(const int *p1,const int *p2,int count)
-{
-	while(count)
-	{
-		if(*p1 != *p2)
-		{
-			return 1;
-		}
-		p1++;
-		p2++;
-		count--;
-	}
-	return 0;
-}
-
-//I was able to use memcmp(), it compiled but it seems it returned always 0 
-// quick fix fot now
-/*int Xmemcmp(const char *p1,const char *p2,int len)
-{
-	if(!(len & 3))
-	{
-		return memcmp32((int*)p1,(int*)p2,len >>2);
-	}
-	while(len)
-	{
-		if(*p1 != *p2)
-		{
-			return 1;
-		}
-		p1++;
-		p2++;
-		len--;
-	}
-	return 0;
-}*/
-#define Xmemcmp memcmp
-
 int CreateFileMapping(const unsigned short *pFileName,FileMapping *pMap){
 	int iResult = 0;
 	char cBuffer[FLASH_PAGE_SIZE];
@@ -391,7 +329,7 @@ int CreateFileMapping(const unsigned short *pFileName,FileMapping *pMap){
 
 		for(;iPageIndx < FLASH_PAGE_COUNT;iPageIndx++)
 		{
-			if(!Xmemcmp(pTgt,cBuffer,iLength))
+			if(!memcmp(pTgt,cBuffer,iLength))
 			{
 				break;
 			}
@@ -431,7 +369,7 @@ int CreateFileMapping(const unsigned short *pFileName,FileMapping *pMap){
 			{
 				break;
 			}
-			if(Xmemcmp(pTgt,cBuffer,iLength))
+			if(memcmp(pTgt,cBuffer,iLength))
 			{
 				break;
 			}
