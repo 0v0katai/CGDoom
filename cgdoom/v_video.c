@@ -171,8 +171,7 @@ void V_CopyRect(int srcx,int srcy,int srcscrn,int width,int height,int destx,int
   dest = screens[destscrn]+SCREENWIDTH*desty+destx; 
   for ( ; height>0 ; height--) 
   { 
-    for(int n = 0; n < width; n++) dest[n] = src[n];
-//    memcpy (dest, src, width);
+    memcpy (dest, src, width);
     src += SCREENWIDTH; 
     dest += SCREENWIDTH; 
   } 

@@ -2,13 +2,12 @@ This repository is a fork of CGDOOM which was ported originally by MPoupe.
 
 Credit goes to:
 * MPoupe for the original fx-CG 10/20 port of DOOM.
-* ProgrammerNerd for attempts at an fx-CG 50 port, which this repository is
+* ComputerNerd for attempts at an fx-CG 50 port, which this repository is
   based on.
 * Lephenixnoir for the final fixes and fx-CG 50 version.
 
 TODO:
 -> Reenable LTO if possible
--> Include a proper fast, version of memcpy
 -> Try and use more memory regions in z_zone.c
 -> Overclocking etc.
 -> Improve file mapping speed (DMA)
@@ -26,5 +25,6 @@ The differences are (I might push it later):
 * Linker script outputs in elf32-sh format
 * Linker script sets 500k of RAM instead of 64k
 * LTO disabled (hopefully it could be reenabled later)
+* Syscall memcpy() (apparently broken) replaced by fxlibc memcpy()
 
 [1] https://github.com/Jonimoose/libfxcg/

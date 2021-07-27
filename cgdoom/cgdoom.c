@@ -459,10 +459,7 @@ int Flash_ReadFile(void *buf, int size, int readpos)
 			I_ErrorI ("Flash_ReadFile", size, readpos, 0, i);
 			return i;
 		}
-		for(int n = 0; n < i; n++) {
-			((char *)buf)[n] = ((char *)pSrc)[n];
-		}
-//		memcpy(buf,pSrc,i);
+		memcpy(buf,pSrc,i);
 		buf = ((char*)buf)+i;
 		readpos +=i;
 		size -=i;
