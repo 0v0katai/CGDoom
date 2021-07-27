@@ -497,9 +497,11 @@ int main(void){
 #ifdef CGDOOM_WAD_BFILE
 	cgdoom_wad_fd = Bfile_OpenFile_OS(cgdoom_wad_path, 0, 0);
 #else
+	int time_start = RTC_GetTicks();
 	gpWADMap = (FileMapping *)(SaveVRAMBuffer + 2*65536);
 	ASSERT(2*65536 + sizeof(FileMapping) < SAVE_VRAM_SIZE);
 	int size = CreateFileMapping(cgdoom_wad_path,gpWADMap);
+	int time_end = RTC_GetTicks();
 
 	if(size == -1) {
 		I_Error ("File read error");
@@ -516,6 +518,17 @@ int main(void){
 	else if(size < 0) {
 		I_ErrorI ("CreateFileMapping", size, 0, 0, 0);
 		return 1;
+	}
+	else {
+		int key;
+		char line[22];
+		int time_ms = (time_end - time_start) * 8;
+		CGDAppendNum0_999("mmap (ms): ", time_ms, 1, line);
+		Bdisp_AllClr_VRAM();
+		locate_OS(1, 1);
+		PrintLine(line, 21);
+		Bdisp_PutDisp_DD();
+		GetKey(&key);
 	}
 #endif
 
