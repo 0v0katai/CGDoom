@@ -6,7 +6,8 @@ RM=rm
 CFLAGS=-m4a-nofpu -mb -fgcse-sm -fgcse-las -fgcse-after-reload -Isrc -O3 -fmerge-all-constants -mhitachi -fuse-linker-plugin -Wall -Wextra -Wno-sign-compare -Wno-unused-but-set-variable -Wno-unused-but-set-parameter -I../../../../include -lgcc -L../../../../lib -I./ -I../../cgdoom -D_FXCG_MINICOMPAT
 LDFLAGS=$(CFLAGS) -nostartfiles -T../../../../toolchain/prizm.x -Wl,-static -lfxcg -lgcc -Wl,-Map=$(PROJ_NAME).map
 CSOURCES=$(wildcard ../../cgdoom/*.c)
-OBJECTS=$(CSOURCES:.c=.o)
+ASMSOURCES=$(wildcard ../../cgdoom/*.s)
+OBJECTS=$(CSOURCES:.c=.o) $(ASMSOURCES:.s=.o)
 PROJ_NAME=CG_Doom
 BIN=$(PROJ_NAME).bin
 ELF=$(PROJ_NAME).elf

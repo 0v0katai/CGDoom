@@ -7,10 +7,12 @@ Credit goes to:
 * Lephenixnoir for the final fixes and fx-CG 50 version.
 
 TODO:
+-> Fix level recap texture
+-> Fix screen not cleared when changing resolution, add larger resolutions
+-> Try and support more WADs
 -> Reenable LTO if possible
 -> Try and use more memory regions in z_zone.c
 -> Overclocking etc.
--> Improve file mapping speed (DMA)
 
 CGDOOM used to be compiled with the mini-SDK. However, it's become quite
 difficult to get a copy of that. Instead, this port is built with a slightly
@@ -26,5 +28,6 @@ The differences are (I might push it later):
 * Linker script sets 500k of RAM instead of 64k
 * LTO disabled (hopefully it could be reenabled later)
 * Syscall memcpy() (apparently broken) replaced by fxlibc memcpy()
+* fxlibc qsort() is added in libc/
 
 [1] https://github.com/Jonimoose/libfxcg/

@@ -43,9 +43,17 @@ void I_ErrorI(const char *str, int i1, int i2, int i3, int i4);
 #define sprintf	212
 
 //return ptr to flash
-int FindInFlash(void **buf, int size, int readpos);
+int FindInFlash(const void **buf, int size, int readpos);
 //direct read from flash
 int Flash_ReadFile(void *buf, int size, int readpos);
 
 //CGD: bypass for direct pointers to flash
-#define PTR_TO_FLASH(x) (((int)x < FLASH_END) && ((int)x >= FLASH_START))
+#define PTR_TO_FLASH(x) ( \
+    ((x) >= FLASH_START && (x) < FLASH_END) || \
+    ((x) >= FLASH_CACHED_START && (x) < FLASH_CACHED_END))
+
+#define min(x,y) ({ \
+    __auto_type __x = (x); \
+    __auto_type __y = (y); \
+    __x < __y ? __x : __y; \
+})
