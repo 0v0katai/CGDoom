@@ -405,26 +405,19 @@ void IndexSearchSector(SectorIndexInfo *index, const void *buf, int *lo_ptr, int
 	*hi_ptr = hi;
 }
 
-static int index_hits = 0;
-static int sector_searches = 0;
-
 /* Find a flash sector which contains the same data as buf. */
 int FindSectorInFlash(const void *buf, int size)
 {
 	typeof(&memcmp) memcmp_fun = &memcmp;
 	if(size == FLASH_PAGE_SIZE) memcmp_fun = &CGD_sector_memcmp;
 
-	sector_searches++;
-
 #ifdef FLASH_INDEX
 	/* If an index has been built, search in it */
 	int lo, hi;
 	IndexSearchSector(gIndex, buf, &lo, &hi);
 	for(int i = lo; i < hi; i++) {
-		if(!memcmp_fun(buf, gIndex[i].sector, size)) {
-			index_hits++;
+		if(!memcmp_fun(buf, gIndex[i].sector, size))
 			return (gIndex[i].sector - FLASH_START) / FLASH_PAGE_SIZE;
-		}
 	}
 #endif
 
@@ -583,8 +576,6 @@ int main(void){
 #ifdef CGDOOM_WAD_BFILE
 	gWADfd = Bfile_OpenFile_OS(gWADpath, 0, 0);
 #else
-	int time_start = RTC_GetTicks();
-
  #ifdef FLASH_INDEX
 	/* Index most likely flash sectors into a sorted array, so that sectors
 	   can be hit quickly. The index contains every sector on a 4-kiB
@@ -604,7 +595,6 @@ int main(void){
 	int fd = Bfile_OpenFile_OS(gWADpath,0,0);
 	int size = CreateFileMapping(fd, gpWADMap);
 	Bfile_CloseFile_OS(fd);
-	int time_end = RTC_GetTicks();
 
 	if(size == -1) {
 		I_Error ("File read error");
@@ -617,23 +607,6 @@ int main(void){
 	else if(size == -3) {
 		I_Error ("File too fragmented");
 		return 1;
-	}
-	else {
-		int key;
-		char line[22];
-		int time_ms = (time_end - time_start) * 8;
-		Bdisp_AllClr_VRAM();
-		locate_OS(1, 1);
-		CGDAppendNum0_999("mmap (ms): ", time_ms, 1, line);
-		PrintLine(line, 21);
-		locate_OS(1, 2);
-		CGDAppendNum0_999("Searches: ", sector_searches, 1, line);
-		PrintLine(line, 21);
-		locate_OS(1, 3);
-		CGDAppendNum0_999("Index hits: ", index_hits, 1, line);
-		PrintLine(line, 21);
-		Bdisp_PutDisp_DD();
-		GetKey(&key);
 	}
 #endif
 
