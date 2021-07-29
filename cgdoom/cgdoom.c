@@ -434,6 +434,25 @@ int FindSectorInFlash(const void *buf, int size)
 	return -1;
 }
 
+/* Show a progress bar of file mapping */
+void FileMappingProgressBar(int size_mapped, int size_total)
+{
+	const int w=192, h=5;
+	const int x0=(WIDTH-w)/2, y0=(HEIGHT-h)/2;
+	const int pos = x0 + (w * size_mapped) / size_total;
+
+	Bdisp_AllClr_VRAM();
+	for(int x = x0; x < x0+w; x++) {
+		Bdisp_SetPoint_VRAM(x, y0, COLOR_BLACK);
+		Bdisp_SetPoint_VRAM(x, y0+h-1, COLOR_BLACK);
+
+		if(x > pos && x != x0+w-1) continue;
+		for(int y = y0+1; y < y0+h-1; y++)
+			Bdisp_SetPoint_VRAM(x, y, COLOR_BLACK);
+	}
+	Bdisp_PutDisp_DD();
+}
+
 int CreateFileMapping(int fd, FileMapping *pMap)
 {
 	/* Cache accesses through a larger buffer */
@@ -442,13 +461,22 @@ int CreateFileMapping(int fd, FileMapping *pMap)
 		.fd = fd
 	};
 	int iLength = 0;
+	int iFileSize = Bfile_GetFileSize_OS(fd);
 
 	pMap->miItemCount = 0;
 	pMap->miTotalLength = 0;
 
+	int iLastProgress = 0;
+
 	const void *pFileData = ReadNextSector(&fc, &iLength);
 	while(iLength > 0)
 	{
+		/* Don't show this too often, or it will eat several seconds */
+		if((pMap->miTotalLength - iLastProgress) * 20 > iFileSize) {
+			FileMappingProgressBar(pMap->miTotalLength, iFileSize);
+			iLastProgress = pMap->miTotalLength;
+		}
+
 		int iSectorID = FindSectorInFlash(pFileData, iLength);
 		if(iSectorID == -1)
 			return -2; // Page not found!
@@ -570,7 +598,6 @@ int main(void){
 #endif 
 	VRAM = (unsigned short*)GetVRAMAddress();
 	EnableColor(1);
-	memset(VRAM,0,WIDTH*HEIGHT*2);
 
 	/* Setup access to WAD file */
 #ifdef CGDOOM_WAD_BFILE
@@ -610,6 +637,7 @@ int main(void){
 	}
 #endif
 
+	memset(VRAM,0,WIDTH*HEIGHT*2);
 	D_DoomMain();
 	return 1;
 }

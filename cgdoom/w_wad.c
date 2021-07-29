@@ -113,7 +113,7 @@ static int W_AddFile ()
   lumpinfo = (lumpinfo_t *)CGDRealloc (lumpinfo, numlumps*sizeof(lumpinfo_t));
 
   if (!lumpinfo)
-    I_Error ("Couldn't realloc lumpinfo");
+    I_ErrorI ("CGDrealloc lumpinfo", (int)lumpinfo, numlumps, numlumps*sizeof(lumpinfo_t), 0);
 
   lump_p = &lumpinfo[startlump];
 
@@ -289,7 +289,7 @@ void * W_ReadLumpWithZ_Malloc(int lump,int tag,int iEnableFlash)
   }
   if(iEnableFlash)
   {
-    c = FindInFlash(&lumpcache[lump], lumpinfo[lump].size, lumpinfo[lump].position);
+    c = FindInFlash((const void **)&lumpcache[lump], lumpinfo[lump].size, lumpinfo[lump].position);
   }
 //  else ASSERT(lumpinfo[lump].size != 10240);
 
