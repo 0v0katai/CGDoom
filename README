@@ -7,7 +7,6 @@ Credit goes to:
 * Lephenixnoir for the final fixes and fx-CG 50 version.
 
 TODO:
--> Fix level recap texture
 -> Fix screen not cleared when changing resolution, add larger resolutions
 -> Try and support more WADs
 -> Reenable LTO if possible

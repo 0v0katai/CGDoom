@@ -354,7 +354,13 @@ void V_Init (void)
   /*int  i;
   for (i=0 ; i< SCREEN_COUNT; i++)
   screens[i] = CGDMalloc(SCREENWIDTH*SCREENHEIGHT);*/
+
+  /* screens[0] is the main screen */
   screens[0] = SaveVRAMBuffer;
+  /* screens[1] is used for the level end sequence (intermission) */
+  screens[1] = SaveVRAMBuffer + SCREENWIDTH*SCREENHEIGHT;
+  /* screens[2] and screens[3] are used for wipe effects (disabled here) */
+  /* screens[4] is used for the status bar (allocated by st_stuff.c) */
 
   //Blank the screen, to indicate on real hardware that SOMETHING is going on
   //Done since loading on real hardware takes so damn long
