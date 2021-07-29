@@ -51,9 +51,21 @@ typedef struct
   memblock_t* rover;
 } memzone_t;
 
+/* CGDOOM: In order to increase available memory, we need to support multiple
+   zones. The code below is adapted to do that:
 
-static memzone_t*  mainzone;
+   * Z_ClearZone is already parameterized, nothing to do (it's never called)
+   * Z_Init is mostly replaced by a new function Z_AddZone()
+   * Z_Free is changed to detect which zone contains the pointer
+   * Z_Malloc is changed to try all zones
+   * Z_FreeTags is changed to iterate on all zones
+   * Z_CheckHeap is changed to iterate on all zones
+   * Z_ChangeTag2 operates on a single block and needs no change
+   * Z_FreeMemory is changed to iterate on all zones */
+static memzone_t *zones[ZONE_MAX];
+static int zone_count;
 
+// static memzone_t*  mainzone;
 
 
 //
@@ -81,27 +93,36 @@ void Z_ClearZone (memzone_t* zone)
 //
 // Z_Init
 //
-void Z_Init (void)
+void Z_Init(void)
+{
+  /* All work is left to Z_AddZone() */
+  zone_count = 0;
+}
+
+void Z_AddZone (void *buf, int size)
 {
   memblock_t* block;
-  int size;
 
-  mainzone = (memzone_t *)I_ZoneBase (&size);
-  mainzone->size = size;
+  if (zone_count >= ZONE_MAX)
+    return;
+
+  memzone_t* zone = (memzone_t *)buf;
+  zones[zone_count++] = zone;
+  zone->size = size;
 
   // set the entire zone to one free block
-  mainzone->blocklist.next = mainzone->blocklist.prev = block = (memblock_t *)( (byte *)mainzone + sizeof(memzone_t) );
+  zone->blocklist.next = zone->blocklist.prev = block = (memblock_t *)( (byte *)zone + sizeof(memzone_t) );
 
-  mainzone->blocklist.user = (void **)mainzone;
-  mainzone->blocklist.tag = PU_STATIC;
-  mainzone->rover = block;
+  zone->blocklist.user = (void **)zone;
+  zone->blocklist.tag = PU_STATIC;
+  zone->rover = block;
 
-  block->prev = block->next = &mainzone->blocklist;
+  block->prev = block->next = &zone->blocklist;
 
   // NULL indicates a free block.
   block->user = NULL;
 
-  block->size = mainzone->size - sizeof(memzone_t);
+  block->size = zone->size - sizeof(memzone_t);
 }
 
 
@@ -113,10 +134,24 @@ void Z_Free (const void* ptr)
   memblock_t* block;
   memblock_t* other;
 
-  if(PTR_TO_FLASH(ptr))
+  if (PTR_TO_FLASH(ptr))
+    return;
+
+  memzone_t* zone = NULL;
+  for (int i = 0; i < zone_count; i++)
   {
+    if (ptr >= (void *)zones[i] && ptr < (void *)zones[i] + zones[i]->size)
+    {
+      zone = zones[i];
+      break;
+    }
+  }
+  if (zone == NULL)
+  {
+    I_ErrorI ("Z_Free: Out of zone", (int)ptr, 0, 0, 0);
     return;
   }
+
   block = (memblock_t *) ( (byte *)ptr - sizeof(memblock_t));
 
   if (block->id != ZONEID)
@@ -147,9 +182,9 @@ void Z_Free (const void* ptr)
     other->next = block->next;
     other->next->prev = other;
 
-    if (block == mainzone->rover)
+    if (block == zone->rover)
     {
-      mainzone->rover = other;
+      zone->rover = other;
     }
 
     block = other;
@@ -163,9 +198,9 @@ void Z_Free (const void* ptr)
     block->next = other->next;
     block->next->prev = block;
 
-    if (other == mainzone->rover)
+    if (other == zone->rover)
     {
-      mainzone->rover = block;
+      zone->rover = block;
     }
   }
 }
@@ -202,13 +237,6 @@ void* Z_Malloc( int size,  int  tag,  void* user )
   }
 #endif
 
-  /*if(size > 64000)
-  {
-  char buf[21];
-  CGDAppendNum0_999("ENERR:",iCalled,1,buf);
-  I_Error(buf);
-  return 0;
-  }*/
   // scan through the block list,
   // looking for the first free block
   // of sufficient size,
@@ -217,49 +245,71 @@ void* Z_Malloc( int size,  int  tag,  void* user )
   // account for size of block header
   size += sizeof(memblock_t);
 
-  // if there is a free block behind the rover,
-  //  back up over them
-  base = mainzone->rover;
+  int zone_no = 0;
+  memzone_t *zone = zones[zone_no];
 
-  if (!base->prev->user)
+  for (;;)
   {
-    base = base->prev;
-  }
+    // if there is a free block behind the rover,
+    //  back up over them
+    base = zone->rover;
 
-  rover = base;
-  start = base->prev;
-
-  do
-  {
-    if (rover == start)
+    if (!base->prev->user)
     {
-      // scanned all the way around the list
-      I_ErrorI ("Z_Malloc failure", size, 0, 0, 0);
+      base = base->prev;
     }
 
-    if (rover->user)
+    rover = base;
+    start = base->prev;
+    int failed = 0;
+
+    do
     {
-      if (rover->tag < PU_PURGELEVEL)
+      if (rover == start)
       {
-        // hit a block that can't be purged,
-        //  so move base past it
-        base = rover = rover->next;
+        // scanned all the way around the list
+        failed = 1;
+        break;
+      }
+
+      if (rover->user)
+      {
+        if (rover->tag < PU_PURGELEVEL)
+        {
+          // hit a block that can't be purged,
+          //  so move base past it
+          base = rover = rover->next;
+        }
+        else
+        {
+          // free the rover block (adding the size to base)
+
+          // the rover can be the base block
+          base = base->prev;
+          Z_Free ((byte *)rover+sizeof(memblock_t));
+          base = base->next;
+          rover = base->next;
+        }
+      }
+      else
+        rover = rover->next;
+    } while (base->user || base->size < size);
+
+    if (failed)
+    {
+      if (zone_no + 1 < zone_count)
+      {
+        zone = zones[++zone_no];
+        continue;
       }
       else
       {
-        // free the rover block (adding the size to base)
-
-        // the rover can be the base block
-        base = base->prev;
-        Z_Free ((byte *)rover+sizeof(memblock_t));
-        base = base->next;
-        rover = base->next;
+        I_ErrorI ("Z_Malloc failure", size, 0, 0, 0);
+        return NULL;
       }
     }
-    else
-      rover = rover->next;
-  } while (base->user || base->size < size);
-
+    else break;
+  }
 
   // found a block big enough
   extra = base->size - size;
@@ -300,7 +350,7 @@ void* Z_Malloc( int size,  int  tag,  void* user )
   base->tag = tag;
 
   // next allocation will start looking here
-  mainzone->rover = base->next;
+  zone->rover = base->next;
 
   base->id = ZONEID;
 
@@ -317,20 +367,25 @@ void Z_FreeTags(int lowtag,int  hightag )
   memblock_t* block;
   memblock_t* next;
 
-  for(block = mainzone->blocklist.next;block != &mainzone->blocklist;block = next)
+  for (int i = 0; i < zone_count; i++)
   {
-    // get link before freeing
-    next = block->next;
+    memzone_t* mainzone = zones[i];
 
-    // free block?
-    if (!block->user)
+    for(block = mainzone->blocklist.next;block != &mainzone->blocklist;block = next)
     {
-      continue;
-    }
+      // get link before freeing
+      next = block->next;
 
-    if (block->tag >= lowtag && block->tag <= hightag)
-    {
-      Z_Free ( (byte *)block+sizeof(memblock_t));
+      // free block?
+      if (!block->user)
+      {
+        continue;
+      }
+
+      if (block->tag >= lowtag && block->tag <= hightag)
+      {
+        Z_Free ( (byte *)block+sizeof(memblock_t));
+      }
     }
   }
 }
@@ -342,27 +397,32 @@ void Z_CheckHeap (void)
 {
   memblock_t* block;
 
-  for (block = mainzone->blocklist.next ; ; block = block->next)
+  for (int i = 0; i < zone_count; i++)
   {
-    if (block->next == &mainzone->blocklist)
-    {
-      // all blocks have been hit
-      break;
-    }
+    memzone_t* mainzone = zones[i];
 
-    if((byte *)block + block->size != (byte *)block->next)
+    for (block = mainzone->blocklist.next ; ; block = block->next)
     {
-      I_Error("Z_CheckHeap: block size does not touch the next block\n");
-    }
+      if (block->next == &mainzone->blocklist)
+      {
+        // all blocks have been hit
+        break;
+      }
 
-    if(block->next->prev != block)
-    {
-      I_Error("Z_CheckHeap: next block doesn't have proper back link\n");
-    }
+      if((byte *)block + block->size != (byte *)block->next)
+      {
+        I_Error("Z_CheckHeap: block size does not touch the next block\n");
+      }
 
-    if(!block->user && !block->next->user)
-    {
-      I_Error("Z_CheckHeap: two consecutive free blocks\n");
+      if(block->next->prev != block)
+      {
+        I_Error("Z_CheckHeap: next block doesn't have proper back link\n");
+      }
+
+      if(!block->user && !block->next->user)
+      {
+        I_Error("Z_CheckHeap: two consecutive free blocks\n");
+      }
     }
   }
 }
@@ -406,11 +466,16 @@ int Z_FreeMemory (void)
   memblock_t* block;
   int free = 0;
 
-  for(block = mainzone->blocklist.next;block != &mainzone->blocklist;block = block->next)
+  for (int i = 0; i < zone_count; i++)
   {
-    if (!block->user || block->tag >= PU_PURGELEVEL)
+    memzone_t* mainzone = zones[i];
+
+    for(block = mainzone->blocklist.next;block != &mainzone->blocklist;block = block->next)
     {
-      free += block->size;
+      if (!block->user || block->tag >= PU_PURGELEVEL)
+      {
+        free += block->size;
+      }
     }
   }
   return free;

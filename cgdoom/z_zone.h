@@ -54,6 +54,13 @@ void    Z_CheckHeap (void);
 void    Z_ChangeTag2 (const void *ptr, int tag);
 int     Z_FreeMemory (void);
 
+/* CGDOOM: Support for multiple zones is added; Z_Init() now does nothing,
+   zones need to be added manually (see D_DoomMain()). */
+void    Z_AddZone (void *zone, int size);
+
+/* Maximum number of zones. */
+#define ZONE_MAX 16
+
 
 typedef struct memblock_s
 {

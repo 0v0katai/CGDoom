@@ -368,6 +368,20 @@ void D_DoomMain()
 //  int repisode=1;
 //  int rmap=1;
 
+  /* CGDOOM: Z_Init is executed early because we rely on the larger heap to
+     allocate the lump cache and lump info; normal heap isn't enough for WADs
+     larger than the shareware WAD */
+  Z_Init ();
+
+  for (int i = 0; true; i++)
+  {
+    int zone_size;
+    void *zone_base = I_ZoneBase(&zone_size, i);
+    if (zone_base == NULL)
+      break;
+    Z_AddZone (zone_base, zone_size);
+  }
+
   ok_wad=W_InitMultipleFiles();
 
   if(W_CheckNumForName("MAP01")!=-1)
@@ -404,7 +418,7 @@ void D_DoomMain()
 #endif 
   }
 
-  if(maxepisode>1)
+  if(maxepisode>1) {}
 #if 0 //TODO !
     do
     {
@@ -455,7 +469,7 @@ void D_DoomMain()
     //printf ("V_Init: Allocate screens\n");
     V_Init ();
     //printf ("Z_Init: Init zone memory allocation daemon \n");
-    Z_Init ();
+    //Z_Init ();
     //printf ("W_Init: Init WADfiles\n");
 
     W_InitMultipleFiles ();

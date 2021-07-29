@@ -110,7 +110,16 @@ static int W_AddFile ()
   numlumps += header.numlumps;
 
   // Fill in lumpinfo
-  lumpinfo = (lumpinfo_t *)CGDRealloc (lumpinfo, numlumps*sizeof(lumpinfo_t));
+  // TODO: Actual realloc
+  if (!lumpinfo)
+  {
+    lumpinfo = (lumpinfo_t *)Z_Malloc (numlumps*sizeof(lumpinfo_t), PU_STATIC, 0);
+  }
+  else
+  {
+    I_Error ("realloc lumpinfo!");
+    lumpinfo = (lumpinfo_t *)CGDRealloc (lumpinfo, numlumps*sizeof(lumpinfo_t));
+  }
 
   if (!lumpinfo)
     I_ErrorI ("CGDrealloc lumpinfo", (int)lumpinfo, numlumps, numlumps*sizeof(lumpinfo_t), 0);
@@ -330,9 +339,7 @@ static void* W_CacheLumpNumCommon( int lump, int tag,int iEnableFlash)
   /*if (lump==1203)
   printf("sky access, returning %x \n",lumpcache[lump]);*/
 
-  int p1 = ((unsigned int)lumpcache[lump] & 0xf0000000) == 0x80000000;
-  int p2 = ((unsigned int)lumpcache[lump] & 0xf0000000) == 0xa0000000;
-  if(lumpcache[lump] == NULL || (!p1 && !p2))
+  if(lumpcache[lump] == NULL)
     I_ErrorI("W_CacheLumpNumCommon", (int)lumpcache[lump], lump, 0, 0);
 
   return lumpcache[lump];

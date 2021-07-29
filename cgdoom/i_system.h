@@ -33,11 +33,13 @@
 // A check to determine which control system to compile for
 //#define EMULATOR_CONTROLS 1
 
+/* CGDOOM: I_ZoneBase() is extended with a second argument to support multiple
+   allocation zones, for more memory */
 
 // Called by startup code
 // to get the ammount of memory to malloc
 // for the zone management.
-byte*	I_ZoneBase (int *size);
+byte*	I_ZoneBase (int *size, int zone_no);
 
 
 // Called by D_DoomLoop,

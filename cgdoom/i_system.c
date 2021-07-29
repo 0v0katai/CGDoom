@@ -57,12 +57,24 @@ int  I_GetHeapSize (void)
     return RAM_I_Zone_SIZE;
 }
 
-byte* I_ZoneBase (int*	size)
+byte* I_ZoneBase (int*	size, int i)
 {
-    *size = RAM_I_Zone_SIZE;
-    mb_mainzone = (byte *) SystemStack;
-    ASSERT(RAM_I_Zone_SIZE <= SYSTEM_STACK_SIZE);
-    return mb_mainzone;
+    if (i == 0)
+    {
+        /* System stack (~500 kiB) */
+        *size = RAM_I_Zone_SIZE;
+        mb_mainzone = (byte *) SystemStack;
+        ASSERT(RAM_I_Zone_SIZE <= SYSTEM_STACK_SIZE);
+        return mb_mainzone;
+    }
+    if (i == 1)
+    {
+        /* Unused part of user stack (~200 kiB); provided by linker script */
+        extern byte sextra, eextra;
+        *size = &eextra - &sextra;
+        return &sextra;
+    }
+    return NULL;
 }
 
 //
