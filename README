@@ -13,7 +13,6 @@ TODO:
 -> Some bad textures here and there
 -> Supply more VRAM memory to internal allocator
 -> Level selector
--> Difficulty selector
 -> Rate-limit the game when overclocking
 -> Run key?
 -> FPS counter on-screen

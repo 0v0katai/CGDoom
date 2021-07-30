@@ -309,6 +309,8 @@ int KeycodeToDoomKey(int code)
     case KEYCODE_OPTN:      return KEY_PAUSE;
     case KEYCODE_0:         return KEY_SLEFTARROW;
     case KEYCODE_DOT:       return KEY_SRIGHTARROW;
+    case KEYCODE_XOT:       return KEY_ESCAPE;
+    case KEYCODE_LOG:       return KEY_ENTER;
     default:                return -1;
     }
 }
