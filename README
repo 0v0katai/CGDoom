@@ -7,11 +7,19 @@ Credit goes to:
 * Lephenixnoir for the final fixes and fx-CG 50 version.
 
 TODO:
--> Fix screen not cleared when changing resolution, add larger resolutions
+-> Fix screen not cleared when changing resolution
+-> Shareware WAD crashes at the end of E1M4 (and in E1M9)
+-> Ultimate DOOM WAD runs out of memory at the end of E1M2
+-> Some bad textures here and there
+-> Supply more VRAM memory to internal allocator
+-> Level selector
+-> Difficulty selector
+-> Rate-limit the game when overclocking
+-> Run key?
+-> FPS counter on-screen
 -> Try and support more WADs
 -> Reenable LTO if possible
--> Try and use more memory regions in z_zone.c
--> Overclocking etc.
+-> Built-in overclocking?
 
 CGDOOM used to be compiled with the mini-SDK. However, it's become quite
 difficult to get a copy of that. Instead, this port is built with a slightly
