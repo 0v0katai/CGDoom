@@ -1,9 +1,11 @@
 This repository is a fork of CGDOOM which was ported originally by MPoupe.
 
 Credit goes to:
+* Mrakoplaz for the original TI-Nspire port from MS-DOS sources.
+* Critor for the Nspire CX (now CX II) port (which includes support for a
+  number of WAD files).
 * MPoupe for the original fx-CG 10/20 port of DOOM.
-* ComputerNerd for attempts at an fx-CG 50 port, which this repository is
-  based on.
+* ComputerNerd for the first attempts at an fx-CG 50 port.
 * Lephenixnoir for the final fixes and fx-CG 50 version.
 
 TODO:
@@ -35,5 +37,6 @@ The differences are (I might push it later):
 * LTO disabled (hopefully it could be reenabled later)
 * Syscall memcpy() (apparently broken) replaced by fxlibc memcpy()
 * fxlibc qsort() is added in libc/
+* Linker script provides addresses to unused section of user RAM
 
 [1] https://github.com/Jonimoose/libfxcg/
