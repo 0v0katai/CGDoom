@@ -242,7 +242,7 @@ int Layout_Event(Layout *l, int key)
 	return 0;
 }
 
-int UI_Main(WADFileInfo *wads, int wad_count, int *dev_info)
+int UI_Main(WADFileInfo *wads, int wad_count, int *dev_info, int *use_mmap)
 {
 	Layout l;
 	Layout_Init(&l);
@@ -269,6 +269,7 @@ int UI_Main(WADFileInfo *wads, int wad_count, int *dev_info)
 
 		Layout_Spacing(&l, 12);
 		Layout_Checkbox(&l, "Developer info:", *dev_info);
+		Layout_Checkbox(&l, "Map file to memory:", *use_mmap);
 		Layout_EndFrame(&l);
 		Bdisp_PutDisp_DD();
 
@@ -279,8 +280,10 @@ int UI_Main(WADFileInfo *wads, int wad_count, int *dev_info)
 
 		if(key == KEY_CTRL_EXE && l.focus < wad_count)
 			return l.focus;
-		if(key == KEY_CTRL_EXE && l.focus == l.focus_count - 1)
+		if(key == KEY_CTRL_EXE && l.focus == l.focus_count - 2)
 			*dev_info ^= 1;
+		if(key == KEY_CTRL_EXE && l.focus == l.focus_count - 1)
+			*use_mmap ^= 1;
 	}
 
 	return -1;

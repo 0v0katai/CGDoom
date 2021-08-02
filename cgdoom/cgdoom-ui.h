@@ -49,6 +49,6 @@ int Layout_Event(Layout *l, int key);
 /* Larger-scale functions. */
 
 /* Show the program's main screen; returns index of selected WAD file. */
-int UI_Main(WADFileInfo *wads, int wad_count, int *dev_info);
+int UI_Main(WADFileInfo *wads, int wad_count, int *dev_info, int *use_mmap);
 
 #endif /* CGDOOM_UI_H */

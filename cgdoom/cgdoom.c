@@ -360,29 +360,19 @@ int FindWADs(WADFileInfo *files, int max)
 
 void I_Error (char *error, ...);
 
-#ifdef CGDOOM_WAD_BFILE
-
-/* File descriptor to WAD file, used in Flash_ReadFile calls from w_wad.c. */
+/* WAD file access method. */
+static int gWADmethod = CGDOOM_WAD_MMAP;
+/* File descriptor to WAD, used in Flash_ReadFile calls. (CGDOOM_WAD_BFILE) */
 static int gWADfd = -1;
-
-int FindInFlash(void **buf, int size, int readpos)
-{
-	return 0;
-}
-
-int Flash_ReadFile(void *buf, int size, int readpos)
-{
-	return Bfile_ReadFile_OS(gWADfd, buf, size, readpos);
-}
-
-#else /* CGDOOM_WAD_MAPPING */
-
+/* Memory map of WAD file. (CGDOOM_WAD_MMAP) */
 static FileMapping *gpWADMap = 0;
+/* Index of most likely sectors for fragment search. (CGDOOM_WAD_MMAP) */
 static SectorIndexInfo *gIndex = NULL;
 
 /* Developer info */
 static int gDevFragments = 0;
 static int gDevIndexHits = 0;
+static void *gDevLowestFragment = NULL;
 
 /* Read next sector from file, while caching into a buffer. */
 const void *ReadNextSector(FileAccessCache *fc, int *size)
@@ -510,6 +500,9 @@ int CreateFileMapping(int fd, FileMapping *pMap)
 
 		/* Look for consecutive sectors in the same fragment */
 		const void *pFragment = FLASH_START + (iSectorID * FLASH_PAGE_SIZE);
+		if(!gDevLowestFragment || pFragment < gDevLowestFragment)
+			gDevLowestFragment = pFragment;
+
 		for(;;)
 		{
 			pMap->mTable[pMap->miItemCount-1].msCount++;
@@ -543,6 +536,9 @@ int CreateFileMapping(int fd, FileMapping *pMap)
 
 int FindInFlash(const void **buf, int size, int readpos)
 {
+	if(gWADmethod == CGDOOM_WAD_BFILE)
+		return 0;
+
 	int iPageReq = readpos / FLASH_PAGE_SIZE;
 	int iPageIndx = 0;
 	int iCurrOffset = 0, iCurrLen;
@@ -577,6 +573,9 @@ int FindInFlash(const void **buf, int size, int readpos)
 
 int Flash_ReadFile(void *buf, int size, int readpos)
 {
+	if(gWADmethod == CGDOOM_WAD_BFILE)
+		return Bfile_ReadFile_OS(gWADfd, buf, size, readpos);
+
 	const void *pSrc;
 	int iRet = 0;
 	while(size >0)
@@ -594,8 +593,6 @@ int Flash_ReadFile(void *buf, int size, int readpos)
 	}
 	return iRet;
 }
-
-#endif /* CGDOOM_WAD_* access method */
 
 void abort(void){
 	int x=0,y=160;
@@ -618,7 +615,7 @@ int main(void){
 	int wad_count = FindWADs(wads, 16);
 
 	int dev_info = 0;
-	int choice = UI_Main(wads, wad_count, &dev_info);
+	int choice = UI_Main(wads, wad_count, &dev_info, &gWADmethod);
 	if(choice < 0)
 		return 1;
 
@@ -630,58 +627,67 @@ int main(void){
 	VRAM = (unsigned short*)GetVRAMAddress();
 
 	/* Setup access to WAD file */
-#ifdef CGDOOM_WAD_BFILE
-	gWADfd = Bfile_OpenFile_OS(wads[choice].path, 0, 0);
-#else
- #ifdef FLASH_INDEX
-	/* Index most likely flash sectors into a sorted array, so that sectors
-	   can be hit quickly. The index contains every sector on a 4-kiB
-	   boundary (where fragments are most likely to start) between
-	   FLASH_FS_HINT and FLASH_END. */
-	gIndex = (void *)SystemStack;
-	for(int i = 0; i < FLASH_INDEX_SIZE; i++) {
-		SectorIndexInfo *info = &gIndex[i];
-		info->sector = FLASH_FS_HINT + (i * 4096);
-		info->start_bytes = *(const uint32_t *)info->sector;
+	if(gWADmethod == CGDOOM_WAD_BFILE)
+	{
+		gWADfd = Bfile_OpenFile_OS(wads[choice].path, 0, 0);
 	}
-	qsort(gIndex, FLASH_INDEX_SIZE, sizeof *gIndex, IndexCompareSectors);
+	else
+	{
+ #ifdef FLASH_INDEX
+		/* Index most likely flash sectors into a sorted array, so that
+		   sectors can be hit quickly. The index contains every sector
+		   on a 4-kiB boundary (where fragments are most likely to
+		   start) between FLASH_FS_HINT and FLASH_END. */
+		gIndex = (void *)SystemStack;
+		for(int i = 0; i < FLASH_INDEX_SIZE; i++) {
+			SectorIndexInfo *info = &gIndex[i];
+			info->sector = FLASH_FS_HINT + (i * 4096);
+			info->start_bytes = *(const uint32_t *)info->sector;
+		}
+		qsort(gIndex, FLASH_INDEX_SIZE, sizeof *gIndex, IndexCompareSectors);
  #endif
 
-	gpWADMap = (FileMapping *)(SaveVRAMBuffer + 2*65536);
-	ASSERT(2*65536 + sizeof(FileMapping) < SAVE_VRAM_SIZE);
-	int fd = Bfile_OpenFile_OS(wads[choice].path,0,0);
-	int size = CreateFileMapping(fd, gpWADMap);
-	Bfile_CloseFile_OS(fd);
-	UI_FileMappingProgressBar(1, 1);
+		gpWADMap = (FileMapping *)(SaveVRAMBuffer + 2*65536);
+		ASSERT(2*65536 + sizeof(FileMapping) < SAVE_VRAM_SIZE);
+		int fd = Bfile_OpenFile_OS(wads[choice].path, 0, 0);
+		int size = CreateFileMapping(fd, gpWADMap);
+		Bfile_CloseFile_OS(fd);
+		UI_FileMappingProgressBar(1, 1);
 
-	if(size == -1) {
-		I_Error ("File read error");
-		return 1;
+		if(size == -1) {
+			I_Error ("File read error");
+			return 1;
+		}
+		else if(size == -2) {
+			I_Error ("Page not found");
+			return 1;
+		}
+		else if(size == -3) {
+			I_Error ("File too fragmented");
+			return 1;
+		}
+		else if(dev_info) {
+			Layout l;
+			Layout_Init(&l);
+			Bdisp_AllClr_VRAM();
+			Layout_CenteredText(&l, "Developer info");
+			Layout_Text(&l, "Fragments:", "%d", gDevFragments);
+			Layout_Text(&l, "Index hits:", "%d (%d%%)", gDevIndexHits,
+				(gDevIndexHits * 100 / gDevFragments));
+			Layout_Text(&l, "Lowest fragment:", "%p",
+				gDevLowestFragment);
+			Bdisp_PutDisp_DD();
+			int key;
+			GetKey(&key);
+		}
 	}
-	else if(size == -2) {
-		I_Error ("Page not found");
-		return 1;
-	}
-	else if(size == -3) {
-		I_Error ("File too fragmented");
-		return 1;
-	}
-	else if(dev_info) {
-		Layout l;
-		Layout_Init(&l);
-		Bdisp_AllClr_VRAM();
-		Layout_CenteredText(&l, "Developer info");
-		Layout_Text(&l, "Fragments:", "%d", gDevFragments);
-		Layout_Text(&l, "Index hits:", "%d (%d%%)", gDevIndexHits,
-			(gDevIndexHits * 100 / gDevFragments));
-		Bdisp_PutDisp_DD();
-		int key;
-		GetKey(&key);
-	}
-#endif
 
 	memset(VRAM,0,WIDTH*HEIGHT*2);
 	D_DoomMain();
+
+	if(gWADfd >= 0)
+		Bfile_CloseFile_OS(gWADfd);
+
 	return 1;
 }
 
