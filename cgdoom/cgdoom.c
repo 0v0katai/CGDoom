@@ -1,5 +1,6 @@
 #include "platform.h"
 #include "os.h"
+#include "cgdoom-ui.h"
 
 #ifdef CG_EMULATOR
 static int iAllocSum = 0;
@@ -280,8 +281,6 @@ int CGDstrnicmp (const char*s1,const char*s2,int iLen)
 //The whole sound doesn't fir onto the RAM.
 //Reading per partes is not possible as this is synchronnous player (there would be silences when reading).
 
-static uint16_t const *gWADpath = u"\\\\fls0\\doom.wad";
-
 /* Fast memcmp() for 512-byte sectors. */
 int CGD_sector_memcmp(const void *fast_ram, const void *rom, size_t _512);
 
@@ -319,6 +318,14 @@ typedef struct
 
 }FileMapping;
 
+typedef struct
+{
+	unsigned short id, type;
+	unsigned long fsize, dsize;
+	unsigned int property;
+	unsigned long address;
+} Bfile_FileInfo;
+
 //reset reading to start
 void ResetData(FileMapping *pMap)
 {
@@ -326,6 +333,26 @@ void ResetData(FileMapping *pMap)
 	pMap->miCurrentLength = 0;
 }
 
+/* Find WAD files in the filesystem. */
+int FindWADs(char filenames[][32], int max)
+{
+	uint16_t path[32];
+	Bfile_FileInfo info;
+
+	int sd, rc, total=0;
+	rc = Bfile_FindFirst(u"\\\\fls0\\*.wad", &sd, path, &info);
+
+	while(rc != -16 && total < max)
+	{
+		Bfile_NameToStr_ncpy(filenames[total], path, 32);
+		total++;
+
+		rc = Bfile_FindNext(sd, path, &info);
+	}
+
+	Bfile_FindClose(sd);
+	return total;
+}
 
 void I_Error (char *error, ...);
 
@@ -434,25 +461,6 @@ int FindSectorInFlash(const void *buf, int size)
 	return -1;
 }
 
-/* Show a progress bar of file mapping */
-void FileMappingProgressBar(int size_mapped, int size_total)
-{
-	const int w=192, h=5;
-	const int x0=(WIDTH-w)/2, y0=(HEIGHT-h)/2;
-	const int pos = x0 + (w * size_mapped) / size_total;
-
-	Bdisp_AllClr_VRAM();
-	for(int x = x0; x < x0+w; x++) {
-		Bdisp_SetPoint_VRAM(x, y0, COLOR_BLACK);
-		Bdisp_SetPoint_VRAM(x, y0+h-1, COLOR_BLACK);
-
-		if(x > pos && x != x0+w-1) continue;
-		for(int y = y0+1; y < y0+h-1; y++)
-			Bdisp_SetPoint_VRAM(x, y, COLOR_BLACK);
-	}
-	Bdisp_PutDisp_DD();
-}
-
 int CreateFileMapping(int fd, FileMapping *pMap)
 {
 	/* Cache accesses through a larger buffer */
@@ -473,7 +481,7 @@ int CreateFileMapping(int fd, FileMapping *pMap)
 	{
 		/* Don't show this too often, or it will eat several seconds */
 		if((pMap->miTotalLength - iLastProgress) * 20 > iFileSize) {
-			FileMappingProgressBar(pMap->miTotalLength, iFileSize);
+			UI_FileMappingProgressBar(pMap->miTotalLength, iFileSize);
 			iLastProgress = pMap->miTotalLength;
 		}
 
@@ -586,22 +594,35 @@ void abort(void){
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 int main(void){
-	InitFlashSimu(gWADpath); //load wad file to flash simulation on simulator, do nothing on real HW
+	InitFlashSimu("doom.wad"); //load wad file to flash simulation on simulator, do nothing on real HW
 #ifdef CG_EMULATOR
 	SaveVRAMBuffer = aSaveVRAMBuffer;
 	SystemStack = aSystemStack;
 #else 
+	EnableColor(1);
+	EnableStatusArea(3);
+
+	char wad_files[16][32];
+	int wad_file_count = FindWADs(wad_files, 16);
+	uint16_t wad_path[39] = u"\\\\fls0\\";
+
+	int dev_info = 0;
+	int choice = UI_Main(wad_files, wad_file_count, &dev_info);
+	if(choice < 0)
+		return 1;
+
+	Bfile_StrToName_ncpy(wad_path+7, wad_files[choice], 32);
+
 	unsigned tmp=((unsigned)getSecondaryVramAddress()+3)&(~3);
 	SaveVRAMBuffer = (unsigned char*)tmp;
 	/* Graph 90+E: RAM starts at 0x0c000000 in physical memory */
 	SystemStack = (void *)0xac0f0000;
 #endif 
 	VRAM = (unsigned short*)GetVRAMAddress();
-	EnableColor(1);
 
 	/* Setup access to WAD file */
 #ifdef CGDOOM_WAD_BFILE
-	gWADfd = Bfile_OpenFile_OS(gWADpath, 0, 0);
+	gWADfd = Bfile_OpenFile_OS(wad_path, 0, 0);
 #else
  #ifdef FLASH_INDEX
 	/* Index most likely flash sectors into a sorted array, so that sectors
@@ -619,9 +640,10 @@ int main(void){
 
 	gpWADMap = (FileMapping *)(SaveVRAMBuffer + 2*65536);
 	ASSERT(2*65536 + sizeof(FileMapping) < SAVE_VRAM_SIZE);
-	int fd = Bfile_OpenFile_OS(gWADpath,0,0);
+	int fd = Bfile_OpenFile_OS(wad_path,0,0);
 	int size = CreateFileMapping(fd, gpWADMap);
 	Bfile_CloseFile_OS(fd);
+	UI_FileMappingProgressBar(1, 1);
 
 	if(size == -1) {
 		I_Error ("File read error");
