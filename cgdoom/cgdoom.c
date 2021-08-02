@@ -318,6 +318,7 @@ typedef struct
 
 }FileMapping;
 
+/* Bfile's file info structure returned by filesystem search functions. */
 typedef struct
 {
 	unsigned short id, type;
@@ -334,9 +335,9 @@ void ResetData(FileMapping *pMap)
 }
 
 /* Find WAD files in the filesystem. */
-int FindWADs(char filenames[][32], int max)
+int FindWADs(WADFileInfo *files, int max)
 {
-	uint16_t path[32];
+	uint16_t path[16];
 	Bfile_FileInfo info;
 
 	int sd, rc, total=0;
@@ -344,7 +345,10 @@ int FindWADs(char filenames[][32], int max)
 
 	while(rc != -16 && total < max)
 	{
-		Bfile_NameToStr_ncpy(filenames[total], path, 32);
+		memcpy(files[total].path, u"\\\\fls0\\", 14);
+		memcpy(files[total].path+7, path, 16*2);
+		Bfile_NameToStr_ncpy(files[total].name, path, 16);
+		files[total].size = info.fsize;
 		total++;
 
 		rc = Bfile_FindNext(sd, path, &info);
@@ -375,6 +379,10 @@ int Flash_ReadFile(void *buf, int size, int readpos)
 
 static FileMapping *gpWADMap = 0;
 static SectorIndexInfo *gIndex = NULL;
+
+/* Developer info */
+static int gDevFragments = 0;
+static int gDevIndexHits = 0;
 
 /* Read next sector from file, while caching into a buffer. */
 const void *ReadNextSector(FileAccessCache *fc, int *size)
@@ -438,13 +446,17 @@ int FindSectorInFlash(const void *buf, int size)
 	typeof(&memcmp) memcmp_fun = &memcmp;
 	if(size == FLASH_PAGE_SIZE) memcmp_fun = &CGD_sector_memcmp;
 
+	gDevFragments++;
+
 #ifdef FLASH_INDEX
 	/* If an index has been built, search in it */
 	int lo, hi;
 	IndexSearchSector(gIndex, buf, &lo, &hi);
 	for(int i = lo; i < hi; i++) {
-		if(!memcmp_fun(buf, gIndex[i].sector, size))
+		if(!memcmp_fun(buf, gIndex[i].sector, size)) {
+			gDevIndexHits++;
 			return (gIndex[i].sector - FLASH_START) / FLASH_PAGE_SIZE;
+		}
 	}
 #endif
 
@@ -602,16 +614,13 @@ int main(void){
 	EnableColor(1);
 	EnableStatusArea(3);
 
-	char wad_files[16][32];
-	int wad_file_count = FindWADs(wad_files, 16);
-	uint16_t wad_path[39] = u"\\\\fls0\\";
+	WADFileInfo wads[16];
+	int wad_count = FindWADs(wads, 16);
 
 	int dev_info = 0;
-	int choice = UI_Main(wad_files, wad_file_count, &dev_info);
+	int choice = UI_Main(wads, wad_count, &dev_info);
 	if(choice < 0)
 		return 1;
-
-	Bfile_StrToName_ncpy(wad_path+7, wad_files[choice], 32);
 
 	unsigned tmp=((unsigned)getSecondaryVramAddress()+3)&(~3);
 	SaveVRAMBuffer = (unsigned char*)tmp;
@@ -622,7 +631,7 @@ int main(void){
 
 	/* Setup access to WAD file */
 #ifdef CGDOOM_WAD_BFILE
-	gWADfd = Bfile_OpenFile_OS(wad_path, 0, 0);
+	gWADfd = Bfile_OpenFile_OS(wads[choice].path, 0, 0);
 #else
  #ifdef FLASH_INDEX
 	/* Index most likely flash sectors into a sorted array, so that sectors
@@ -640,7 +649,7 @@ int main(void){
 
 	gpWADMap = (FileMapping *)(SaveVRAMBuffer + 2*65536);
 	ASSERT(2*65536 + sizeof(FileMapping) < SAVE_VRAM_SIZE);
-	int fd = Bfile_OpenFile_OS(wad_path,0,0);
+	int fd = Bfile_OpenFile_OS(wads[choice].path,0,0);
 	int size = CreateFileMapping(fd, gpWADMap);
 	Bfile_CloseFile_OS(fd);
 	UI_FileMappingProgressBar(1, 1);
@@ -656,6 +665,18 @@ int main(void){
 	else if(size == -3) {
 		I_Error ("File too fragmented");
 		return 1;
+	}
+	else if(dev_info) {
+		Layout l;
+		Layout_Init(&l);
+		Bdisp_AllClr_VRAM();
+		Layout_CenteredText(&l, "Developer info");
+		Layout_Text(&l, "Fragments:", "%d", gDevFragments);
+		Layout_Text(&l, "Index hits:", "%d (%d%%)", gDevIndexHits,
+			(gDevIndexHits * 100 / gDevFragments));
+		Bdisp_PutDisp_DD();
+		int key;
+		GetKey(&key);
 	}
 #endif
 

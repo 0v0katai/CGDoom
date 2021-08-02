@@ -40,7 +40,6 @@ void I_ErrorI(const char *str, int i1, int i2, int i3, int i4);
 #define strnicmp 22
 #define strncmp 27
 #define strcmp 33
-#define sprintf	212
 
 //return ptr to flash
 int FindInFlash(const void **buf, int size, int readpos);

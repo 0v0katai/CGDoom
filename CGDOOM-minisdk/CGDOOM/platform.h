@@ -73,4 +73,12 @@
 #define ASSERT(x)
 #define InitFlashSimu(filename)
 
+/* Description of a WAD file selectable by user. */
+typedef struct
+{
+    char name[16];
+    uint16_t path[23];
+    int size;
+} WADFileInfo;
+
 #endif //#ifndef PLATFORM_H

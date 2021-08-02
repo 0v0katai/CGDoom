@@ -1,4 +1,5 @@
 #include "cgdoom-ui.h"
+#include <stdio.h>
 
 /* gint's font in a PrizmSDK-friendly (though ugly) form */
 static uint8_t const font_width[96] = {
@@ -68,7 +69,7 @@ static void Font_RenderChar(int *x, int y, int c, int fg)
 	for(int dy = 0; dy < 11; dy++)
 	for(int dx = 0; dx < font_width[g]; dx++)
 	{
-		int b = font_glyphs[offset + (bit >> 5)] & (0x80000000 >> (bit & 31));
+		int b = font_glyphs[offset + (bit>>5)] & (0x80000000 >> (bit&31));
 		if (b)
 			Bdisp_SetPoint_VRAM(*x+dx, y+dy, fg);
 		bit++;
@@ -89,13 +90,7 @@ static int Font_StringLength(char const *text)
 	return w - 1;
 }
 
-enum {
-	UI_LEFT = 0,
-	UI_CENTER = 1,
-	UI_RIGHT = 2,
-};
-
-void UI_Print(int x, int y, char const *text, int fg, int align)
+void UI_Print(int x, int y, int fg, int align, char const *text)
 {
 	if(align == UI_CENTER)
 		x -= (Font_StringLength(text) + 1) / 2;
@@ -104,6 +99,21 @@ void UI_Print(int x, int y, char const *text, int fg, int align)
 
 	for(int i = 0; text[i]; i++)
 		Font_RenderChar(&x, y, text[i], fg);
+}
+
+void UI_Vprintf(int x, int y, int fg, int align, char const *fmt, va_list args)
+{
+	char str[256];
+	vsprintf(str, fmt, args);
+	UI_Print(x, y, fg, align, str);
+}
+
+void UI_Printf(int x, int y, int fg, int align, char const *fmt, ...)
+{
+	va_list args;
+	va_start(args, fmt);
+	UI_Vprintf(x, y, fg, align, fmt, args);
+	va_end(args);
 }
 
 void UI_AreaReverse(int x1, int y1, int x2, int y2)
@@ -131,59 +141,6 @@ void UI_Checkbox(int x, int y, int checked)
 	}
 }
 
-int UI_Main(char const wad_files[][32], int wad_file_count, int *dev_info)
-{
-	int key=0, cursor=0;
-
-	while(key != KEY_CTRL_EXIT)
-	{
-		int l=60, r=WIDTH-l, y=34, cursor_max=0, play_max=0;
-
-		Bdisp_AllClr_VRAM();
-		UI_Print(WIDTH / 2, 12, "CGDOOM for fx-CG 50 and Graph 90+E",
-			0x0000, UI_CENTER);
-
-		for(int i = 0; i < wad_file_count; i++)
-		{
-			char const *action = "Play other WAD";
-			if(!strcmp(wad_files[i], "doom.wad"))
-				action = "Play DOOM";
-			else if(!strcmp(wad_files[i], "doomu.wad"))
-				action = "Play Ultimate DOOM";
-
-			char name[34] = "";
-			strcat(name, "(");
-			strcat(name, wad_files[i]);
-			strcat(name, ")");
-
-			UI_Print(l, y, action, 0x0000, UI_LEFT);
-			UI_Print(r, y, name, 0x0000, UI_RIGHT);
-			y += 14;
-		}
-		play_max = cursor_max = wad_file_count;
-
-		UI_Print(l, y, "Developer info:", 0x0000, UI_LEFT);
-		UI_Checkbox(r-7, y+1, *dev_info);
-		y += 14;
-		cursor_max++;
-
-		UI_AreaReverse(0, 32+14*cursor, WIDTH-1, 32+14*cursor+13);
-		Bdisp_PutDisp_DD();
-
-		GetKey(&key);
-		if(key == KEY_CTRL_UP && cursor > 0)
-			cursor--;
-		if(key == KEY_CTRL_DOWN && cursor < cursor_max - 1)
-			cursor++;
-		if(key == KEY_CTRL_EXE && cursor < play_max)
-			return cursor;
-		if(key == KEY_CTRL_EXE && cursor == cursor_max - 1)
-			*dev_info ^= 1;
-	}
-
-	return -1;
-}
-
 void UI_FileMappingProgressBar(int size_mapped, int size_total)
 {
 	const int w=192, h=5;
@@ -200,4 +157,131 @@ void UI_FileMappingProgressBar(int size_mapped, int size_total)
 			Bdisp_SetPoint_VRAM(x, y, COLOR_BLACK);
 	}
 	Bdisp_PutDisp_DD();
+}
+
+/* Layout functions. */
+
+#define LAYOUT_LEFT 40
+#define LAYOUT_RIGHT (WIDTH-40)
+
+void Layout_Init(Layout *l)
+{
+	l->focus = -1;
+	Layout_StartFrame(l);
+}
+
+void Layout_StartFrame(Layout *l)
+{
+	l->focus_count = 0;
+	l->y = 12;
+}
+
+void Layout_EndFrame(Layout *l)
+{
+	if(l->focus < 0)
+		return;
+	int y = l->focus_y[l->focus];
+	UI_AreaReverse(0, y, WIDTH-1, y+13);
+}
+
+static void Layout_AddFocus(Layout *l)
+{
+	if(l->focus < 0)
+		l->focus = 0;
+	if(l->focus_count >= 16)
+		return;
+	l->focus_y[l->focus_count++] = l->y - 2;
+}
+
+void Layout_CenteredText(Layout *l, const char *text)
+{
+	UI_Print(WIDTH / 2, l->y, 0x0000, UI_CENTER, text);
+	l->y += 14;
+}
+
+void Layout_Text(Layout *l, const char *label, const char *fmt, ...)
+{
+	va_list args;
+	va_start(args, fmt);
+	Layout_AddFocus(l);
+	UI_Print(LAYOUT_LEFT, l->y, 0x0000, UI_LEFT, label);
+	UI_Vprintf(LAYOUT_RIGHT, l->y, 0x0000, UI_RIGHT, fmt, args);
+	l->y += 14;
+	va_end(args);
+}
+
+void Layout_Checkbox(Layout *l, const char *label, int checked)
+{
+	Layout_AddFocus(l);
+	UI_Print(LAYOUT_LEFT, l->y, 0x0000, UI_LEFT, label);
+	UI_Checkbox(LAYOUT_RIGHT-7, l->y+1, checked);
+	l->y += 14;
+}
+
+void Layout_Spacing(Layout *l, int spacing)
+{
+	l->y += spacing;
+}
+
+int Layout_Event(Layout *l, int key)
+{
+	if(key == KEY_CTRL_UP)
+	{
+		l->focus--;
+		if(l->focus < 0)
+			l->focus += l->focus_count;
+		return 1;
+	}
+	if(key == KEY_CTRL_DOWN)
+	{
+		l->focus++;
+		if(l->focus >= l->focus_count)
+			l->focus -= l->focus_count;
+		return 1;
+	}
+	return 0;
+}
+
+int UI_Main(WADFileInfo *wads, int wad_count, int *dev_info)
+{
+	Layout l;
+	Layout_Init(&l);
+
+	while(1)
+	{
+		Bdisp_AllClr_VRAM();
+		Layout_StartFrame(&l);
+		Layout_CenteredText(&l, "CGDOOM for fx-CG 50 and Graph 90+E");
+		Layout_Spacing(&l, 12);
+
+		for(int i = 0; i < wad_count; i++)
+		{
+			char const *action = "Play other WAD";
+			if(!strcmp(wads[i].name, "doom.wad"))
+				action = "Play DOOM";
+			else if(!strcmp(wads[i].name, "doomu.wad"))
+				action = "Play Ultimate DOOM";
+
+			Layout_Text(&l, action, "%s (%d.%dM)",
+				wads[i].name, wads[i].size / 1000000,
+				(wads[i].size % 1000000) / 100000);
+		}
+
+		Layout_Spacing(&l, 12);
+		Layout_Checkbox(&l, "Developer info:", *dev_info);
+		Layout_EndFrame(&l);
+		Bdisp_PutDisp_DD();
+
+		int key;
+		GetKey(&key);
+		if(Layout_Event(&l, key))
+			continue;
+
+		if(key == KEY_CTRL_EXE && l.focus < wad_count)
+			return l.focus;
+		if(key == KEY_CTRL_EXE && l.focus == l.focus_count - 1)
+			*dev_info ^= 1;
+	}
+
+	return -1;
 }
