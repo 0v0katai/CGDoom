@@ -8,6 +8,9 @@ Credit goes to:
 * ComputerNerd for the first attempts at an fx-CG 50 port.
 * Lephenixnoir for the final fixes and fx-CG 50 version.
 
+CGDOOM is licensed under GPLv2 as a derivative work of both the original DOOM
+sources (GPL) and nDoom (GPLv2). See LICENSE.
+
 TODO:
 -> Fix screen not cleared when changing resolution
 -> Shareware WAD crashes at the end of E1M4 (and in E1M9)
@@ -23,20 +26,8 @@ TODO:
 -> Built-in overclocking?
 
 CGDOOM used to be compiled with the mini-SDK. However, it's become quite
-difficult to get a copy of that. Instead, this port is built with a slightly
-modified PrizmSDK from Jonimoose/libfxcg.
-
-The differences are (I might push it later):
-* TOOLCHAIN_PREFIX=sh-elf- (in libc/ and libfxcg/)
-* Syscall 0x1B0B, getSecondaryVramAddress() is added in libfxcg/
-* abort() is removed from libc/ (CGDOOM has its own)
-* calloc() defined in libc/ (just a call to sys_calloc)
-* sys_calloc() fixed in libfxcg/ to use memset (memsetZero is broken)
-* Linker script outputs in elf32-sh format
-* Linker script sets 500k of RAM instead of 64k
-* LTO disabled (hopefully it could be reenabled later)
-* Syscall memcpy() (apparently broken) replaced by fxlibc memcpy()
-* fxlibc qsort() is added in libc/
-* Linker script provides addresses to unused section of user RAM
+difficult to get a copy of that. Instead, this port is built with a modified
+PrizmSDK from Jonimoose/libfxcg [1]. I attempted to list differences at first,
+but there are quite a lot of bugfixes so I might simply push it later.
 
 [1] https://github.com/Jonimoose/libfxcg/
