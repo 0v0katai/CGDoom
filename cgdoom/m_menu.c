@@ -176,7 +176,7 @@ void M_Episode(int choice);
 void M_ChooseSkill(int choice);
 //void M_LoadGame(int choice);
 //void M_SaveGame(int choice);
-//void M_Options(int choice);
+void M_Options(int choice);
 void M_EndGame(int choice);
 void M_ReadThis(int choice);
 void M_ReadThis2(int choice);
@@ -242,7 +242,7 @@ menuitem_t MainMenu[]=
 {
     {1,"M_NGAME",M_NewGame,'n'},
 //CGD: hack to remove but keep menu size
-    {1,"M_OPTION",M_NewGame/*M_Options*/,'o'},
+    {1,"M_OPTION",M_Options,'o'},
     {1,"M_LOADG",M_NewGame/*M_LoadGame*/,'l'},
     {1,"M_SAVEG",M_NewGame/*M_SaveGame*/,'s'},
     // Another hickup with Special edition.
@@ -692,12 +692,12 @@ void M_DrawOptions(void)
 
   V_DrawPatchDirect (OptionsDef.x + 120,OptionsDef.y+LINEHEIGHT*messages,0,W_CacheLumpNamePatch(msgNames[showMessages],PU_CACHE));
 }
-/*
+
 void M_Options(int choice)
 {
 	choice = 0;
     M_SetupNextMenu(&OptionsDef);
-}*/
+}
 
 
 
@@ -738,7 +738,7 @@ void M_EndGame(int choice)
     if (!usergame)
 		return;
 	
-//    M_StartMessage(ENDGAME,(void*)M_EndGameResponse,true);
+    M_StartMessage(ENDGAME,(void*)M_EndGameResponse,true);
 }
 
 
