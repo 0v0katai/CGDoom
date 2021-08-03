@@ -12,7 +12,6 @@ CGDOOM is licensed under GPLv2 as a derivative work of both the original DOOM
 sources (GPL) and nDoom (GPLv2). See LICENSE.
 
 TODO:
--> Fix screen not cleared when changing resolution
 -> Shareware WAD crashes at the end of E1M4 (and in E1M9)
 -> Ultimate DOOM WAD runs out of memory at the end of E1M2
 -> Supply more VRAM memory to internal allocator

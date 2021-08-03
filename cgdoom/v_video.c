@@ -366,3 +366,9 @@ void V_Init (void)
   //Done since loading on real hardware takes so damn long
 //  I_PrepScreen();
 }
+
+/* CGDOOM-specific function to clear screen when changing window size */
+void V_Clear (void)
+{
+  memset(screens[0], 0, 320*(200-32));
+}
