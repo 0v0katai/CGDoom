@@ -15,7 +15,6 @@ TODO:
 -> Fix screen not cleared when changing resolution
 -> Shareware WAD crashes at the end of E1M4 (and in E1M9)
 -> Ultimate DOOM WAD runs out of memory at the end of E1M2
--> Some bad textures here and there
 -> Supply more VRAM memory to internal allocator
 -> Level selector
 -> Rate-limit the game when overclocking

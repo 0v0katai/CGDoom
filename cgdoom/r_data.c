@@ -373,15 +373,16 @@ const byte* R_GetColumn ( int	tex, int col )
   lump = texturecolumnlump[tex][col];
   ofs = texturecolumnofs[tex][col];
 
-  //CGD: hack - this program is not DOOM any more
-  //it is cripled doom
-  // to save RAM, do not use composite textures, but use just some texture
-  //FAIL: switches are not visible, so try to make composite textures only for small sizes
-  if((lump <= 0) && (texturecompositesize[tex] > 8192))
+  /* CGDOOM: To save RAM in WADs bound by limited memory, composite textures
+     can be allowed only up to a certain size. Original CGDOOM limits to 8192
+     bytes to that switches can appear, but some other textures fail. */
+#if 0
+  if(lump <= 0 && texturecompositesize[tex] > 8192)
   {
     lump = 990;
     ofs = 267;
   }
+#endif
   if (lump > 0)
     return (const byte *)W_CacheLumpNumConst(lump,PU_CACHE)+ofs;
   
