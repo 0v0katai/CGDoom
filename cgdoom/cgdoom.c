@@ -416,9 +416,7 @@ void IndexSearchSector(SectorIndexInfo *index, const void *buf, int *lo_ptr, int
 
 	while(lo < hi) {
 		int m = (lo + hi) / 2;
-		int diff = index[m].start_bytes - needle;
-
-		if(diff < 0) lo = m + 1;
+		if(index[m].start_bytes < needle) lo = m + 1;
 		else hi = m;
 	}
 
@@ -530,48 +528,45 @@ int CreateFileMapping(int fd, FileMapping *pMap)
 	return pMap->miTotalLength;
 }
 
+/* Find a fragment in the file map by binary search. */
+int FindFragmentInMap(FileMapping *map, int sector_number)
+{
+	int lo=0, hi=map->miItemCount;
+
+	while (lo < hi)
+	{
+		int m = (lo + hi) / 2;
+		if (map->mTable[m].file_address > sector_number) hi = m;
+		else lo = m + 1;
+	}
+
+	return hi - 1;
+}
+
 int FindInFlash(const void **buf, int size, int readpos)
 {
 	if(gWADmethod == CGDOOM_WAD_BFILE)
 		return 0;
 
-	int iPageReq = readpos / FLASH_PAGE_SIZE;
-	int iPageIndx = 0;
-	int iFragOffset = 0, iFragEnd, iAvailableLen;
-	int iSubOffset;
 	ASSERT(readpos >= 0);
-
 	if (readpos + size > gpWADMap->miTotalLength)
 		return -1;
 
-	/* Find fragment containing the specified readpos. */
-	for(;;)
-	{
-		if(iPageIndx >= gpWADMap->miItemCount ||
-			gpWADMap->mTable[iPageIndx].file_address > iPageReq)
-		{
-			iPageIndx--;
-			break;
-		}
-		iPageIndx++;
-	}
+	int iFragIndx = FindFragmentInMap(gpWADMap, readpos / FLASH_PAGE_SIZE);
+	int iFragOffset = gpWADMap->mTable[iFragIndx].file_address * FLASH_PAGE_SIZE;
+	int iSubOffset = readpos - iFragOffset;
 
-	iFragOffset = gpWADMap->mTable[iPageIndx].file_address * FLASH_PAGE_SIZE;
-	iSubOffset = readpos - iFragOffset;
-
-	if (iPageIndx+1 < gpWADMap->miItemCount)
-		iFragEnd = gpWADMap->mTable[iPageIndx+1].file_address * FLASH_PAGE_SIZE;
+	int iFragEnd;
+	if (iFragIndx+1 < gpWADMap->miItemCount)
+		iFragEnd = gpWADMap->mTable[iFragIndx+1].file_address * FLASH_PAGE_SIZE;
 	else
 		iFragEnd = gpWADMap->miTotalLength;
 
-	iAvailableLen = iFragEnd - readpos;
-	ASSERT(iAvailableLen > 0);
+	*buf = FLASH_CACHED_START + (gpWADMap->mTable[iFragIndx].flash_address * FLASH_PAGE_SIZE) + iSubOffset;
 
 	/* Return how many bytes can be read off the fragment (up to size). */
-	if(iAvailableLen > size)
-		iAvailableLen = size;
-
-	*buf = FLASH_CACHED_START + (gpWADMap->mTable[iPageIndx].flash_address * FLASH_PAGE_SIZE) + iSubOffset;
+	int iAvailableLen = min(iFragEnd - readpos, size);
+	ASSERT(iAvailableLen > 0);
 	return iAvailableLen;
 }
 
