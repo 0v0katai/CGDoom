@@ -300,12 +300,14 @@ typedef struct {
 //allocate 1024 items for max 1024 fragments of the file.
 // 640 KB should to be enough for everyone ;-)
 #define MAX_FRAGMENTS 1024
-//descriptor for 1 fragment
-typedef struct
-{
-	unsigned short msOffset;//page index (0 ~ 64K)
-	short msCount;//count of pages in this fragment
-}FileMappingItem;
+
+/* Description of a fragment of a WAD file, in Flash. */
+typedef struct {
+	/* Index of first sector in Flash (0...64k) */
+	uint16_t flash_address;
+	/* Corresponding sector in the WAD file */
+	uint16_t file_address;
+} FileMappingItem;
 
 
 typedef struct
@@ -372,7 +374,7 @@ static SectorIndexInfo *gIndex = NULL;
 /* Developer info */
 static int gDevFragments = 0;
 static int gDevIndexHits = 0;
-static void *gDevLowestFragment = NULL;
+static const void *gDevLowestFragment = NULL;
 
 /* Read next sector from file, while caching into a buffer. */
 const void *ReadNextSector(FileAccessCache *fc, int *size)
@@ -495,8 +497,8 @@ int CreateFileMapping(int fd, FileMapping *pMap)
 		if(pMap->miItemCount >= MAX_FRAGMENTS)
 			return -3; // File too fragmented!
 
-		pMap->mTable[pMap->miItemCount-1].msOffset = iSectorID;
-		pMap->mTable[pMap->miItemCount-1].msCount = 0;
+		pMap->mTable[pMap->miItemCount-1].flash_address = iSectorID;
+		pMap->mTable[pMap->miItemCount-1].file_address = pMap->miTotalLength / FLASH_PAGE_SIZE;
 
 		/* Look for consecutive sectors in the same fragment */
 		const void *pFragment = FLASH_START + (iSectorID * FLASH_PAGE_SIZE);
@@ -505,7 +507,6 @@ int CreateFileMapping(int fd, FileMapping *pMap)
 
 		for(;;)
 		{
-			pMap->mTable[pMap->miItemCount-1].msCount++;
 			pMap->miTotalLength += iLength;
 			iSectorID++;
 			pFragment += FLASH_PAGE_SIZE;
@@ -526,11 +527,6 @@ int CreateFileMapping(int fd, FileMapping *pMap)
 	}
 	if(iLength < 0)
 		return -1;
-
-	if(pMap->miTotalLength >50000)
-	{
-		pMap->miTotalLength = 50000;//hack
-	}
 	return pMap->miTotalLength;
 }
 
@@ -541,34 +537,42 @@ int FindInFlash(const void **buf, int size, int readpos)
 
 	int iPageReq = readpos / FLASH_PAGE_SIZE;
 	int iPageIndx = 0;
-	int iCurrOffset = 0, iCurrLen;
+	int iFragOffset = 0, iFragEnd, iAvailableLen;
 	int iSubOffset;
-	ASSERT(readpos >=0);
-	//find item
+	ASSERT(readpos >= 0);
+
+	if (readpos + size > gpWADMap->miTotalLength)
+		return -1;
+
+	/* Find fragment containing the specified readpos. */
 	for(;;)
 	{
-		if(iPageIndx >= gpWADMap->miItemCount)
+		if(iPageIndx >= gpWADMap->miItemCount ||
+			gpWADMap->mTable[iPageIndx].file_address > iPageReq)
 		{
-			return -1;
-		}
-		if(iPageReq < gpWADMap->mTable[iPageIndx].msCount)
-		{
-			ASSERT(iCurrOffset <= readpos);
+			iPageIndx--;
 			break;
 		}
-		iPageReq -= gpWADMap->mTable[iPageIndx].msCount;
-		iCurrOffset += ((int)gpWADMap->mTable[iPageIndx].msCount) * FLASH_PAGE_SIZE;
 		iPageIndx++;
 	}
-	iSubOffset = readpos - iCurrOffset;
-	iCurrLen = (gpWADMap->mTable[iPageIndx].msCount * FLASH_PAGE_SIZE) - iSubOffset;
-	ASSERT(iCurrLen > 0);
-	if(iCurrLen > size)
-	{
-		iCurrLen = size;
-	}
-	*buf = FLASH_CACHED_START + (gpWADMap->mTable[iPageIndx].msOffset * FLASH_PAGE_SIZE) + iSubOffset;
-	return iCurrLen;
+
+	iFragOffset = gpWADMap->mTable[iPageIndx].file_address * FLASH_PAGE_SIZE;
+	iSubOffset = readpos - iFragOffset;
+
+	if (iPageIndx+1 < gpWADMap->miItemCount)
+		iFragEnd = gpWADMap->mTable[iPageIndx+1].file_address * FLASH_PAGE_SIZE;
+	else
+		iFragEnd = gpWADMap->miTotalLength;
+
+	iAvailableLen = iFragEnd - readpos;
+	ASSERT(iAvailableLen > 0);
+
+	/* Return how many bytes can be read off the fragment (up to size). */
+	if(iAvailableLen > size)
+		iAvailableLen = size;
+
+	*buf = FLASH_CACHED_START + (gpWADMap->mTable[iPageIndx].flash_address * FLASH_PAGE_SIZE) + iSubOffset;
+	return iAvailableLen;
 }
 
 int Flash_ReadFile(void *buf, int size, int readpos)
@@ -603,6 +607,8 @@ void abort(void){
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 int main(void){
+	int time, ms_index=0, ms_mmap=0;
+
 	InitFlashSimu("doom.wad"); //load wad file to flash simulation on simulator, do nothing on real HW
 #ifdef CG_EMULATOR
 	SaveVRAMBuffer = aSaveVRAMBuffer;
@@ -638,6 +644,7 @@ int main(void){
 		   sectors can be hit quickly. The index contains every sector
 		   on a 4-kiB boundary (where fragments are most likely to
 		   start) between FLASH_FS_HINT and FLASH_END. */
+		time = RTC_GetTicks();
 		gIndex = (void *)SystemStack;
 		for(int i = 0; i < FLASH_INDEX_SIZE; i++) {
 			SectorIndexInfo *info = &gIndex[i];
@@ -645,14 +652,16 @@ int main(void){
 			info->start_bytes = *(const uint32_t *)info->sector;
 		}
 		qsort(gIndex, FLASH_INDEX_SIZE, sizeof *gIndex, IndexCompareSectors);
+		ms_index = (RTC_GetTicks() - time) * 8;
  #endif
-
+		time = RTC_GetTicks();
 		gpWADMap = (FileMapping *)(SaveVRAMBuffer + 2*65536);
 		ASSERT(2*65536 + sizeof(FileMapping) < SAVE_VRAM_SIZE);
 		int fd = Bfile_OpenFile_OS(wads[choice].path, 0, 0);
 		int size = CreateFileMapping(fd, gpWADMap);
 		Bfile_CloseFile_OS(fd);
 		UI_FileMappingProgressBar(1, 1);
+		ms_mmap = (RTC_GetTicks() - time) * 8;
 
 		if(size == -1) {
 			I_Error ("File read error");
@@ -671,11 +680,15 @@ int main(void){
 			Layout_Init(&l);
 			Bdisp_AllClr_VRAM();
 			Layout_CenteredText(&l, "Developer info");
+			Layout_Spacing(&l, 12);
 			Layout_Text(&l, "Fragments:", "%d", gDevFragments);
 			Layout_Text(&l, "Index hits:", "%d (%d%%)", gDevIndexHits,
 				(gDevIndexHits * 100 / gDevFragments));
 			Layout_Text(&l, "Lowest fragment:", "%p",
 				gDevLowestFragment);
+			Layout_Spacing(&l, 12);
+			Layout_Text(&l, "Index build time:", "%d ms", ms_index);
+			Layout_Text(&l, "File mapping time:", "%d ms", ms_mmap);
 			Bdisp_PutDisp_DD();
 			int key;
 			GetKey(&key);
