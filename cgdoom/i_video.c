@@ -122,17 +122,63 @@ static void WriteLCDReg(unsigned short reg, unsigned short value)
    LCDC = value;
 }
 
+static void SetWindow(int left, int top, int width, int height)
+{
+  WriteLCDReg(LCD_WINDOW_LEFT, left);
+  WriteLCDReg(LCD_WINDOW_TOP, top);
+  WriteLCDReg(LCD_WINDOW_RIGHT, left + width - 1);
+  WriteLCDReg(LCD_WINDOW_BOTTOM, top + height - 1);
+}
+
 void I_Flip (void)
 {
-  WriteLCDReg(LCD_GRAM_X, 0);
-  WriteLCDReg(LCD_GRAM_Y, 0);
-  SelectLCDReg(LCD_GRAM);
+  /* Whether the black background has been rendered. We could fill the screen
+     at initialization but it would flicker. Instead, we go the extra mile and
+     render the background at the same time as the first frame. */
+  static int black_bg = 0;
 
-  unsigned j=0, i=320*200;
-  while(i--)
+  if (!black_bg)
   {
-    LCDC = gPalette[screens[0][j]];
-    j++;
+    SetWindow(0, 0, 396, 224);
+    WriteLCDReg(LCD_GRAM_X, 0);
+    WriteLCDReg(LCD_GRAM_Y, 0);
+    SelectLCDReg(LCD_GRAM);
+
+    /* Clear 12 lines, render VRAM, then clear 12 */
+    for (int n = 0; n < 396 * 12; n++)
+      LCDC = 0x0000;
+
+    byte *scr = screens[0];
+    for (int y = 0; y < SCREENHEIGHT; y++)
+    {
+      for(int x = 0; x < 38; x++)
+        LCDC = 0x0000;
+      for(int x = 0; x < SCREENWIDTH; x++)
+        LCDC = gPalette[*scr++];
+      for(int x = 0; x < 38; x++)
+        LCDC = 0x0000;
+    }
+
+    for (int n = 0; n < 396 * 12; n++)
+      LCDC = 0x0000;
+
+    /* Set the future window */
+    SetWindow((396 - SCREENWIDTH) / 2, (224 - SCREENHEIGHT) / 2,
+      SCREENWIDTH, SCREENHEIGHT);
+    black_bg = 1;
+  }
+  else
+  {
+    WriteLCDReg(LCD_GRAM_X, 0);
+    WriteLCDReg(LCD_GRAM_Y, 0);
+    SelectLCDReg(LCD_GRAM);
+
+    unsigned j=0, i=320*200;
+    while(i--)
+    {
+      LCDC = gPalette[screens[0][j]];
+      j++;
+    }
   }
 }
 
@@ -140,19 +186,11 @@ void I_InitGraphics(void)
 {	
   usegamma = 0;
   I_SetPalette(usegamma);
-
-  WriteLCDReg(LCD_WINDOW_LEFT, (396 - 320)/2);
-  WriteLCDReg(LCD_WINDOW_RIGHT, (396 - 320)/2 + 319);
-  WriteLCDReg(LCD_WINDOW_TOP, (224 - 200) / 2);
-  WriteLCDReg(LCD_WINDOW_BOTTOM, (224 - 200) / 2 + 199);
 }
 
 void I_ShutdownGraphics(void)
 {
-  WriteLCDReg(LCD_WINDOW_LEFT, (396 - 384)/2);
-  WriteLCDReg(LCD_WINDOW_RIGHT, (396 - 384)/2 + 383);
-  WriteLCDReg(LCD_WINDOW_TOP, (224 - 216) / 2);
-  WriteLCDReg(LCD_WINDOW_BOTTOM, (224 - 216) / 2 + 215);
+  SetWindow(6, 0, 384, 216);
 }
 
 #else
