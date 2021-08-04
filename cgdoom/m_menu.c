@@ -22,7 +22,6 @@
 //
 //-----------------------------------------------------------------------------
 
-//static const char 
 
 #include "os.h"
 
@@ -174,8 +173,8 @@ menu_t*	currentMenu;
 void M_NewGame(int choice);
 void M_Episode(int choice);
 void M_ChooseSkill(int choice);
-//void M_LoadGame(int choice);
-//void M_SaveGame(int choice);
+void M_LoadGame(int choice);
+void M_SaveGame(int choice);
 void M_Options(int choice);
 void M_EndGame(int choice);
 void M_ReadThis(int choice);
@@ -241,10 +240,9 @@ enum
 menuitem_t MainMenu[]=
 {
     {1,"M_NGAME",M_NewGame,'n'},
-//CGD: hack to remove but keep menu size
     {1,"M_OPTION",M_Options,'o'},
-    {1,"M_LOADG",M_NewGame/*M_LoadGame*/,'l'},
-    {1,"M_SAVEG",M_NewGame/*M_SaveGame*/,'s'},
+    {1,"M_LOADG",M_LoadGame,'l'},
+    {1,"M_SAVEG",M_SaveGame,'s'},
     // Another hickup with Special edition.
     {1,"M_RDTHIS",M_ReadThis,'r'},
     {1,"M_QUITG",M_QuitDOOM,'q'}
@@ -506,6 +504,16 @@ void M_DrawLoad(void)
 
 */
 
+void M_LoadGame(int choice)
+{
+    M_StartMessage(NOTIMP, NULL, true);
+}
+
+void M_SaveGame(int choice)
+{
+    M_StartMessage(NOTIMP, NULL, true);
+}
+
 //
 // Draw border for the savegame description
 //
@@ -637,7 +645,7 @@ void M_DrawEpisode(void)
 
 void M_VerifyNightmare(int ch)
 {
-    if (ch != 'y')
+    if (ch != 'y' && ch != ' ' && ch != KEY_ENTER)
 		return;
 		
     G_DeferedInitNew((skill_t)nightmare,epi+1,1);
@@ -724,7 +732,7 @@ void M_ChangeMessages(int choice)
 //
 void M_EndGameResponse(int ch)
 {
-    if (ch != 'y')
+    if (ch != 'y' && ch != ' ' && ch != KEY_ENTER)
 	return;
 		
     currentMenu->lastOn = itemOn;
@@ -767,7 +775,7 @@ void M_FinishReadThis(int choice)
 
 void M_QuitResponse(int ch)
 {
-    if (ch != 'y')
+    if (ch != 'y' && ch != ' ' && ch != KEY_ENTER)
 		return;
 
     I_Quit ();
@@ -781,9 +789,9 @@ void M_QuitDOOM(int choice)
 	choice = 0;
 	// We pick index 0 which is language sensitive,
 	//  or one at random, between 1 and maximum number.
-	//sprintf(endstring,"%s\n\n"DOSY, endmsg[ (gametic%(NUM_QUITMESSAGES-2))+1 ]);
+	sprintf(endstring,"%s\n\n"DOSY, endmsg[ (gametic%(NUM_QUITMESSAGES-2))+1 ]);
 
-//	M_StartMessage(QUITMSG/*endstring*/,(void *)M_QuitResponse,true);
+	M_StartMessage(endstring,(void *)M_QuitResponse,true);
 }
 
 
@@ -810,19 +818,7 @@ void M_ChangeSensitivity(int choice)
 void M_ChangeDetail(int choice)
 {
     choice = 0;
-    detailLevel = 1 - detailLevel;
-
-    // FIXME - does not work. Remove anyway?
-    //printf( "M_ChangeDetail: low detail mode n.a.\n");
-
-    return;
-    
-    /*R_SetViewSize (screenblocks, detailLevel);
-
-    if (!detailLevel)
-	players[consoleplayer].message = DETAILHI;
-    else
-	players[consoleplayer].message = DETAILLO;*/
+    M_StartMessage(DETAILCGD,NULL,true);
 }
 
 //
@@ -996,7 +992,7 @@ boolean M_Responder (event_t* ev)
     if (messageToPrint)
     {
 	if (messageNeedsInput == true &&
-	    !(ch == ' ' || ch == 'n' || ch == 'y' || ch == KEY_ESCAPE))
+	    !(ch == ' ' || ch == 'n' || ch == 'y' || ch == KEY_ESCAPE || ch == KEY_ENTER))
 	    return false;
 		
 	menuactive = (boolean)messageLastMenuActive;

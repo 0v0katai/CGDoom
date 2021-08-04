@@ -502,7 +502,7 @@ void CGCycleGamma()
   I_SetPalette(usegamma);
 
   static char message[32];
-  sprintf(message, "Brightness: %d/4", usegamma);
+  sprintf(message, GAMMALV, usegamma);
   plyr->message = message;
 }
 
