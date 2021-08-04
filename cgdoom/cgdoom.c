@@ -12,7 +12,10 @@ void * CGDMalloc(int iSize)
 	iAllocSum += iSize;
 	printf("malloc %i (%i)\n",iSize,iAllocSum);
 #endif 
-	return malloc(iSize);
+	void *p = malloc(iSize);
+	if (!p)
+		I_Error ("CGDMalloc failure");
+	return p;
 }
 
 void * CGDCalloc(int iSize)
