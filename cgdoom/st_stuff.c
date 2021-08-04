@@ -1103,5 +1103,5 @@ void ST_Init (void)
 {
   veryfirsttime = 0;
   ST_loadData();
-  screens[4] = (byte *) Z_Malloc(ST_WIDTH*ST_HEIGHT, PU_STATIC, 0);
+  screens[4] = SaveVRAMBuffer + 2 * SCREENWIDTH * SCREENHEIGHT;
 }
