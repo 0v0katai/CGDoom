@@ -18,15 +18,15 @@ UI improvements TODO:
 
 WAD support TODO:
 -> Unmodified 1.9 shareware WAD works all the way through?
--> Shareware WAD crashes at the end of E1M3/E1M4 (and in E1M9)
--> Ultimate DOOM WAD runs out of memory at the end of E1M2/E1M3
+-> Shareware WAD from Planète Casio should work 100%
+-> Ultimate DOOM WAD runs out of memory in E1M6, otherwise should work
 
 Technical support TODO:
 -> Supply more VRAM memory to internal allocator
    => Merge internal heap into Z_Zone? (< 50 kB)
    => Rewrite video code to use long PRAM0 access? (138 kB)
+   => Use the XRAM/R61524 combo and use VRAM as heap? (160 kB)
 -> Rate-limit the game when overclocking
--> FPS counter on-screen
 -> Load/Save game would be very cool
 -> Reenable LTO if possible
 -> Built-in overclocking?

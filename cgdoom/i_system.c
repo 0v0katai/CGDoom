@@ -30,6 +30,7 @@
 
 #include "g_game.h"
 #include "d_main.h"
+#include "doomstat.h"
 
 #ifdef __GNUG__
 #pragma implementation "i_system.h"
@@ -319,6 +320,31 @@ void I_StartTic (void)
 {
     static KeyboardState st = { 0 };
 
+    static int fps_show = 0;
+    /* Number of frames since FPS count started */
+    static int fps_frames = 0;
+    /* Time when the FPS count started */
+    static int fps_ticks = -1;
+
+    if(fps_ticks < 0)
+        fps_ticks = RTC_GetTicks();
+
+    if(++fps_frames >= 16)
+    {
+        int now = RTC_GetTicks();
+        int fps = (now == fps_ticks) ? -1 : 128 * fps_frames / (now - fps_ticks);
+
+        if (fps_show)
+        {
+            static char message[16];
+            sprintf(message, "%d FPS", fps);
+            players[consoleplayer].message = message;
+        }
+
+        fps_ticks = now;
+        fps_frames = 0;
+    }
+
     KeyboardState next_st;
     ScanKeyboard(next_st);
 
@@ -337,6 +363,8 @@ void I_StartTic (void)
         CGCycleGamma();
     if (KeycodePressed(st, next_st, KEYCODE_FD))
         CGFreeMem();
+    if (KeycodePressed(st, next_st, KEYCODE_LEFTP))
+        fps_show ^= 1;
     if (KeycodePressed(st, next_st, KEYCODE_VARS))
         CGRefreshSwitch();
 
