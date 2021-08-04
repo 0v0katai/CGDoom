@@ -25,7 +25,14 @@ void UI_Vprintf(int x, int y, int fg, int halign, char const *fmt, va_list args)
 
 typedef struct
 {
-    int y, focus, focus_count;
+    /* Reset each frame: current rendering y, number of focusable elements */
+    int y, focus_count;
+    /* Persistent: currently-focused element, non-zero if input in progress */
+    int focus, active;
+    /* Input text and cursor position */
+    char text[16];
+    int cursor;
+    /* Properties for focusable elements */
     uint8_t focus_y[16];
     uint8_t focus_type[16];
     void *focus_data[16];

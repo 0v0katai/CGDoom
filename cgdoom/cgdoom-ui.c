@@ -171,6 +171,7 @@ void UI_FileMappingProgressBar(int size_mapped, int size_total)
 void Layout_Init(Layout *l)
 {
 	l->focus = -1;
+	l->active = 0;
 	Layout_StartFrame(l);
 }
 
@@ -185,7 +186,18 @@ void Layout_EndFrame(Layout *l)
 	if(l->focus < 0)
 		return;
 	int y = l->focus_y[l->focus];
-	UI_AreaReverse(0, y, WIDTH-1, y+13);
+
+	if(l->active)
+	{
+		/* Draw cursor */
+		int x = LAYOUT_RIGHT - Font_StringLength(l->text + l->cursor);
+		for(int dy = 0; dy < 12; dy++)
+			Bdisp_SetPoint_VRAM(x, y+dy, 0x0000);
+	}
+	else
+	{
+		UI_AreaReverse(0, y, WIDTH-1, y+13);
+	}
 }
 
 static void Layout_AddFocus(Layout *l, int type, void *data)
@@ -200,6 +212,21 @@ static void Layout_AddFocus(Layout *l, int type, void *data)
 	l->focus_data[l->focus_count] = data;
 
 	l->focus_count++;
+}
+
+static void Layout_StartInput(Layout *l)
+{
+	if (l->active)
+		return;
+
+	l->active = 1;
+	memset(l->text, 0, sizeof l->text);
+	l->cursor = 0;
+}
+
+static void Layout_EndInput(Layout *l)
+{
+	l->active = 0;
 }
 
 void Layout_CenteredText(Layout *l, const char *text)
@@ -231,7 +258,10 @@ void Layout_Integer(Layout *l, const char *label, int *value)
 {
 	Layout_AddFocus(l, FOCUS_INTEGER, value);
 	UI_Print(LAYOUT_LEFT, l->y, 0x0000, UI_LEFT, label);
-	UI_Printf(LAYOUT_RIGHT, l->y, 0x0000, UI_RIGHT, "%d", *value);
+	if(l->active && l->focus == l->focus_count - 1)
+		UI_Print(LAYOUT_RIGHT, l->y, 0x0000, UI_RIGHT, l->text);
+	else
+		UI_Printf(LAYOUT_RIGHT, l->y, 0x0000, UI_RIGHT, "%d", *value);
 	l->y += 14;
 }
 
@@ -245,14 +275,14 @@ int Layout_Event(Layout *l, int key)
 	int type    = (l->focus >= 0) ? l->focus_type[l->focus] : -1;
 	void *data  = (l->focus >= 0) ? l->focus_data[l->focus] : NULL;
 
-	if(key == KEY_CTRL_UP)
+	if(key == KEY_CTRL_UP && !l->active)
 	{
 		l->focus--;
 		if(l->focus < 0)
 			l->focus += l->focus_count;
 		return 1;
 	}
-	if(key == KEY_CTRL_DOWN)
+	if(key == KEY_CTRL_DOWN && !l->active)
 	{
 		l->focus++;
 		if(l->focus >= l->focus_count)
@@ -264,25 +294,54 @@ int Layout_Event(Layout *l, int key)
 		*(int *)data ^= 1;
 		return 1;
 	}
-	if(key == KEY_CTRL_AC && type == FOCUS_INTEGER && data)
+	if(key == KEY_CTRL_EXE && type == FOCUS_INTEGER && data)
 	{
-		*(int *)data = 0;
+		if (!l->active)
+			Layout_StartInput(l);
+		else
+		{
+			Layout_EndInput(l);
+			*(int *)data = atoi(l->text);
+		}
 		return 1;
 	}
-	if(key >= '0' && key <= '9' && type == FOCUS_INTEGER && data)
-	{
-		*(int *)data = *(int *)data * 10 + (key - '0');
-		return 1;
-	}
-	if(key == KEY_CTRL_LEFT && type == FOCUS_INTEGER && data)
+	if(key == KEY_CTRL_LEFT && type == FOCUS_INTEGER && data && !l->active)
 	{
 		*(int *)data -= 1;
 		return 1;
 	}
-	if(key == KEY_CTRL_RIGHT && type == FOCUS_INTEGER && data)
+	if(key == KEY_CTRL_RIGHT && type == FOCUS_INTEGER && data && !l->active)
 	{
 		*(int *)data += 1;
 		return 1;
+	}
+
+	/* Input controls */
+	if(l->active && key == KEY_CTRL_LEFT && l->cursor > 0)
+	{
+		l->cursor--;
+		return 1;
+	}
+	if(l->active && key == KEY_CTRL_RIGHT && l->text[l->cursor])
+	{
+		l->cursor++;
+		return 1;
+	}
+	if(l->active && key >= '0' && key <= '9')
+	{
+		if (strlen(l->text) < sizeof l->text - 1)
+		{
+			memmove(l->text + l->cursor + 1, l->text + l->cursor,
+				sizeof l->text - l->cursor);
+			l->text[l->cursor++] = key;
+		}
+		return 1;
+	}
+	if(l->active && key == KEY_CTRL_DEL && l->cursor > 0)
+	{
+		memmove(l->text + l->cursor - 1, l->text + l->cursor,
+			strlen(l->text + l->cursor) + 1);
+		l->cursor--;
 	}
 
 	return 0;
@@ -325,11 +384,14 @@ int UI_Main(WADFileInfo *wads, int wad_count, int *dev_info, int *use_mmap,
 
 		int key;
 		GetKey(&key);
-		if(Layout_Event(&l, key))
-			continue;
 
-		if(key == KEY_CTRL_EXE && l.focus < wad_count)
+		if(Layout_Event(&l, key))
+			{}
+		else if(key == KEY_CTRL_EXE && l.focus < wad_count)
 			return l.focus;
+
+		if(*startmap < 1)
+			*startmap = 1;
 	}
 
 	return -1;
