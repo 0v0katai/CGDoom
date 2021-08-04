@@ -75,6 +75,15 @@ byte* I_ZoneBase (int*	size, int i)
         *size = &eextra - &sextra;
         return &sextra;
     }
+#ifdef CGDOOM_DIRECT_R61524
+    if (i == 2)
+    {
+        /* Secondary VRAM (screen buffers being in the main VRAM because we're
+           doing direct access so we don't need Bdisp_PutDisp_DD() */
+        *size = 384 * 216 * 2;
+        return SaveVRAMBuffer;
+    }
+#endif
     return NULL;
 }
 

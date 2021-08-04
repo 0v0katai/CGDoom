@@ -54,6 +54,29 @@ enum {
 #define CGDOOM_DIRECT_R61524
 
 //---
+// Memory distribution
+//---
+
+/* When direct-display access is disabled, put the screens in secondary VRAM
+   and use VRAM for rendering. When it's enabled, put the screens in VRAM and
+   use the secondary VRAM as heap. We swap because using the VRAM as heap would
+   cause problems with error screens (stepping through errors would crash). */
+#ifdef CGDOOM_DIRECT_R61524
+# define CGDOOM_SCREENS_BASE ((void *)GetVRAMAddress())
+#else
+# define CGDOOM_SCREENS_BASE SaveVRAMBuffer
+#endif
+
+/* The primary/secondary VRAM covers 384*216*2 = 162 kiB:
+   -> Give 320*200 = 64 kB to screens[0] (main display)
+   -> Give 320*200 = 64 kB to screens[1] (intermissions)
+   -> Give 320*32  = 10 kiB to screens[4] (status bar)
+   -> 27 kiB are left */
+#define CGDOOM_SCREENS_0 (CGDOOM_SCREENS_BASE)
+#define CGDOOM_SCREENS_1 (CGDOOM_SCREENS_BASE + 320*200)
+#define CGDOOM_SCREENS_4 (CGDOOM_SCREENS_BASE + 320*200*2)
+
+//---
 
 #include "keyboard.hpp"
 #include "keyboard_syscalls.h"
