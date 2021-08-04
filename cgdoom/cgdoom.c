@@ -300,28 +300,32 @@ typedef struct {
 	uint32_t start_bytes;
 } SectorIndexInfo;
 
-//allocate 1024 items for max 1024 fragments of the file.
-// 640 KB should to be enough for everyone ;-)
-#define MAX_FRAGMENTS 1024
-
-/* Description of a fragment of a WAD file, in Flash. */
-typedef struct {
+/* Description of a fragment of a WAD file, in Flash. This is placed in PRAM0
+   to save RAM elsewhere. PRAM0 only supports 32-bit accesses, so we make this
+   structure a volatile bitfield where each entry has a 32-bit supporting type,
+   and build with -fstrict-volatile-bitfields which instructs GCC to use
+   accesses of the size of the supporting type without compromising on the
+   naming of the fields. */
+typedef volatile struct {
 	/* Index of first sector in Flash (0...64k) */
-	uint16_t flash_address;
+	uint32_t flash_address :16;
 	/* Corresponding sector in the WAD file */
-	uint16_t file_address;
+	uint32_t file_address :16;
 } FileMappingItem;
 
+/* Maximum number of fragments in the file map. Fragment information is stored
+   in PRAM0, so up to ~40k entries can be stored; this limit is mostly to catch
+   failures in fragment detection. (I have witnessed Ultimate Doom WADs with
+   up to 500 fragments.)*/
+#define MAX_FRAGMENTS 2048
 
-typedef struct
-{
-	FileMappingItem mTable[MAX_FRAGMENTS];//table of fragments
+typedef struct {
+	/* Table of fragments */
+	FileMappingItem *mTable;
 	int miItemCount;
-	int miTotalLength;//length of the file
-	int miCurrentLength;//currently returned length (by GetNextdata() )
-	int miCurrentItem;//active fragment (to be returned by GetNextdata() )
-
-}FileMapping;
+	/* Length of the file */
+	int miTotalLength;
+} FileMapping;
 
 /* Bfile's file info structure returned by filesystem search functions. */
 typedef struct
@@ -331,13 +335,6 @@ typedef struct
 	unsigned int property;
 	unsigned long address;
 } Bfile_FileInfo;
-
-//reset reading to start
-void ResetData(FileMapping *pMap)
-{
-	pMap->miCurrentItem = 0;
-	pMap->miCurrentLength = 0;
-}
 
 /* Find WAD files in the filesystem. */
 int FindWADs(WADFileInfo *files, int max)
@@ -363,14 +360,12 @@ int FindWADs(WADFileInfo *files, int max)
 	return total;
 }
 
-void I_Error (char *error, ...);
-
 /* WAD file access method. */
 static int gWADmethod = CGDOOM_WAD_MMAP;
 /* File descriptor to WAD, used in Flash_ReadFile calls. (CGDOOM_WAD_BFILE) */
 static int gWADfd = -1;
 /* Memory map of WAD file. (CGDOOM_WAD_MMAP) */
-static FileMapping *gpWADMap = 0;
+static FileMapping gWADMap;
 /* Index of most likely sectors for fragment search. (CGDOOM_WAD_MMAP) */
 static SectorIndexInfo *gIndex = NULL;
 
@@ -552,20 +547,20 @@ int FindInFlash(const void **buf, int size, int readpos)
 		return 0;
 
 	ASSERT(readpos >= 0);
-	if (readpos + size > gpWADMap->miTotalLength)
+	if (readpos + size > gWADMap.miTotalLength)
 		return -1;
 
-	int iFragIndx = FindFragmentInMap(gpWADMap, readpos / FLASH_PAGE_SIZE);
-	int iFragOffset = gpWADMap->mTable[iFragIndx].file_address * FLASH_PAGE_SIZE;
+	int iFragIndx = FindFragmentInMap(&gWADMap, readpos / FLASH_PAGE_SIZE);
+	int iFragOffset = gWADMap.mTable[iFragIndx].file_address * FLASH_PAGE_SIZE;
 	int iSubOffset = readpos - iFragOffset;
 
 	int iFragEnd;
-	if (iFragIndx+1 < gpWADMap->miItemCount)
-		iFragEnd = gpWADMap->mTable[iFragIndx+1].file_address * FLASH_PAGE_SIZE;
+	if (iFragIndx+1 < gWADMap.miItemCount)
+		iFragEnd = gWADMap.mTable[iFragIndx+1].file_address * FLASH_PAGE_SIZE;
 	else
-		iFragEnd = gpWADMap->miTotalLength;
+		iFragEnd = gWADMap.miTotalLength;
 
-	*buf = FLASH_CACHED_START + (gpWADMap->mTable[iFragIndx].flash_address * FLASH_PAGE_SIZE) + iSubOffset;
+	*buf = FLASH_CACHED_START + (gWADMap.mTable[iFragIndx].flash_address * FLASH_PAGE_SIZE) + iSubOffset;
 
 	/* Return how many bytes can be read off the fragment (up to size). */
 	int iAvailableLen = min(iFragEnd - readpos, size);
@@ -653,10 +648,9 @@ int main(void){
 		ms_index = (RTC_GetTicks() - time) * 8;
  #endif
 		time = RTC_GetTicks();
-		gpWADMap = (FileMapping *)(SaveVRAMBuffer + 2*65536);
-		ASSERT(2*65536 + sizeof(FileMapping) < SAVE_VRAM_SIZE);
+		gWADMap.mTable = (void *)0xfe200000; /* PRAM0 */
 		int fd = Bfile_OpenFile_OS(wads[choice].path, 0, 0);
-		int size = CreateFileMapping(fd, gpWADMap);
+		int size = CreateFileMapping(fd, &gWADMap);
 		Bfile_CloseFile_OS(fd);
 		UI_FileMappingProgressBar(1, 1);
 		ms_mmap = (RTC_GetTicks() - time) * 8;

@@ -33,6 +33,7 @@ void CGDAppendHex32(const char *pszText,int iNum, int iDigits,char *pszBuf);
 
 int abs(int x);
 
+void I_Error (char *error, ...);
 void I_ErrorI(const char *str, int i1, int i2, int i3, int i4);
 
 //force compiler error on use following:
