@@ -41,7 +41,8 @@ void I_InitGraphics (void);
 
 void I_ShutdownGraphics(void);
 
-//void I_TogglePalette (boolean sfx, boolean dark);
+/* Regenerate palette based on gamma correction level. */
+void I_SetPalette (int gamma_correction);
 
 void I_Flip (void);
 

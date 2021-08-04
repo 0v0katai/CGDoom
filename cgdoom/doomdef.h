@@ -309,6 +309,7 @@ void CGCheat();
 void CGSwitchClip();
 void CGFreeMem();
 void CGRefreshSwitch();
+void CGCycleGamma();
 
 
 #endif          // __DOOMDEF__

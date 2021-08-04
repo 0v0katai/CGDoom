@@ -333,6 +333,8 @@ void I_StartTic (void)
         R_SetViewSizeChange(1);
     if (KeycodePressed(st, next_st, KEYCODE_ARROW))
         CGSwitchClip();
+    if (KeycodePressed(st, next_st, KEYCODE_FRAC))
+        CGCycleGamma();
     if (KeycodePressed(st, next_st, KEYCODE_FD))
         CGFreeMem();
     if (KeycodePressed(st, next_st, KEYCODE_VARS))

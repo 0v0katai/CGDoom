@@ -495,6 +495,17 @@ void CGRefreshSwitch()
   }
 }
 
+void CGCycleGamma()
+{
+  extern int usegamma;
+  usegamma = (usegamma + 1) % 5;
+  I_SetPalette(usegamma);
+
+  static char message[32];
+  sprintf(message, "Brightness: %d/4", usegamma);
+  plyr->message = message;
+}
+
 // Respond to keyboard input events,
 //  intercept cheats.
 boolean ST_Responder (event_t* ev)
