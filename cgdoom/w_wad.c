@@ -302,7 +302,10 @@ void * W_ReadLumpWithZ_Malloc(int lump,int tag,int iEnableFlash)
   }
 //  else ASSERT(lumpinfo[lump].size != 10240);
 
-  if(c != lumpinfo[lump].size)
+  /* Allocate only if the lump spans several fragments, or is misaligned;
+     otherwise, returns the cached Flash address, which is just as good as what
+     the heap would provide. */
+  if(c != lumpinfo[lump].size || ((uint32_t)lumpcache[lump] & 1) != 0)
   {
     Z_Malloc (lumpinfo[lump].size, tag, &lumpcache[lump]);
     W_ReadLump (lump, lumpcache[lump]);
