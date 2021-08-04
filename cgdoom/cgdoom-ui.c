@@ -164,6 +164,10 @@ void UI_FileMappingProgressBar(int size_mapped, int size_total)
 #define LAYOUT_LEFT 40
 #define LAYOUT_RIGHT (WIDTH-40)
 
+#define FOCUS_NOTHING 0
+#define FOCUS_CHECKBOX 1
+#define FOCUS_INTEGER 2
+
 void Layout_Init(Layout *l)
 {
 	l->focus = -1;
@@ -184,13 +188,18 @@ void Layout_EndFrame(Layout *l)
 	UI_AreaReverse(0, y, WIDTH-1, y+13);
 }
 
-static void Layout_AddFocus(Layout *l)
+static void Layout_AddFocus(Layout *l, int type, void *data)
 {
 	if(l->focus < 0)
 		l->focus = 0;
 	if(l->focus_count >= 16)
 		return;
-	l->focus_y[l->focus_count++] = l->y - 2;
+
+	l->focus_y[l->focus_count] = l->y - 2;
+	l->focus_type[l->focus_count] = type;
+	l->focus_data[l->focus_count] = data;
+
+	l->focus_count++;
 }
 
 void Layout_CenteredText(Layout *l, const char *text)
@@ -203,18 +212,26 @@ void Layout_Text(Layout *l, const char *label, const char *fmt, ...)
 {
 	va_list args;
 	va_start(args, fmt);
-	Layout_AddFocus(l);
+	Layout_AddFocus(l, FOCUS_NOTHING, NULL);
 	UI_Print(LAYOUT_LEFT, l->y, 0x0000, UI_LEFT, label);
 	UI_Vprintf(LAYOUT_RIGHT, l->y, 0x0000, UI_RIGHT, fmt, args);
 	l->y += 14;
 	va_end(args);
 }
 
-void Layout_Checkbox(Layout *l, const char *label, int checked)
+void Layout_Checkbox(Layout *l, const char *label, int *checked)
 {
-	Layout_AddFocus(l);
+	Layout_AddFocus(l, FOCUS_CHECKBOX, checked);
 	UI_Print(LAYOUT_LEFT, l->y, 0x0000, UI_LEFT, label);
-	UI_Checkbox(LAYOUT_RIGHT-7, l->y+1, checked);
+	UI_Checkbox(LAYOUT_RIGHT-7, l->y+1, *checked);
+	l->y += 14;
+}
+
+void Layout_Integer(Layout *l, const char *label, int *value)
+{
+	Layout_AddFocus(l, FOCUS_INTEGER, value);
+	UI_Print(LAYOUT_LEFT, l->y, 0x0000, UI_LEFT, label);
+	UI_Printf(LAYOUT_RIGHT, l->y, 0x0000, UI_RIGHT, "%d", *value);
 	l->y += 14;
 }
 
@@ -225,6 +242,9 @@ void Layout_Spacing(Layout *l, int spacing)
 
 int Layout_Event(Layout *l, int key)
 {
+	int type    = (l->focus >= 0) ? l->focus_type[l->focus] : -1;
+	void *data  = (l->focus >= 0) ? l->focus_data[l->focus] : NULL;
+
 	if(key == KEY_CTRL_UP)
 	{
 		l->focus--;
@@ -239,10 +259,37 @@ int Layout_Event(Layout *l, int key)
 			l->focus -= l->focus_count;
 		return 1;
 	}
+	if(key == KEY_CTRL_EXE && type == FOCUS_CHECKBOX && data)
+	{
+		*(int *)data ^= 1;
+		return 1;
+	}
+	if(key == KEY_CTRL_AC && type == FOCUS_INTEGER && data)
+	{
+		*(int *)data = 0;
+		return 1;
+	}
+	if(key >= '0' && key <= '9' && type == FOCUS_INTEGER && data)
+	{
+		*(int *)data = *(int *)data * 10 + (key - '0');
+		return 1;
+	}
+	if(key == KEY_CTRL_LEFT && type == FOCUS_INTEGER && data)
+	{
+		*(int *)data -= 1;
+		return 1;
+	}
+	if(key == KEY_CTRL_RIGHT && type == FOCUS_INTEGER && data)
+	{
+		*(int *)data += 1;
+		return 1;
+	}
+
 	return 0;
 }
 
-int UI_Main(WADFileInfo *wads, int wad_count, int *dev_info, int *use_mmap)
+int UI_Main(WADFileInfo *wads, int wad_count, int *dev_info, int *use_mmap,
+	int *startmap)
 {
 	Layout l;
 	Layout_Init(&l);
@@ -268,8 +315,11 @@ int UI_Main(WADFileInfo *wads, int wad_count, int *dev_info, int *use_mmap)
 		}
 
 		Layout_Spacing(&l, 12);
-		Layout_Checkbox(&l, "Developer info:", *dev_info);
-		Layout_Checkbox(&l, "Map file to memory:", *use_mmap);
+		Layout_Integer(&l, "Start at map:", startmap);
+
+		Layout_Spacing(&l, 12);
+		Layout_Checkbox(&l, "Developer info:", dev_info);
+		Layout_Checkbox(&l, "Map file to memory:", use_mmap);
 		Layout_EndFrame(&l);
 		Bdisp_PutDisp_DD();
 
@@ -280,10 +330,6 @@ int UI_Main(WADFileInfo *wads, int wad_count, int *dev_info, int *use_mmap)
 
 		if(key == KEY_CTRL_EXE && l.focus < wad_count)
 			return l.focus;
-		if(key == KEY_CTRL_EXE && l.focus == l.focus_count - 2)
-			*dev_info ^= 1;
-		if(key == KEY_CTRL_EXE && l.focus == l.focus_count - 1)
-			*use_mmap ^= 1;
 	}
 
 	return -1;

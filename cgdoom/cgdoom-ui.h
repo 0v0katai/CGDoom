@@ -26,7 +26,9 @@ void UI_Vprintf(int x, int y, int fg, int halign, char const *fmt, va_list args)
 typedef struct
 {
     int y, focus, focus_count;
-    int16_t focus_y[16];
+    uint8_t focus_y[16];
+    uint8_t focus_type[16];
+    void *focus_data[16];
 } Layout;
 
 void Layout_Init(Layout *l);
@@ -39,7 +41,9 @@ void Layout_CenteredText(Layout *l, const char *text);
 /* Add a labeled field with printf-formatted contents. */
 void Layout_Text(Layout *l, const char *label, const char *fmt, ...);
 /* Add a checkbox. */
-void Layout_Checkbox(Layout *l, const char *label, int checked);
+void Layout_Checkbox(Layout *l, const char *label, int *checked);
+/* Add an integer input. */
+void Layout_Integer(Layout *l, const char *label, int *value);
 /* Add spacing. */
 void Layout_Spacing(Layout *l, int spacing);
 
@@ -49,6 +53,10 @@ int Layout_Event(Layout *l, int key);
 /* Larger-scale functions. */
 
 /* Show the program's main screen; returns index of selected WAD file. */
-int UI_Main(WADFileInfo *wads, int wad_count, int *dev_info, int *use_mmap);
+int UI_Main(WADFileInfo *wads, int wad_count,
+    int *dev_info,    /* Enable technical detail screens */
+    int *use_mmap,    /* Map file to memory (as opposed to using Bfile) */
+    int *startmap     /* Warp to this map */
+);
 
 #endif /* CGDOOM_UI_H */

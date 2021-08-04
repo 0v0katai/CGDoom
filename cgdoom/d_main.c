@@ -462,7 +462,7 @@ void D_DoomMain()
     else if(skill==4) startskill = sk_nightmare;
 
     startepisode = episode;
-    startmap = map;
+    map = startmap;
     autostart = false;
 
     // init subsystems

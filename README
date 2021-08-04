@@ -14,7 +14,6 @@ sources (GPL) and nDoom (GPLv2). See LICENSE.
 UI improvements TODO:
 -> Better keyboard layout (including more keys, eg. Run)
    => Edit messages accordingly ("press y"/etc)
--> Warp to level from the main screen
 -> Figure out why blue key looks yellow in status bar
 
 WAD support TODO:
