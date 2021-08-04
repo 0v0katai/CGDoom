@@ -1061,7 +1061,7 @@ void ST_createWidgets(void)
   STlib_initPercent(&w_armor,ST_ARMORX,ST_ARMORY,tallnum,&plyr->armorpoints,&st_statusbaron, tallpercent);
 
   // keyboxes 0-2
-  STlib_initMultIcon(&w_keyboxes_0,ST_KEY0X,ST_KEY0Y,keys,&keyboxes_1,&st_statusbaron);
+  STlib_initMultIcon(&w_keyboxes_0,ST_KEY0X,ST_KEY0Y,keys,&keyboxes_0,&st_statusbaron);
 
   STlib_initMultIcon(&w_keyboxes_1,ST_KEY1X,ST_KEY1Y,keys,&keyboxes_1,&st_statusbaron);
 
