@@ -251,16 +251,16 @@ int UI_Main(WADFileInfo *wads, int wad_count, int *dev_info, int *use_mmap)
 	{
 		Bdisp_AllClr_VRAM();
 		Layout_StartFrame(&l);
-		Layout_CenteredText(&l, "CGDOOM for fx-CG 50 and Graph 90+E");
+		Layout_CenteredText(&l, "CGDoom for fx-CG 50 and Graph 90+E");
 		Layout_Spacing(&l, 12);
 
 		for(int i = 0; i < wad_count; i++)
 		{
 			char const *action = "Play other WAD";
 			if(!strcmp(wads[i].name, "doom.wad"))
-				action = "Play DOOM";
+				action = "Play Doom Shareware";
 			else if(!strcmp(wads[i].name, "doomu.wad"))
-				action = "Play Ultimate DOOM";
+				action = "Play Ultimate Doom";
 
 			Layout_Text(&l, action, "%s (%d.%dM)",
 				wads[i].name, wads[i].size / 1000000,
