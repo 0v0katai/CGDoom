@@ -73,88 +73,6 @@ static const uint16_t gBasePalette[256] = {
 /* Current palette (accounting for gamma correction) */
 static uint16_t gPalette[256];
 
-//#ifndef CG_EMULATOR
-#if 0 // this doesn't work
-
-//#define SYNCO() __asm__ volatile("SYNCO\n\t":::"memory"); //doesn't compile
-#define SYNCO()
-#define PRDR *(volatile unsigned char *)0xA405013C
-#define LCDC *(volatile unsigned short*)0xB4000000
-
-#define LCD_GRAM_X 0x200
-#define LCD_GRAM_Y 0x201
-#define LCD_GRAM 0x202
-#define LCD_WINDOW_LEFT 0x210
-#define LCD_WINDOW_RIGHT 0x211
-#define LCD_WINDOW_TOP 0x212
-#define LCD_WINDOW_BOTTOM 0x213
-
-static void SelectLCDReg(unsigned short reg)
-{
-   SYNCO();
-   PRDR &= ~0x10;
-   SYNCO();
-   LCDC = reg;
-   SYNCO();
-   PRDR |= 0x10;
-   SYNCO();
-   return;
-}
-
-static void WriteLCDReg(unsigned short reg, unsigned short value)
-{
-   SelectLCDReg(reg);
-   LCDC = value;
-   return;
-}
-
-static unsigned short ReadLCDReg(unsigned short reg)
-{
-   SelectLCDReg(reg);
-   return LCDC;
-}
-
-void I_Flip (void)
-{
-  unsigned j=0,i = 320*200;
-  while(i--)
-  {
-    LCDC = gwPallette[screens[0][j]];
-    j++;
-  }
-}
-
-void I_InitGraphics(void)
-{	
-  WriteLCDReg(LCD_WINDOW_LEFT, (396 - 320)/2);
-  WriteLCDReg(LCD_WINDOW_RIGHT, (396 - 320)/2 + 319);
-  WriteLCDReg(LCD_WINDOW_TOP, (224 - 200) / 2);
-  WriteLCDReg(LCD_WINDOW_BOTTOM, (224 - 200) / 2 + 199);
-}
-
-void I_ShutdownGraphics(void)
-{
-
-  WriteLCDReg(LCD_WINDOW_LEFT, (396 - 384)/2);
-   WriteLCDReg(LCD_WINDOW_RIGHT, (396 - 384)/2 + 383);
-   WriteLCDReg(LCD_WINDOW_TOP, (224 - 216) / 2);
-   WriteLCDReg(LCD_WINDOW_BOTTOM, (224 - 216) / 2 + 215);
-}
-#else
-
-void I_Flip (void)
-{
-  int x,y;
-  for(y=0;y<SCREENHEIGHT;y++)
-  {
-    for(x=0;x<SCREENWIDTH;x++)
-    {
-      VRAM[(x+(WIDTH-SCREENWIDTH)/2)+(y+(HEIGHT-SCREENHEIGHT)/2)*WIDTH] = gPalette[screens[0][x+y*SCREENWIDTH]];
-    }
-  }
-  Bdisp_PutDisp_DD();
-}
-
 /* Generate palette based on gamma correction level. */
 void I_SetPalette(int gamma_correction)
 {
@@ -172,6 +90,84 @@ void I_SetPalette(int gamma_correction)
     b = gamma[b] >> 3;
     gPalette[i] = (r << 11) | (g << 5) | b;
   }
+}
+
+#if !defined(CG_EMULATOR) && defined(CGDOOM_DIRECT_R61524)
+
+#define SYNCO() __asm__ volatile("synco":::"memory");
+#define PRDR *(volatile uint8_t *)0xA405013C
+#define LCDC *(volatile uint16_t *)0xB4000000
+
+#define LCD_GRAM_X 0x200
+#define LCD_GRAM_Y 0x201
+#define LCD_GRAM 0x202
+#define LCD_WINDOW_LEFT 0x210
+#define LCD_WINDOW_RIGHT 0x211
+#define LCD_WINDOW_TOP 0x212
+#define LCD_WINDOW_BOTTOM 0x213
+
+static void SelectLCDReg(unsigned short reg)
+{
+   PRDR &= ~0x10;
+   SYNCO();
+   LCDC = reg;
+   SYNCO();
+   PRDR |= 0x10;
+   SYNCO();
+}
+
+static void WriteLCDReg(unsigned short reg, unsigned short value)
+{
+   SelectLCDReg(reg);
+   LCDC = value;
+}
+
+void I_Flip (void)
+{
+  WriteLCDReg(LCD_GRAM_X, 0);
+  WriteLCDReg(LCD_GRAM_Y, 0);
+  SelectLCDReg(LCD_GRAM);
+
+  unsigned j=0, i=320*200;
+  while(i--)
+  {
+    LCDC = gPalette[screens[0][j]];
+    j++;
+  }
+}
+
+void I_InitGraphics(void)
+{	
+  usegamma = 0;
+  I_SetPalette(usegamma);
+
+  WriteLCDReg(LCD_WINDOW_LEFT, (396 - 320)/2);
+  WriteLCDReg(LCD_WINDOW_RIGHT, (396 - 320)/2 + 319);
+  WriteLCDReg(LCD_WINDOW_TOP, (224 - 200) / 2);
+  WriteLCDReg(LCD_WINDOW_BOTTOM, (224 - 200) / 2 + 199);
+}
+
+void I_ShutdownGraphics(void)
+{
+  WriteLCDReg(LCD_WINDOW_LEFT, (396 - 384)/2);
+  WriteLCDReg(LCD_WINDOW_RIGHT, (396 - 384)/2 + 383);
+  WriteLCDReg(LCD_WINDOW_TOP, (224 - 216) / 2);
+  WriteLCDReg(LCD_WINDOW_BOTTOM, (224 - 216) / 2 + 215);
+}
+
+#else
+
+void I_Flip (void)
+{
+  int x,y;
+  for(y=0;y<SCREENHEIGHT;y++)
+  {
+    for(x=0;x<SCREENWIDTH;x++)
+    {
+      VRAM[(x+(WIDTH-SCREENWIDTH)/2)+(y+(HEIGHT-SCREENHEIGHT)/2)*WIDTH] = gPalette[screens[0][x+y*SCREENWIDTH]];
+    }
+  }
+  Bdisp_PutDisp_DD();
 }
 
 void I_InitGraphics(void)

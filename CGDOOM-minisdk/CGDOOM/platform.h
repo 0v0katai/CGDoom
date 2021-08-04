@@ -45,6 +45,15 @@ enum {
 #define FLASH_INDEX_SIZE ((FLASH_END-FLASH_FS_HINT) / 4096)
 
 //---
+// Display driver access
+//---
+
+/* Whether to use direct-DD access rather than intermediate VRAM. Enabling this
+   option will provide the unused VRAM as additonal heap. (Comment out to
+   disable.) */
+#define CGDOOM_DIRECT_R61524
+
+//---
 
 #include "keyboard.hpp"
 #include "keyboard_syscalls.h"
