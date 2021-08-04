@@ -694,9 +694,6 @@ int main(void){
 	memset(VRAM, 0, WIDTH*HEIGHT*2);
 	D_DoomMain();
 
-	Bdisp_FrameAndColor(3, 16);
-	Bdisp_FrameAndColor(1, 0);
-
 	if(gWADfd >= 0)
 		Bfile_CloseFile_OS(gWADfd);
 
