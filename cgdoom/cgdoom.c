@@ -609,6 +609,8 @@ int main(void){
 #else 
 	EnableColor(1);
 	EnableStatusArea(3);
+	Bdisp_FrameAndColor(3, 16);
+	Bdisp_FrameAndColor(1, 0);
 
 	WADFileInfo wads[16];
 	int wad_count = FindWADs(wads, 16);
@@ -689,8 +691,11 @@ int main(void){
 		}
 	}
 
-	memset(VRAM,0,WIDTH*HEIGHT*2);
+	memset(VRAM, 0, WIDTH*HEIGHT*2);
 	D_DoomMain();
+
+	Bdisp_FrameAndColor(3, 16);
+	Bdisp_FrameAndColor(1, 0);
 
 	if(gWADfd >= 0)
 		Bfile_CloseFile_OS(gWADfd);

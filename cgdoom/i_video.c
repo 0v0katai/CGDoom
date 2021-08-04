@@ -159,6 +159,13 @@ void I_ShutdownGraphics(void)
 
 void I_Flip (void)
 {
+  /* Set a black frame if the current one is white */
+  if ((Bdisp_FrameAndColor(0, 0) & 1) == 0)
+  {
+    Bdisp_FrameAndColor(3, 17);
+    Bdisp_FrameAndColor(1, 0);
+  }
+
   int x,y;
   for(y=0;y<SCREENHEIGHT;y++)
   {
