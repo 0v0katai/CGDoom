@@ -615,10 +615,14 @@ int main(void){
 	WADFileInfo wads[16];
 	int wad_count = FindWADs(wads, 16);
 
-	extern int startmap;
+	extern int startmap, startepisode;
 	int dev_info = 0;
+
 	startmap = 1;
-	int choice = UI_Main(wads, wad_count, &dev_info, &gWADmethod, &startmap);
+	startepisode = 1;
+
+	int choice = UI_Main(wads, wad_count, &dev_info, &gWADmethod,
+		&startmap, &startepisode);
 	if(choice < 0)
 		return 1;
 

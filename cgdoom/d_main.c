@@ -461,7 +461,7 @@ void D_DoomMain()
     else if(skill==3) startskill = sk_hard;
     else if(skill==4) startskill = sk_nightmare;
 
-    startepisode = episode;
+    episode = startepisode;
     map = startmap;
     autostart = false;
 

@@ -348,7 +348,7 @@ int Layout_Event(Layout *l, int key)
 }
 
 int UI_Main(WADFileInfo *wads, int wad_count, int *dev_info, int *use_mmap,
-	int *startmap)
+	int *startmap, int *startepisode)
 {
 	Layout l;
 	Layout_Init(&l);
@@ -374,6 +374,7 @@ int UI_Main(WADFileInfo *wads, int wad_count, int *dev_info, int *use_mmap,
 		}
 
 		Layout_Spacing(&l, 12);
+		Layout_Integer(&l, "Start at episode:", startepisode);
 		Layout_Integer(&l, "Start at map:", startmap);
 
 		Layout_Spacing(&l, 12);
@@ -392,6 +393,8 @@ int UI_Main(WADFileInfo *wads, int wad_count, int *dev_info, int *use_mmap,
 
 		if(*startmap < 1)
 			*startmap = 1;
+		if(*startepisode < 1)
+			*startepisode = 1;
 	}
 
 	return -1;
