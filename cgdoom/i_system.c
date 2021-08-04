@@ -329,7 +329,9 @@ void I_StartTic (void)
 {
     static KeyboardState st = { 0 };
 
-    static int fps_show = 0;
+    extern boolean fpscounteractive;
+    extern int fpscounter_data;
+
     /* Number of frames since FPS count started */
     static int fps_frames = 0;
     /* Time when the FPS count started */
@@ -341,14 +343,7 @@ void I_StartTic (void)
     if(++fps_frames >= 16)
     {
         int now = RTC_GetTicks();
-        int fps = (now == fps_ticks) ? -1 : 128 * fps_frames / (now - fps_ticks);
-
-        if (fps_show)
-        {
-            static char message[16];
-            sprintf(message, "%d FPS", fps);
-            players[consoleplayer].message = message;
-        }
+        fpscounter_data = (now == fps_ticks) ? -1 : 128 * fps_frames / (now - fps_ticks);
 
         fps_ticks = now;
         fps_frames = 0;
@@ -373,7 +368,7 @@ void I_StartTic (void)
     if (KeycodePressed(st, next_st, KEYCODE_FD))
         CGFreeMem();
     if (KeycodePressed(st, next_st, KEYCODE_LEFTP))
-        fps_show ^= 1;
+        fpscounteractive = !fpscounteractive;
     if (KeycodePressed(st, next_st, KEYCODE_VARS))
         CGRefreshSwitch();
 

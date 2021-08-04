@@ -95,6 +95,12 @@ extern boolean  automapactive;
 
 static boolean  headsupactive = false;
 
+/* CGDoom */
+static hu_stext_t w_fpscounter;
+static boolean fpscounter_on;
+int fpscounter_data = 0;
+boolean fpscounteractive = false;
+
 //
 // Builtin map names.
 // The actual names can be found in DStrings.h.
@@ -222,6 +228,12 @@ void HU_Start(void)
     hu_font,
     HU_FONTSTART);
 
+  /* CGDoom: Create the FPS counter widget */
+  HUlib_initSText(&w_fpscounter,
+    SCREENWIDTH-48, HU_MSGY, HU_MSGHEIGHT,
+    hu_font,
+    HU_FONTSTART, &fpscounter_on);
+
   switch ( gamemode )
   {
   case shareware:
@@ -274,6 +286,8 @@ void HU_Drawer(void)
 {
 
   HUlib_drawSText(&w_message);
+  if (fpscounteractive)
+    HUlib_drawSText(&w_fpscounter);
   HUlib_drawIText(&w_chat);
   if (automapactive)
     HUlib_drawTextLine(&w_title, false);
@@ -283,6 +297,8 @@ void HU_Drawer(void)
 void HU_Erase(void)
 {
   HUlib_eraseSText(&w_message);
+  if (fpscounteractive)
+    HUlib_eraseSText(&w_fpscounter);
   HUlib_eraseIText(&w_chat);
   HUlib_eraseTextLine(&w_title);
 
@@ -316,6 +332,15 @@ void HU_Ticker(void)
     }
 
   } // else message_on = false;
+
+  if (fpscounteractive)
+  {
+    /* Update FPS counter text */
+    static char text[10];
+    sprintf(text, "%d FPS", fpscounter_data);
+    HUlib_addMessageToSText(&w_fpscounter, 0, text);
+    fpscounter_on = true;
+  }
 }
 
 #define QUEUESIZE  128
