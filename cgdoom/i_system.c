@@ -331,10 +331,11 @@ void I_StartTic (void)
 
     extern boolean fpscounteractive;
     extern int fpscounter_data;
+    extern int giRefreshMask;
 
     /* Number of frames since FPS count started */
     static int fps_frames = 0;
-    /* Time when the FPS count started */
+    /* RTC time when the FPS count started */
     static int fps_ticks = -1;
 
     if(fps_ticks < 0)
@@ -343,7 +344,10 @@ void I_StartTic (void)
     if(++fps_frames >= 16)
     {
         int now = RTC_GetTicks();
-        fpscounter_data = (now == fps_ticks) ? -1 : 128 * fps_frames / (now - fps_ticks);
+        if (now == fps_ticks)
+            fpscounter_data = -1;
+        else
+            fpscounter_data = 128 * fps_frames / ((now - fps_ticks) * (giRefreshMask + 1));
 
         fps_ticks = now;
         fps_frames = 0;
