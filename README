@@ -18,7 +18,12 @@ UI improvements TODO:
 WAD support TODO:
 -> Unmodified 1.9 shareware WAD works all the way through?
 -> Shareware WAD from Planète Casio should work 100%
--> Ultimate Doom WAD should work 100% for episode 1
+   => Check the finale and the end of E1M9
+-> Ultimate Doom WAD:
+   => Episode 1 should be 100%
+   => E2M3 has missing textures through the door at the start
+   => E2M7 may not load based on fragmentation
+   => Episodes 3 & 4 seem to be OK
 
 Technical support TODO:
 -> Supply more VRAM memory to internal allocator
@@ -26,6 +31,8 @@ Technical support TODO:
    => Rewrite video code to use long PRAM0 access? (138 kB)
 -> Rate-limit the game when overclocking
 -> Switches don't always show the pressed texture (?)
+-> Add more SHORT() to avoid having to copy-align lumps
+   (note left by MPoupe in m_swap.h)
 -> Quit Game menu sometimes crashes the add-in
 -> Load/Save game would be very cool
 -> Reenable LTO if possible
