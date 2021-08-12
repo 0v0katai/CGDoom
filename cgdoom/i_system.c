@@ -308,7 +308,7 @@ int KeycodeToDoomKey(int code)
     case KEYCODE_RIGHT:     return KEY_RIGHTARROW;
     case KEYCODE_UP:        return KEY_UPARROW;
     case KEYCODE_DOWN:      return KEY_DOWNARROW;
-    case KEYCODE_EXE:       return ' ';
+    case KEYCODE_SQUARE:    return ' ';
     case KEYCODE_ALPHA:     return KEY_RCTRL;
     case KEYCODE_F1:        return '1';
     case KEYCODE_F2:        return '2';
@@ -321,8 +321,8 @@ int KeycodeToDoomKey(int code)
     case KEYCODE_OPTN:      return KEY_PAUSE;
     case KEYCODE_0:         return KEY_SLEFTARROW;
     case KEYCODE_DOT:       return KEY_SRIGHTARROW;
-    case KEYCODE_XOT:       return KEY_ESCAPE;
-    case KEYCODE_LOG:       return KEY_ENTER;
+    case KEYCODE_MENU:      return KEY_ESCAPE;
+    case KEYCODE_EXE:       return KEY_ENTER;
     default:                return -1;
     }
 }
@@ -359,8 +359,6 @@ void I_StartTic (void)
     ScanKeyboard(next_st);
 
     /* Capture events for special keys */
-    if (KeycodePressed(st, next_st, KEYCODE_MENU))
-        I_Quit();
     if (KeycodePressed(st, next_st, KEYCODE_POWER))
         CGCheat();
     if (KeycodePressed(st, next_st, KEYCODE_MINUS))
