@@ -1,6 +1,7 @@
 #include "platform.h"
 #include "os.h"
 #include "cgdoom-ui.h"
+#include "cgdoom-alloc.h"
 
 #ifdef CG_EMULATOR
 static int iAllocSum = 0;
@@ -693,6 +694,12 @@ int main(void){
 			int key;
 			GetKey(&key);
 		}
+
+		/* Initialize the PRAM allocator */
+		void *PRAM0_start = (void *)0xfe200000;
+		void *PRAM0_end   = (void *)0xfe228000;
+		PRAM0_start += gWADMap.miItemCount * sizeof(FileMappingItem);
+		CGD_PRAM_Init(PRAM0_start, PRAM0_end);
 	}
 
 	memset(VRAM, 0, WIDTH*HEIGHT*2);

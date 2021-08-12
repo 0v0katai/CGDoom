@@ -41,6 +41,7 @@
 #include "r_sky.h"
 
 #include "os.h"
+#include "cgdoom-alloc.h"
 
 #include "r_data.h"
 
@@ -482,13 +483,14 @@ void R_InitTextures (void)
 
   numtextures = numtextures1 + numtextures2;
 
-  textures = (texture_t **)Z_Malloc (numtextures*4, PU_STATIC, 0);
-  texturecolumnlump = (short**)Z_Malloc (numtextures*4, PU_STATIC, 0);
-  texturecolumnofs = (unsigned short**)Z_Malloc (numtextures*4, PU_STATIC, 0);
-  texturecomposite = (byte**)Z_Malloc (numtextures*4, PU_STATIC, 0);
-  texturecompositesize = (int*)Z_Malloc (numtextures*4, PU_STATIC, 0);
-  texturewidthmask = (int*)Z_Malloc (numtextures*4, PU_STATIC, 0);
-  textureheight = (fixed_t*)Z_Malloc (numtextures*4, PU_STATIC, 0);
+  /* CGDoom: Allocate all of these in PRAM, since they have 4-byte elements */
+  textures = (texture_t **)CGD_PRAM_Malloc (numtextures*4);
+  texturecolumnlump = (short**)CGD_PRAM_Malloc (numtextures*4);
+  texturecolumnofs = (unsigned short**)CGD_PRAM_Malloc (numtextures*4);
+  texturecomposite = (byte**)CGD_PRAM_Malloc (numtextures*4);
+  texturecompositesize = (int*)CGD_PRAM_Malloc (numtextures*4);
+  texturewidthmask = (int*)CGD_PRAM_Malloc (numtextures*4);
+  textureheight = (fixed_t*)CGD_PRAM_Malloc (numtextures*4);
 
   totalwidth = 0;
 
@@ -575,7 +577,7 @@ void R_InitTextures (void)
     R_GenerateLookup (i);
 
   // Create translation table for global animation.
-  texturetranslation = (int *)Z_Malloc ((numtextures+1)*4, PU_STATIC, 0);
+  texturetranslation = (int *)CGD_PRAM_Malloc ((numtextures+1)*4);
 
   for (i=0 ; i<numtextures ; i++)
     texturetranslation[i] = i;
@@ -598,7 +600,7 @@ void R_InitFlats (void)
   numflats = lastflat - firstflat + 1;
 
   // Create translation table for global animation.
-  flattranslation = (int *)Z_Malloc ((numflats+1)*4, PU_STATIC, 0);
+  flattranslation = (int *)CGD_PRAM_Malloc ((numflats+1)*4);
 
   for (i=0 ; i<numflats ; i++)
     flattranslation[i] = i;

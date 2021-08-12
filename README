@@ -28,8 +28,6 @@ WAD support TODO:
 Technical support TODO:
 -> Supply more VRAM memory to internal allocator
    => Merge internal heap into Z_Zone? (< 50 kB)
-   => Rewrite video code to use long PRAM0 access? (138 kB)
-   => Identify arrays that can go to PRAM, eg. lumpcache
    => Remove multiply-avoiding lookup tables?
 -> Rate-limit the game when overclocking
 -> Add more SHORT() to avoid having to copy-align lumps

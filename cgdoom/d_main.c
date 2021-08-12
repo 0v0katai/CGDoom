@@ -30,6 +30,7 @@
 
 
 #include "os.h"
+#include "cgdoom-alloc.h"
 
 #include "doomdef.h"
 #include "doomstat.h"
@@ -275,7 +276,7 @@ void D_DoomLoop (void)
   }
  // I_ShutdownGraphics();
   free(lumpinfo);
-  free(lumpcache);
+  CGD_PRAM_Free(lumpcache);
   I_ShutdownGraphics();
   return;
 }

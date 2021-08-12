@@ -38,6 +38,7 @@
 #endif*/
 
 #include "os.h"
+#include "cgdoom-alloc.h"
 
 #include "doomtype.h"
 #include "m_swap.h"
@@ -174,7 +175,7 @@ int W_InitMultipleFiles(void)
 
   // set up caching
   //printf ("numlumps = %i \n",numlumps);
-  lumpcache = (void **)CGDCalloc(numlumps * sizeof(*lumpcache));
+  lumpcache = (void **)CGD_PRAM_Zalloc(numlumps * sizeof(*lumpcache));
 
   if (!lumpcache)
   {
