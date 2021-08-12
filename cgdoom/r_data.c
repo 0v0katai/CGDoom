@@ -375,7 +375,7 @@ const byte* R_GetColumn ( int	tex, int col )
 
   /* CGDOOM: To save RAM in WADs bound by limited memory, composite textures
      can be allowed only up to a certain size. Original CGDOOM limits to 8192
-     bytes to that switches can appear, but some other textures fail. */
+     bytes so that switches can appear, but some other textures fail. */
 #if 0
   if(lump <= 0 && texturecompositesize[tex] > 8192)
   {
@@ -584,7 +584,6 @@ void R_InitTextures (void)
   //CGD: Prizm has malloc / free, but only 128 KB heap
   free(patchlookup);
 }
-
 
 
 //
