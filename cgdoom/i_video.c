@@ -130,14 +130,15 @@ static void SetWindow(int left, int top, int width, int height)
   WriteLCDReg(LCD_WINDOW_BOTTOM, top + height - 1);
 }
 
+/* Whether the black background has been rendered. We could fill the screen
+   at initialization but it would flicker. Instead, we go the extra mile and
+   render the background at the same time as the first frame. This also allows
+   redrawing it after erros.*/
+static int firstflipdone = 0;
+
 void I_Flip (void)
 {
-  /* Whether the black background has been rendered. We could fill the screen
-     at initialization but it would flicker. Instead, we go the extra mile and
-     render the background at the same time as the first frame. */
-  static int black_bg = 0;
-
-  if (!black_bg)
+  if (!firstflipdone)
   {
     SetWindow(0, 0, 396, 224);
     WriteLCDReg(LCD_GRAM_X, 0);
@@ -165,7 +166,7 @@ void I_Flip (void)
     /* Set the future window */
     SetWindow((396 - SCREENWIDTH) / 2, (224 - SCREENHEIGHT) / 2,
       SCREENWIDTH, SCREENHEIGHT);
-    black_bg = 1;
+    firstflipdone = 1;
   }
   else
   {
@@ -191,6 +192,14 @@ void I_InitGraphics(void)
 void I_ShutdownGraphics(void)
 {
   SetWindow(6, 0, 384, 216);
+}
+
+void I_ReinitAfterError(void)
+{
+    firstflipdone = 0;
+    /* Redraw status bar over help message */
+    extern boolean st_firsttime;
+    st_firsttime = true;
 }
 
 #else
@@ -223,7 +232,10 @@ void I_InitGraphics(void)
 
 void I_ShutdownGraphics(void)
 {
+}
 
+void I_SetWindowAfterError(void)
+{
 }
 
 #endif

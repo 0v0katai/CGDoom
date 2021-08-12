@@ -154,6 +154,7 @@ void I_ErrorI (const char *error, int i1,int i2,int i3,int i4)
     locate_OS( 1, 5 );CGDAppendHex32("i3:",i3,8,buf);PrintLine( buf, 21 );
     locate_OS( 1, 6 );CGDAppendHex32("i4:",i4,8,buf);PrintLine( buf, 21 );
     GetKey( &key );
+    I_ReinitAfterError();
 #else
       I_Error (error,i1,i2,i3,i4);
 #endif
@@ -181,6 +182,7 @@ void I_Error (char *error, ...)
     locate_OS( 1, 2 );
     PrintLine( error, 21 );
     GetKey( &key );
+    I_ReinitAfterError();
 #endif //#ifdef CG_EMULATOR
     //I_Quit();
 }

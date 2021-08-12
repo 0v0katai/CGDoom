@@ -267,7 +267,7 @@
 static player_t*   plyr; 
 
 // ST_Start() has just been called
-static boolean    st_firsttime;
+boolean    st_firsttime;
 
 // used to execute ST_Init() only once
 static int     veryfirsttime = 1;
