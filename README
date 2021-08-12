@@ -22,7 +22,6 @@ WAD support TODO:
    => Check the finale and the end of E1M9
 -> Ultimate Doom WAD:
    => Episode 1 should be 100%
-   => E2M3 has missing textures through the door at the start
    => E2M7 may not load based on fragmentation
    => Episodes 3 & 4 seem to be OK
 
@@ -33,7 +32,6 @@ Technical support TODO:
    => Identify arrays that can go to PRAM, eg. lumpcache
    => Remove multiply-avoiding lookup tables?
 -> Rate-limit the game when overclocking
--> Switches don't always show the pressed texture (?)
 -> Add more SHORT() to avoid having to copy-align lumps
    (note left by MPoupe in m_swap.h)
 -> Load/Save game would be very cool
