@@ -1,5 +1,2 @@
-*.o
-CG_Doom.bin
-CG_Doom.elf
-CG_Doom.map
-doom.wad
+build-cg/
+build-sdl2/

@@ -97,11 +97,6 @@ enum {
 #define WIDTH 384
 #define HEIGHT 216
 
-#define KEY_PRGM_OPTN 68
-#define KEY_PRGM_MENU 48
-#define KEY_PRGM_POWER 57
-#define KEY_PRGM_EXE 31
-
 #define EmulHack_Sleep(x)
 #define ASSERT(x)
 #define InitFlashSimu(filename)
