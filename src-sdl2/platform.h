@@ -10,19 +10,17 @@
 
 /* Rendering system emulation. */
 
-// Emulated fx-CG function
 void Bdisp_PutDisp_DD(void);
 void Bdisp_AllClr_VRAM(void);
 uint16_t *GetVRAMAddress(void);
 
-// Additional SDL-related calls
-void EmuInitGraphics(void);
-void EmuShutdownGraphics(void);
-void EmuUpdateWindow(void);
+int Bdisp_FrameAndColor(int, int);
+#define EnableColor(...)
+#define EnableStatusArea(...)
 
 /* Input system emulation. */
 
-// TODO
+void GetKey(int *key);
 
 //~
 

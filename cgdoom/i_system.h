@@ -30,9 +30,6 @@
 #pragma interface
 #endif
 
-// A check to determine which control system to compile for
-//#define EMULATOR_CONTROLS 1
-
 /* CGDOOM: I_ZoneBase() is extended with a second argument to support multiple
    allocation zones, for more memory */
 

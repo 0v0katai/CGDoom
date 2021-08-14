@@ -23,6 +23,7 @@
 
 
 #include "platform.h"
+#include "cgdoom.h"
 #include <stdlib.h>
 
 #include "doomdef.h"
@@ -256,129 +257,8 @@ static void R_SetViewSizeChange(int iDiff)
   }
 }
 
-///////////////////////////////////////////////////////////////////////////////
-// Keyboard input
-//
-// Instead of using libfxcg functions which only provide single-key analysis
-// (GetKey, GetKeyWait, and PRGM_GetKey mainly), the following code uses a
-// simple KEYSC driver. This is indirectly taken from gint code.
-///////////////////////////////////////////////////////////////////////////////
-
-/* Keyboard matrix codes */
-
-#define KEYCODE_F1      0x91
-#define KEYCODE_F2      0x92
-#define KEYCODE_F3      0x93
-#define KEYCODE_F4      0x94
-#define KEYCODE_F5      0x95
-#define KEYCODE_F6      0x96
-
-#define KEYCODE_SHIFT   0x81
-#define KEYCODE_OPTN    0x82
-#define KEYCODE_VARS    0x83
-#define KEYCODE_MENU    0x84
-#define KEYCODE_LEFT    0x85
-#define KEYCODE_UP      0x86
-
-#define KEYCODE_ALPHA   0x71
-#define KEYCODE_SQUARE  0x72
-#define KEYCODE_POWER   0x73
-#define KEYCODE_EXIT    0x74
-#define KEYCODE_DOWN    0x75
-#define KEYCODE_RIGHT   0x76
-
-#define KEYCODE_XOT     0x61
-#define KEYCODE_LOG     0x62
-#define KEYCODE_LN      0x63
-#define KEYCODE_SIN     0x64
-#define KEYCODE_COS     0x65
-#define KEYCODE_TAN     0x66
-
-#define KEYCODE_FRAC    0x51
-#define KEYCODE_FD      0x52
-#define KEYCODE_LEFTP   0x53
-#define KEYCODE_RIGHTP  0x54
-#define KEYCODE_COMMA   0x55
-#define KEYCODE_ARROW   0x56
-
-#define KEYCODE_7       0x41
-#define KEYCODE_8       0x42
-#define KEYCODE_9       0x43
-#define KEYCODE_DEL     0x44
-
-#define KEYCODE_4       0x31
-#define KEYCODE_5       0x32
-#define KEYCODE_6       0x33
-#define KEYCODE_MUL     0x34
-#define KEYCODE_DIV     0x35
-
-#define KEYCODE_1       0x21
-#define KEYCODE_2       0x22
-#define KEYCODE_3       0x23
-#define KEYCODE_PLUS    0x24
-#define KEYCODE_MINUS   0x25
-
-#define KEYCODE_0       0x11
-#define KEYCODE_DOT     0x12
-#define KEYCODE_EXP     0x13
-#define KEYCODE_NEG     0x14
-#define KEYCODE_EXE     0x15
-
-#define KEYCODE_ACON    0x07
-
-/* Copy of the keyboard state, one byte per row */
-typedef uint8_t KeyboardState[12] __attribute__((aligned(2)));
-
-void ScanKeyboard(KeyboardState state)
-{
-    volatile uint16_t *KEYSC = (void *)0xa44b0000;
-    uint16_t *array = (void *)state;
-    for(int i = 0; i < 6; i++) array[i] = KEYSC[i];
-}
-
-int KeycodeDown(KeyboardState state, int code)
-{
-    int row = (code >> 4) ^ 1;
-    int col = 0x80 >> (code & 0x7);
-    return (state[row] & col) != 0;
-}
-
-int KeycodePressed(KeyboardState old_state, KeyboardState new_state, int code)
-{
-    return !KeycodeDown(old_state, code) && KeycodeDown(new_state, code);
-}
-
-int KeycodeToDoomKey(int code)
-{
-    switch(code)
-    {
-    case KEYCODE_LEFT:      return KEY_LEFTARROW;
-    case KEYCODE_RIGHT:     return KEY_RIGHTARROW;
-    case KEYCODE_UP:        return KEY_UPARROW;
-    case KEYCODE_DOWN:      return KEY_DOWNARROW;
-    case KEYCODE_SQUARE:    return ' ';
-    case KEYCODE_ALPHA:     return KEY_RCTRL;
-    case KEYCODE_F1:        return '1';
-    case KEYCODE_F2:        return '2';
-    case KEYCODE_F3:        return '3';
-    case KEYCODE_F4:        return '4';
-    case KEYCODE_F5:        return '5';
-    case KEYCODE_F6:        return '6';
-    case KEYCODE_SHIFT:     return '7';
-    case KEYCODE_EXIT:      return KEY_TAB;
-    case KEYCODE_OPTN:      return KEY_PAUSE;
-    case KEYCODE_0:         return KEY_SLEFTARROW;
-    case KEYCODE_DOT:       return KEY_SRIGHTARROW;
-    case KEYCODE_MENU:      return KEY_ESCAPE;
-    case KEYCODE_EXE:       return KEY_ENTER;
-    default:                return -1;
-    }
-}
-
 void I_StartTic (void)
 {
-    static KeyboardState st = { 0 };
-
     extern boolean fpscounteractive;
     extern int fpscounter_data;
     extern int giRefreshMask;
@@ -403,50 +283,45 @@ void I_StartTic (void)
         fps_frames = 0;
     }
 
-    KeyboardState next_st;
-    ScanKeyboard(next_st);
+    UpdateKeyboardState();
 
     /* Capture events for special keys */
-    if (KeycodePressed(st, next_st, KEYCODE_POWER))
+    if (KeyWasJustPressed(SKEY_CHEAT))
         CGCheat();
-    if (KeycodePressed(st, next_st, KEYCODE_MINUS))
+    if (KeyWasJustPressed(SKEY_DECVP))
         R_SetViewSizeChange(-1);
-    if (KeycodePressed(st, next_st, KEYCODE_PLUS))
+    if (KeyWasJustPressed(SKEY_INCVP))
         R_SetViewSizeChange(1);
-    if (KeycodePressed(st, next_st, KEYCODE_ARROW))
+    if (KeyWasJustPressed(SKEY_NOCLIP))
         CGSwitchClip();
-    if (KeycodePressed(st, next_st, KEYCODE_FRAC))
+    if (KeyWasJustPressed(SKEY_GAMMA))
         CGCycleGamma();
-    if (KeycodePressed(st, next_st, KEYCODE_FD))
+    if (KeyWasJustPressed(SKEY_FREEMEM))
         CGFreeMem();
-    if (KeycodePressed(st, next_st, KEYCODE_LEFTP))
+    if (KeyWasJustPressed(SKEY_FPSCOUNTER))
         fpscounteractive = !fpscounteractive;
-    if (KeycodePressed(st, next_st, KEYCODE_VARS))
+    if (KeyWasJustPressed(SKEY_FRAMESKIP))
         CGRefreshSwitch();
 
-    /* Emit events for all changes between st and next_st */
-    for (int row = 0; row < 12; row++)
+    static int keys[] = {
+        KEY_LEFTARROW, KEY_RIGHTARROW, KEY_UPARROW, KEY_DOWNARROW,
+        KEY_RCTRL, KEY_TAB, KEY_PAUSE, KEY_SLEFTARROW, KEY_SRIGHTARROW,
+        KEY_ESCAPE, KEY_ENTER,
+        ' ', '1', '2', '3', '4', '5', '6', '7',
+        0
+    };
+
+    /* Emit events for all changes */
+    for(int i = 0; keys[i]; i++)
     {
-        int changed = next_st[row] ^ st[row];
-        if (!changed)
-            continue;
+        event_t e;
+        if(KeyWasJustPressed(keys[i]))
+            e.type = ev_keydown;
+        else if(KeyWasJustReleased(keys[i]))
+            e.type = ev_keyup;
+        else continue;
 
-        for(int code = ((row ^ 1) << 4) | 0x7; code & 0x7; code--)
-        {
-            if(changed & 1)
-            {
-                int key = KeycodeToDoomKey(code);
-                if (key < 0)
-                    continue;
-
-                event_t e;
-                e.type = KeycodeDown(next_st, code) ? ev_keydown : ev_keyup;
-                e.data1 = key;
-                D_PostEvent(&e);
-            }
-            changed >>= 1;
-        }
+        e.data1 = keys[i];
+        D_PostEvent(&e);
     }
-
-    memcpy(st, next_st, sizeof st);
 }

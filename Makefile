@@ -10,7 +10,7 @@ CFLAGS := -I cgdoom
 # Extra optimization passes just in case
 CFLAGS += -O3 -fgcse-sm -fgcse-las -fgcse-after-reload -fmerge-all-constants
 # We remove some warnings that come up a lot in Doom
-CFLAGS += -Wall -Wextra -Wno-sign-compare -Wno-unused-but-set-variable -Wno-unused-but-set-parameter
+CFLAGS += -Wall -Wextra -Wno-sign-compare -Wno-unused-but-set-variable -Wno-unused-but-set-parameter -Wno-implicit-fallthrough -Wno-misleading-indentation
 
 LDFLAGS :=
 
@@ -36,8 +36,8 @@ CG_LDFLAGS += -nostartfiles -T $(LIBFXCG_ROOT)/toolchain/prizm.x
 # Generate a map of every function and global variable for debugging
 CG_LDFLAGS += -Wl,-Map=build-cg/$(NAME).map
 
-CG_SRC := $(SRC) $(wildcard src-cg/*.c src-cg/*.s)
-CG_OBJ := $(CG_SRC:cgdoom/%=build-cg/%.o)
+CG_SRC := $(wildcard src-cg/*.c src-cg/*.s)
+CG_OBJ := $(SRC:cgdoom/%=build-cg/%.o) $(CG_SRC:src-cg/%=build-cg/%.o)
 
 ### Native SDL2 build.
 
@@ -46,16 +46,16 @@ CC ?= gcc
 SDL2_CFLAGS := $(CFLAGS) -I src-sdl2 -DCG_EMULATOR $(pkg-config sdl2 --cflags)
 SDL2_LDFLAGS := $(LDFLAGS) $(pkg-config sdl2 --libs)
 
-SDL2_SRC := $(SRC) $(wildcard src-sdl2/*.c)
-SDL2_OBJ := $(SDL2_SRC:cgdoom/%=build-sdl2/%.o)
+SDL2_SRC := $(wildcard src-sdl2/*.c)
+SDL2_OBJ := $(SRC:cgdoom/%=build-sdl2/%.o) $(SDL2_SRC:src-sdl2/%=build-sdl2/%.o)
 
 ### Build rules.
 
-all: all-cg50
+all: all-cg
 
 #~
 
-all-cg50: $(NAME).g3a
+all-cg: $(NAME).g3a
 
 $(NAME).g3a: build-cg/$(NAME).bin
 	mkg3a -n : -i uns:CGDOOM_UNSELECTED.png -i sel:CGDOOM_SELECTED.png $< $@
@@ -67,6 +67,9 @@ build-cg/%.c.o: cgdoom/%.c | build-cg/
 	$(CG_CC) $(CG_CFLAGS) -c $< -o $@
 
 build-cg/%.c.o: src-cg/%.c | build-cg/
+	$(CG_CC) $(CG_CFLAGS) -c $< -o $@
+
+build-cg/%.s.o: src-cg/%.s | build-cg/
 	$(CG_CC) $(CG_CFLAGS) -c $< -o $@
 
 build-cg/$(NAME).elf: $(CG_OBJ)

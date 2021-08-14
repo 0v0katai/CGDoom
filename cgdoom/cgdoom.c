@@ -1,6 +1,7 @@
 #include "platform.h"
 #include "os.h"
 #include "cgdoom.h"
+#include <stdlib.h>
 
 #ifndef CG_EMULATOR
 # include "cgdoom-alloc.h"
@@ -616,9 +617,6 @@ int main(void)
 
 	VRAM = (unsigned short*)GetVRAMAddress();
 
-#ifdef CG_EMULATOR
-	InitFlashSimu("doom.wad");
-#else 
 	int time, ms_index=0, ms_mmap=0;
 
 	EnableColor(1);
@@ -630,8 +628,6 @@ int main(void)
 	int wad_count = FindWADs(wads, 16);
 
 	int dev_info = 0;
-
-
 	int choice = UI_Main(wads, wad_count, &dev_info, &gWADmethod,
 		&startmap, &startepisode);
 	if(choice < 0)
@@ -643,13 +639,16 @@ int main(void)
 	SystemStack = (void *)0xac0f0000;
 
 	/* Setup access to WAD file */
+	#ifdef CG_EMULATOR
+	gWADmethod = CGDOOM_WAD_BFILE;
+	#endif
 	if(gWADmethod == CGDOOM_WAD_BFILE)
 	{
 		gWADfd = Bfile_OpenFile_OS(wads[choice].path, 0, 0);
 	}
 	else
 	{
- #ifdef FLASH_INDEX
+		#ifdef FLASH_INDEX
 		/* Index most likely flash sectors into a sorted array, so that
 		   sectors can be hit quickly. The index contains every sector
 		   on a 4-kiB boundary (where fragments are most likely to
@@ -663,7 +662,8 @@ int main(void)
 		}
 		qsort(gIndex, FLASH_INDEX_SIZE, sizeof *gIndex, IndexCompareSectors);
 		ms_index = (RTC_GetTicks() - time) * 8;
- #endif
+		#endif /* FLASH_INDEX */
+
 		time = RTC_GetTicks();
 		gWADMap.mTable = (void *)0xfe200000; /* PRAM0 */
 		int fd = Bfile_OpenFile_OS(wads[choice].path, 0, 0);
@@ -710,15 +710,11 @@ int main(void)
 		CGD_PRAM_Init(PRAM0_start, PRAM0_end);
 	}
 
-#endif /* !CG_EMULATOR */
-
 	memset(VRAM, 0, WIDTH*HEIGHT*2);
 	D_DoomMain();
 
-#ifndef CG_EMULATOR
 	if(gWADfd >= 0)
 		Bfile_CloseFile_OS(gWADfd);
-#endif
 
 	return 1;
 }

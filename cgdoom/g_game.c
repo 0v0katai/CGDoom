@@ -258,39 +258,39 @@ void G_BuildTiccmd (ticcmd_t* cmd)
       break; 
     }
 
-    if (forward > MAXPLMOVE) 
-    {
-      forward = MAXPLMOVE; 
-    }
-    else if (forward < -MAXPLMOVE) 
-    {
-      forward = -MAXPLMOVE;
-    }
+  if (forward > MAXPLMOVE)
+  {
+    forward = MAXPLMOVE;
+  }
+  else if (forward < -MAXPLMOVE)
+  {
+    forward = -MAXPLMOVE;
+  }
 
-    if (side > MAXPLMOVE) 
-    {
-      side = MAXPLMOVE; 
-    }
-    else if (side < -MAXPLMOVE) 
-    {
-      side = -MAXPLMOVE; 
-    }
+  if (side > MAXPLMOVE)
+  {
+    side = MAXPLMOVE;
+  }
+  else if (side < -MAXPLMOVE)
+  {
+    side = -MAXPLMOVE;
+  }
 
-    cmd->forwardmove= forward;
-    cmd->sidemove= side;
+  cmd->forwardmove= forward;
+  cmd->sidemove= side;
 
-    // special buttons
-    if (sendpause) 
-    { 
-      sendpause = false; 
-      cmd->buttons = BT_SPECIAL | BTS_PAUSE; 
-    } 
+  // special buttons
+  if (sendpause)
+  {
+    sendpause = false;
+    cmd->buttons = BT_SPECIAL | BTS_PAUSE;
+  }
 
-    if (sendsave) 
-    { 
-      sendsave = false; 
-      cmd->buttons = (byte)(BT_SPECIAL | BTS_SAVEGAME | (savegameslot<<BTS_SAVESHIFT)); 
-    } 
+  if (sendsave)
+  {
+    sendsave = false;
+    cmd->buttons = (byte)(BT_SPECIAL | BTS_SAVEGAME | (savegameslot<<BTS_SAVESHIFT));
+  }
 } 
 
 
@@ -921,6 +921,8 @@ void G_DoLoadGame (void)
 //
 void G_SaveGame( int slot, char* description ) 
 { 
+  (void)slot;
+  (void)description;
 } 
 
 void G_DoSaveGame (void)

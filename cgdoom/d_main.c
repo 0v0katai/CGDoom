@@ -31,6 +31,7 @@
 
 #include "os.h"
 #include "cgdoom-alloc.h"
+#include <stdlib.h>
 
 #include "doomdef.h"
 #include "doomstat.h"

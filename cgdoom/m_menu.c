@@ -452,7 +452,7 @@ menu_t  SaveDef =
     80,54,
     0
 };
-
+*/
 
 //
 // M_ReadSaveStrings
@@ -506,11 +506,13 @@ void M_DrawLoad(void)
 
 void M_LoadGame(int choice)
 {
+    (void)choice;
     M_StartMessage(NOTIMP, NULL, true);
 }
 
 void M_SaveGame(int choice)
 {
+    (void)choice;
     M_StartMessage(NOTIMP, NULL, true);
 }
 
@@ -1169,15 +1171,15 @@ void M_Drawer (void)
           break;
         }
 
-        if (i == CGDstrlen(messageString+start))
-        {
-          CGDstrcpy(string,messageString+start);
-          start += i;
-        }
+      if (i == CGDstrlen(messageString+start))
+      {
+        CGDstrcpy(string,messageString+start);
+        start += i;
+      }
 
-        x = (short)(160 - M_StringWidth(string)/2);
-        M_WriteText(x,y,string);
-        y = y + SHORT(hu_font[0]->height);
+      x = (short)(160 - M_StringWidth(string)/2);
+      M_WriteText(x,y,string);
+      y = y + SHORT(hu_font[0]->height);
     }
     return;
   }

@@ -1,328 +1,122 @@
-// nonstandard extension used : nameless struct/union
-#pragma warning (disable : 4201)
-// unreferenced inline function has been removed
-#pragma warning (disable : 4514)
-
-#define WIN32_LEAN_AND_MEAN		// Exclude rarely-used stuff from Windows headers
-#include <windows.h>
+#include "cgdoom.h"
 #include "platform.h"
-#include <tchar.h>
-#include <stdarg.h>
+#include <SDL2/SDL.h>
 #include <stdio.h>
-#include <windef.h>
 
+SDL_Window *window = NULL;
+SDL_Surface *VRAM_RGB888 = NULL;
 
-// Global Variables:
-static TCHAR *szWindowClass = _T("ConsoleW");
-static HWND hWnd = NULL;
-static HANDLE hThread = NULL;
-static HANDLE hThreadKB = NULL;
-static HANDLE hKeyLock = NULL;
-static int iMainRetVal = -1;
-static int ZOOM = 1;
+/* Rendering system emulation. */
 
-#define KEY_BUFFER_LENGTH 16
+uint16_t _VRAM[WIDTH * HEIGHT];
 
-typedef struct 
+static void QuitSDL(void)
 {
-    int miKeyBuffer[KEY_BUFFER_LENGTH];
-    int miKeyUsed;
-    HANDLE mhEvent;
-}GETCH_CONTEXT;
-
-
-static GETCH_CONTEXT gGetchContext = {0};
-
-static LRESULT CALLBACK	MsgHandler(HWND,UINT,WPARAM,LPARAM);
-static LRESULT CALLBACK EditBoxMsgHandler(HWND,UINT,WPARAM,LPARAM);
-
-
-static DWORD __stdcall ThreadProc(void *pContext);
-
-static void ConsoleWrite(IN const char *pszText);
-void KeyHandler(int iKey)
-{
-    /*if(iKey == VK_RETURN)
-    {
-        iKey = '\n';
-    }*/
-    WaitForSingleObject(hKeyLock,INFINITE);
-	if(gGetchContext.miKeyUsed < KEY_BUFFER_LENGTH)
-	{
-		gGetchContext.miKeyBuffer[gGetchContext.miKeyUsed] = iKey;
-		gGetchContext.miKeyUsed++;
-	}
-	SetEvent(gGetchContext.mhEvent);
-    ReleaseMutex(hKeyLock);
+	if(window)
+		SDL_DestroyWindow(window);
+	if(VRAM_RGB888)
+		SDL_FreeSurface(VRAM_RGB888);
+	SDL_Quit();
 }
+
+static void InitSDL(void)
+{
+	if(SDL_Init(SDL_INIT_VIDEO) < 0) {
+		I_Error("InitSDL: %s", SDL_GetError());
+		return;
+	}
+
+	window = SDL_CreateWindow("CGDoom",
+		SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+		WIDTH, HEIGHT, 0);
+
+	VRAM_RGB888 = SDL_CreateRGBSurface(0, WIDTH, HEIGHT, 24, 0, 0, 0, 0);
+	if(!VRAM_RGB888) {
+		I_Error("InitSDL: Cannot create intermediate surface: %s",
+			SDL_GetError());
+		QuitSDL();
+		return;
+	}
+
+	atexit(QuitSDL);
+}
+
+uint16_t *GetVRAMAddress(void)
+{
+	return _VRAM;
+}
+
+void Bdisp_PutDisp_DD(void)
+{
+	if(!window)
+		InitSDL();
+	if(!window || !VRAM_RGB888)
+		return;
+
+	/* Copy from VRAM to RGB888 and let SDL handle the conversion to the
+	   window's native format */
+	for(int y = 0; y < HEIGHT; y++)
+	for(int x = 0; x < WIDTH; x++)
+	{
+		int rgb565 = VRAM[WIDTH * y + x];
+	    int r = (rgb565 >> 8) & 0xf8;
+	    int g = (rgb565 >> 3) & 0xfc;
+	    int b = (rgb565 << 3) & 0xf8;
+
+	    Uint8 *rgb888 = VRAM_RGB888->pixels + y * VRAM_RGB888->pitch + 3 * x;
+	    rgb888[0] = r;
+	    rgb888[1] = g;
+	    rgb888[2] = b;
+	}
+
+	SDL_BlitSurface(VRAM_RGB888, NULL, SDL_GetWindowSurface(window), NULL);
+	SDL_UpdateWindowSurface(window);
+}
+
+int Bdisp_FrameAndColor(int p1, int p2)
+{
+	(void)p1;
+	(void)p2;
+	return 0;
+}
+
+void Bdisp_AllClr_VRAM(void)
+{
+	memset(_VRAM, 0, WIDTH * HEIGHT * 2);
+}
+
+/* Keyboard system emulation. */
+
+void GetKey(int *key)
+{
+	SDL_Event e;
+	int valid=0, sym;
+
+	while(!valid)
+	{
+		SDL_WaitEvent(&e);
+		if(e.type != SDL_KEYDOWN) continue;
+
+		valid = 1;
+		switch((sym = e.key.keysym.sym))
+		{
+		case SDL_SCANCODE_UP:     *key = KEY_CTRL_UP;
+		case SDL_SCANCODE_RIGHT:  *key = KEY_CTRL_RIGHT;
+		case SDL_SCANCODE_DOWN:   *key = KEY_CTRL_DOWN;
+		case SDL_SCANCODE_LEFT:   *key = KEY_CTRL_LEFT;
+		case SDL_SCANCODE_RETURN: *key = KEY_CTRL_EXE;
+
+		default:
+			if(sym >= '0' && sym <= '9') *key = sym;
+			else valid = 0;
+		}
+	}
+}
+
+/* Main function */
 
 int main(int argc,char *argv[])
 {
-    MSG msg;
-    {
-        WNDCLASS wcex = {0};
-        wcex.style			= CS_HREDRAW | CS_VREDRAW;
-        wcex.lpfnWndProc	= MsgHandler;
-        wcex.cbClsExtra		= 0;
-        wcex.cbWndExtra		= 0;
-        wcex.hInstance		= NULL;
-        wcex.hIcon			= NULL;
-        wcex.hCursor		= LoadCursor(NULL, IDC_ARROW); 
-        wcex.hbrBackground	= (HBRUSH) GetStockObject(BLACK_BRUSH);
-        wcex.lpszMenuName	= NULL;
-        wcex.lpszClassName	= szWindowClass;
-        RegisterClass(&wcex);
-    }
-
-    hKeyLock = CreateMutex(NULL,0,NULL);
-    gGetchContext.mhEvent = CreateEvent(NULL,1,0,NULL);
-
-	hWnd = CreateWindow(szWindowClass, "Display", WS_OVERLAPPED,CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, 0, NULL);
-    if (!hWnd)
-    {
-        return 0;
-    }
-    ShowWindow(hWnd, SW_SHOW);
-	SetWindowPos(hWnd,NULL,0,0,WIDTH*ZOOM+8,HEIGHT*ZOOM+23+4,SWP_NOMOVE|SWP_NOZORDER);
-    UpdateWindow(hWnd);
-
-    while (GetMessage(&msg, hWnd, 0, 0))
-    {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
-    }
-
-    CloseHandle(hKeyLock);
-    CloseHandle(gGetchContext.mhEvent);
-    CloseHandle(hThread);
-	CloseHandle(hThreadKB);
-    DestroyWindow(hWnd);
-
-
-    return iMainRetVal;
-}
-
-unsigned short VRAM1[WIDTH * HEIGHT] = {0};
-unsigned short VRAM2[WIDTH * HEIGHT] = {0};
-
-/*#if ((sizeof(void *)) != 4)
-#error "only 32 bit platform is supported"
-#endif 
-*/
-unsigned int GetVRAMAddress( void )
-{
-	return (int) ((void*)VRAM1);
-}
-
-static void Redraw(HWND hWnd)
-{
-	PAINTSTRUCT ps;
-	HDC hDC;
-	int a,b,x,y,i=0;
-	hDC = BeginPaint(hWnd, &ps);
-
-	for(y=0;y<HEIGHT;y++)
-	for(x=0;x<WIDTH;x++)
-	{
-		COLORREF c = 0;
-		BYTE *bc = (BYTE*)&c;
-		WORD p = VRAM1[i];
-
-		bc[0] = ((p >> 11) & 31)<<3;
-		bc[1] = ((p >>  5) & 63)<<2;
-		bc[2] = ((p >>  0) & 31)<<3;
-		for(a=0;a<ZOOM;a++)
-		{
-			for(b=0;b<ZOOM;b++)
-			{
-				SetPixel(hDC,x*ZOOM+b,y*ZOOM+a,c);
-			}
-		}
-
-		i++;
-	}
-
-	EndPaint(hWnd, &ps);
-}
-
-static void Redraw2(HWND hWnd)
-{
-	PAINTSTRUCT ps;
-	HDC hDC;
-	int a,b,x,y,i=0;
-	hDC = BeginPaint(hWnd, &ps);
-
-	for(y=0;y<HEIGHT;y++)
-	for(x=0;x<WIDTH;x++)
-	{
-		COLORREF c = 0;
-		BYTE *bc = (BYTE*)&c;
-		WORD p = VRAM1[i];
-		if(p != VRAM2[i])
-		{
-			bc[0] = ((p >> 11) & 31)<<3;
-			bc[1] = ((p >>  5) & 63)<<2;
-			bc[2] = ((p >>  0) & 31)<<3;
-			for(a=0;a<ZOOM;a++)
-			{
-				for(b=0;b<ZOOM;b++)
-				{
-					SetPixel(hDC,x*ZOOM+b,y*ZOOM+a,c);
-				}
-			}
-			VRAM2[i] = p;
-		}
-		i++;
-	}
-
-	EndPaint(hWnd, &ps);
-}
-
-DWORD __stdcall KeyboardFunc(void *p);
-static int giOptimize = 0;
-static int giIsRedraw = 0;
-static LRESULT CALLBACK MsgHandler(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-    switch(message)
-    {
-    case WM_CREATE:
-		   hThread = CreateThread(NULL,0,&ThreadProc,NULL,0,NULL);
-		   hThreadKB = CreateThread(NULL,0,&KeyboardFunc,NULL,0,NULL);
-        break;
-    case WM_SIZE:
-        break;
-    case WM_CHAR:
-        //KeyHandler((int)wParam);
-        break;
-    case WM_CLOSE:  
-    case WM_DESTROY:
-        PostQuitMessage(0);
-        break;
-	case WM_PAINT:
-		//if(giOptimize)
-		Redraw2(hWnd);
-		giIsRedraw = 1;
-		//else
-		//	Redraw(hWnd);
-		//giOptimize = 0;
-		break;
-	case WM_RBUTTONUP://switch zoom 1x <-> 2x
-		ZOOM = 3 - ZOOM;
-		SetWindowPos(hWnd,NULL,0,0,WIDTH*ZOOM+8,HEIGHT*ZOOM+23+4,SWP_NOMOVE|SWP_NOZORDER);
-		memset(VRAM2,0,sizeof(VRAM2));
-		InvalidateRect(hWnd,NULL,FALSE);
-		break;
-
-    default:
-        return DefWindowProc(hWnd, message, wParam, lParam);
-    }
-    return 0;
-}
-
-
-//////////////////////////////////////////////////////////////////////////
-
-int Consolekbhit()
-{
-    return WaitForSingleObject(gGetchContext.mhEvent,0) == WAIT_OBJECT_0;
-}
-int Consolegetch()
-{
-    int iResult;
-    WaitForSingleObject(gGetchContext.mhEvent,INFINITE);
-    WaitForSingleObject(hKeyLock,INFINITE);
-    gGetchContext.miKeyUsed--;
-    iResult = gGetchContext.miKeyBuffer[gGetchContext.miKeyUsed];
-    if(gGetchContext.miKeyUsed == 0)
-    {
-        ResetEvent(gGetchContext.mhEvent);
-    }
-    ReleaseMutex(hKeyLock);
-    return iResult;
-}
-
-static DWORD __stdcall ThreadProc(void *pContext)
-{
-    G3A_main();
-    PostMessage(hWnd, WM_CLOSE, 0, 0);
-    return 0;
-}
-
-void Bdisp_PutDisp_DD()
-{
-	//Redraw2(hWnd);
-	giOptimize = 1;
-	giIsRedraw = 0;
-	InvalidateRect(hWnd,NULL,FALSE);
-	while(!giIsRedraw)Sleep(1);
-}
-
-extern int iKeyDown;
-int PRGM_GetKey()
-{
-	/*if(Consolekbhit())
-	{
-		return Consolegetch();
-	}*/
-	return iKeyDown;
-}
-
-
-void Bdisp_AllClr_VRAM( void )
-{
-	memset(VRAM1,0,sizeof(VRAM1));
-}
-
-HANDLE ghPort = 0;
-int Serial_Open( unsigned char *mode )
-{
-	DWORD dwMode = PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_NOWAIT;
-	ghPort = CreateFileA( 
-		"\\\\.\\pipe\\seriak",   // pipe name \\.\pipe\seriak
-		GENERIC_READ |  // read and write access 
-		GENERIC_WRITE, 
-		0,              // no sharing 
-		NULL,           // default security attributes
-		OPEN_EXISTING,  // opens existing pipe 
-		FILE_FLAG_WRITE_THROUGH, // default attributes 
-		NULL);          // no template file 
-
-
-	SetNamedPipeHandleState( 
-		ghPort, // pipe handle 
-		&dwMode,  // new pipe mode 
-		NULL,     // don't set maximum bytes 
-		NULL);    // don't set maximum time 
-	return 0;
-}
-
-int Serial_Close( int mode )
-{
-	CloseHandle(ghPort);
-	return 0;
-}
-
-int Serial_DirectTransmitOneByte( unsigned char byte_to_transmit )
-{
-	DWORD dwSent;
-	WriteFile(ghPort,&byte_to_transmit,sizeof(byte_to_transmit),&dwSent,NULL);
-	return 0;
-}
-
-int Serial_CheckRX()
-{
-	DWORD dwData = 0;
-	PeekNamedPipe(ghPort,NULL,0,0,&dwData,NULL);
-	//if(!dwData)Sleep(1);
-	return (int)dwData;
-}
-
-unsigned char Serial_Read()
-{
-	DWORD dwData = 0;
-	BYTE byData;
-	ReadFile(ghPort,&byData,1,&dwData,NULL);
-	return byData;
 }
 
 
@@ -390,56 +184,4 @@ int Bfile_CloseFile_OS( int HANDLE )
 {
 	fclose((FILE*)HANDLE);
 	return 0;
-}
-
-static unsigned char gcFlashBuffer[FLASH_PAGE_SIZE * FLASH_PAGE_COUNT] = {0};
-const unsigned char *gpcFlashBuffer = gcFlashBuffer;
-
-static const char *gpszFlashFileName = "flash.bin";
-static void CreateFlash( const unsigned short*filename)
-{
-  int f = Bfile_OpenFile_OS(filename,0);
-  int iRet;
-  int iIndex = 0;
-
-  for(;;)
-  {
- //   iIndex++;
-
-    iRet = Bfile_ReadFile_OS(f,gcFlashBuffer + (iIndex * FLASH_PAGE_SIZE), FLASH_PAGE_SIZE,-1);
-    iIndex++;
-    if(iRet < FLASH_PAGE_SIZE)
-    {
-      break;
-    }
-  }
-  Bfile_CloseFile_OS(f);
-  {
-    FILE *f = fopen(gpszFlashFileName,"wb");
-    fwrite(gcFlashBuffer,1,sizeof(gcFlashBuffer),f);
-    fclose(f);
-  }
-}
-
-void InitFlashSimu( const unsigned short*filename)
-{
-  DWORD dwFileSize;
-  HANDLE hMap;
-  HANDLE hFile=CreateFileA(gpszFlashFileName,GENERIC_READ|GENERIC_WRITE,FILE_SHARE_READ|FILE_SHARE_WRITE,NULL,OPEN_EXISTING,0,NULL);
-  if(hFile==INVALID_HANDLE_VALUE)
-  {
-    CreateFlash( filename);
-    hFile=CreateFileA(gpszFlashFileName,GENERIC_READ|GENERIC_WRITE,FILE_SHARE_READ|FILE_SHARE_WRITE,NULL,OPEN_EXISTING,0,NULL);
-  };
-  ASSERT(hFile!=INVALID_HANDLE_VALUE);
-
-  // create anonymous file mapping
-  hMap=CreateFileMapping(hFile,NULL,PAGE_READWRITE,0,0,NULL);
-  ASSERT(hMap!=NULL);
-
-  dwFileSize=GetFileSize(hFile,NULL); // get file size
-
-  // map buffer to local process space
-  gpcFlashBuffer =(unsigned char *)MapViewOfFile(hMap,FILE_MAP_READ,0,0,dwFileSize);
-  ASSERT(gpcFlashBuffer!=NULL);
 }
