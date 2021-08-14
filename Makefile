@@ -4,7 +4,7 @@
 ### Project structure.
 
 NAME := CGDoom
-SRC := $(wildcard cgdoom/*.c cgdoom/*.s)
+SRC := $(wildcard cgdoom/*.c)
 
 CFLAGS := -I cgdoom
 # Extra optimization passes just in case
@@ -36,7 +36,7 @@ CG_LDFLAGS += -nostartfiles -T $(LIBFXCG_ROOT)/toolchain/prizm.x
 # Generate a map of every function and global variable for debugging
 CG_LDFLAGS += -Wl,-Map=build-cg/$(NAME).map
 
-CG_SRC := $(SRC) $(wildcard src-fxcg/*.c src-fxcg/*.s)
+CG_SRC := $(SRC) $(wildcard src-cg/*.c src-cg/*.s)
 CG_OBJ := $(CG_SRC:cgdoom/%=build-cg/%.o)
 
 ### Native SDL2 build.

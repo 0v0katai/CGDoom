@@ -1,5 +1,6 @@
 #include "cgdoom-alloc.h"
 #include "z_zone.h"
+#include <stdint.h>
 
 /* We use -fstrict-volatile-bitfields to enforce the 32-bit access size. */
 struct node;

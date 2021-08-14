@@ -22,6 +22,7 @@
 //-----------------------------------------------------------------------------
 
 #include "os.h"
+#include "cgdoom.h"
 
 #include "doomstat.h"
 #include "i_system.h"
@@ -92,7 +93,32 @@ void I_SetPalette(int gamma_correction)
   }
 }
 
-#if !defined(CG_EMULATOR) && defined(CGDOOM_DIRECT_R61524)
+#if defined(CG_EMULATOR)
+
+void I_Flip (void)
+{
+  int x,y;
+  for(y=0;y<SCREENHEIGHT;y++)
+  {
+    for(x=0;x<SCREENWIDTH;x++)
+    {
+      VRAM[(x+(WIDTH-SCREENWIDTH)/2)+(y+(HEIGHT-SCREENHEIGHT)/2)*WIDTH] = gPalette[screens[0][x+y*SCREENWIDTH]];
+    }
+  }
+  EmuUpdateWindow();
+}
+
+void I_InitGraphics(void)
+{
+  EmuInitGraphics();
+}
+
+void I_ShutdownGraphics(void)
+{
+  EmuShutdownGraphics();
+}
+
+#elif defined(CGDOOM_DIRECT_R61524)
 
 #define SYNCO() __asm__ volatile("synco":::"memory");
 #define PRDR *(volatile uint8_t *)0xA405013C
@@ -202,7 +228,7 @@ void I_ReinitAfterError(void)
     st_firsttime = true;
 }
 
-#else
+#else /* fx-CG 50 without direct-DD access */
 
 void I_Flip (void)
 {

@@ -22,7 +22,8 @@
 
 
 
-#include "os.h"
+#include "platform.h"
+#include <stdlib.h>
 
 #include "doomdef.h"
 #include "m_misc.h"
@@ -58,7 +59,35 @@ int  I_GetHeapSize (void)
     return RAM_I_Zone_SIZE;
 }
 
+#ifdef CG_EMULATOR
+
+/* On the native build, simply reserve a large enough region of heap. */
 byte* I_ZoneBase (int*	size, int i)
+{
+    if (i == 0)
+    {
+        *size = (8 << 20);
+        return malloc(*size);
+    }
+    return NULL;
+}
+
+byte *I_ScreenBase(int screen)
+{
+    if (screen == 0)
+        return malloc(320 * 200);
+    if (screen == 1)
+        return malloc(320 * 200);
+    if (screen == 4)
+        return malloc(320 * 32);
+
+    return NULL;
+}
+
+#else /* fx-CG build */
+
+/* On the calculator, scrap every possible bit of RAM */
+byte* I_ZoneBase (int*  size, int i)
 {
     if (i == 0)
     {
@@ -75,7 +104,7 @@ byte* I_ZoneBase (int*	size, int i)
         *size = &eextra - &sextra;
         return &sextra;
     }
-#ifdef CGDOOM_DIRECT_R61524
+    #ifdef CGDOOM_DIRECT_R61524
     if (i == 2)
     {
         /* Secondary VRAM (screen buffers being in the main VRAM because we're
@@ -83,9 +112,28 @@ byte* I_ZoneBase (int*	size, int i)
         *size = 384 * 216 * 2;
         return SaveVRAMBuffer;
     }
-#endif
+    #endif
     return NULL;
 }
+
+byte *I_ScreenBase(int screen)
+{
+    /* The primary/secondary VRAM covers 384*216*2 = 162 kiB:
+       -> Give 320*200 = 64 kB to screens[0] (main display)
+       -> Give 320*200 = 64 kB to screens[1] (intermissions)
+       -> Give 320*32  = 10 kiB to screens[4] (status bar)
+       -> 27 kiB are left */
+    if (screen == 0)
+        return CGDOOM_SCREENS_BASE;
+    if (screen == 1)
+        return CGDOOM_SCREENS_BASE + 320*200;
+    if (screen == 4)
+        return CGDOOM_SCREENS_BASE + 320*200*2;
+
+    return NULL;
+}
+
+#endif
 
 //
 // I_Init
@@ -160,7 +208,7 @@ void I_ErrorI (const char *error, int i1,int i2,int i3,int i4)
 #endif
 }
 
-void I_Error (char *error, ...)
+void I_Error (const char *error, ...)
 {
 #ifdef CG_EMULATOR
     /*// Message first.

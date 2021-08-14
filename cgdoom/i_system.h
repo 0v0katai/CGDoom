@@ -41,6 +41,8 @@
 // for the zone management.
 byte*	I_ZoneBase (int *size, int zone_no);
 
+/* Extra CGDoom function supplying screen pointers from custom areas */
+byte *I_ScreenBase(int screen);
 
 // Called by D_DoomLoop,
 // returns current time in tics.
@@ -93,7 +95,7 @@ void 	I_ShowDBox(const char* title, const char* msg);
 int  	toupper_int(int i);
 //boolean	access_ok(const char *file);
 //void	I_GetMainDir(char* dir);
-void 	I_Error (char *error, ...);
+void 	I_Error (const char *error, ...);
 
 //CGD bastl/hack
 void I_ErrorI (const char *error, int i1,int i2,int i3,int i4);

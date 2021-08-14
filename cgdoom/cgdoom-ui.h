@@ -2,7 +2,9 @@
 #define CGDOOM_UI_H
 
 #include "platform.h"
+#include "cgdoom.h"
 #include <stdarg.h>
+#include <stdint.h>
 
 /* Basic rendering functions. */
 

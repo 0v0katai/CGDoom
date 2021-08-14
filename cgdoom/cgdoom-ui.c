@@ -1,5 +1,6 @@
 #include "cgdoom-ui.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 /* gint's font in a PrizmSDK-friendly (though ugly) form */
 static uint8_t const font_width[96] = {
@@ -51,6 +52,11 @@ static uint32_t const font_glyphs[263] = {
 	0x0,
 };
 
+static inline void SetPixel(int x, int y, int color)
+{
+	VRAM[WIDTH * y + x] = color;
+}
+
 static void Font_RenderChar(int *x, int y, int c, int fg)
 {
 	if(c < 32 || c >= 128)
@@ -71,7 +77,7 @@ static void Font_RenderChar(int *x, int y, int c, int fg)
 	{
 		int b = font_glyphs[offset + (bit>>5)] & (0x80000000 >> (bit&31));
 		if (b)
-			Bdisp_SetPoint_VRAM(*x+dx, y+dy, fg);
+			SetPixel(*x+dx, y+dy, fg);
 		bit++;
 	}
 
@@ -136,7 +142,7 @@ void UI_Checkbox(int x, int y, int checked)
 		if((dx == 0) || (dx == 7) || (dy == 0) || (dy == 7) ||
 			(checked && dx >= 2 && dx <= 5 && dy >= 2 && dy <= 5))
 		{
-			Bdisp_SetPoint_VRAM(x+dx, y+dy, 0x0000);
+			SetPixel(x+dx, y+dy, 0x0000);
 		}
 	}
 }
@@ -149,12 +155,12 @@ void UI_FileMappingProgressBar(int size_mapped, int size_total)
 
 	for(int x = x0; x < x0+w; x++)
 	{
-		Bdisp_SetPoint_VRAM(x, y0, COLOR_BLACK);
-		Bdisp_SetPoint_VRAM(x, y0+h-1, COLOR_BLACK);
+		SetPixel(x, y0, 0x0000);
+		SetPixel(x, y0+h-1, 0x0000);
 
 		if(x > pos && x != x0+w-1) continue;
 		for(int y = y0+1; y < y0+h-1; y++)
-			Bdisp_SetPoint_VRAM(x, y, COLOR_BLACK);
+			SetPixel(x, y, 0x0000);
 	}
 	Bdisp_PutDisp_DD();
 }
@@ -192,7 +198,7 @@ void Layout_EndFrame(Layout *l)
 		/* Draw cursor */
 		int x = LAYOUT_RIGHT - Font_StringLength(l->text + l->cursor);
 		for(int dy = 0; dy < 12; dy++)
-			Bdisp_SetPoint_VRAM(x, y+dy, 0x0000);
+			SetPixel(x, y+dy, 0x0000);
 	}
 	else
 	{

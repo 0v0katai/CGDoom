@@ -1,7 +1,11 @@
 #include "platform.h"
 #include "os.h"
-#include "cgdoom-ui.h"
-#include "cgdoom-alloc.h"
+#include "cgdoom.h"
+
+#ifndef CG_EMULATOR
+# include "cgdoom-alloc.h"
+# include "cgdoom-ui.h"
+#endif
 
 #ifdef CG_EMULATOR
 static int iAllocSum = 0;
@@ -281,6 +285,8 @@ int CGDstrnicmp (const char*s1,const char*s2,int iLen)
 //
 // See <platform.h> for Flash traversal parameters.
 ///////////////////////////////////////////////////////////////////////////////
+
+#ifndef CG_EMULATOR
 
 //The whole sound doesn't fir onto the RAM.
 //Reading per partes is not possible as this is synchronnous player (there would be silences when reading).
@@ -599,15 +605,22 @@ void abort(void){
 	for(;;)
 		GetKey(&key);
 }
+
+#endif /* CG_EMULATOR */
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-int main(void){
+int main(void)
+{
+	startmap = 1;
+	startepisode = 1;
+
+	VRAM = (unsigned short*)GetVRAMAddress();
+
+#ifdef CG_EMULATOR
+	InitFlashSimu("doom.wad");
+#else 
 	int time, ms_index=0, ms_mmap=0;
 
-	InitFlashSimu("doom.wad"); //load wad file to flash simulation on simulator, do nothing on real HW
-#ifdef CG_EMULATOR
-	SaveVRAMBuffer = aSaveVRAMBuffer;
-	SystemStack = aSystemStack;
-#else 
 	EnableColor(1);
 	EnableStatusArea(3);
 	Bdisp_FrameAndColor(3, 16);
@@ -616,11 +629,8 @@ int main(void){
 	WADFileInfo wads[16];
 	int wad_count = FindWADs(wads, 16);
 
-	extern int startmap, startepisode;
 	int dev_info = 0;
 
-	startmap = 1;
-	startepisode = 1;
 
 	int choice = UI_Main(wads, wad_count, &dev_info, &gWADmethod,
 		&startmap, &startepisode);
@@ -631,8 +641,6 @@ int main(void){
 	SaveVRAMBuffer = (unsigned char*)tmp;
 	/* Graph 90+E: RAM starts at 0x0c000000 in physical memory */
 	SystemStack = (void *)0xac0f0000;
-#endif 
-	VRAM = (unsigned short*)GetVRAMAddress();
 
 	/* Setup access to WAD file */
 	if(gWADmethod == CGDOOM_WAD_BFILE)
@@ -702,11 +710,15 @@ int main(void){
 		CGD_PRAM_Init(PRAM0_start, PRAM0_end);
 	}
 
+#endif /* !CG_EMULATOR */
+
 	memset(VRAM, 0, WIDTH*HEIGHT*2);
 	D_DoomMain();
 
+#ifndef CG_EMULATOR
 	if(gWADfd >= 0)
 		Bfile_CloseFile_OS(gWADfd);
+#endif
 
 	return 1;
 }

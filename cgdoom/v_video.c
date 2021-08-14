@@ -352,15 +352,11 @@ void V_GetBlock( int  x, int  y, int  scrn, int  width, int  height, byte*  dest
 void V_Init (void) 
 { 
   /* screens[0] is the main screen */
-  screens[0] = CGDOOM_SCREENS_0;
+  screens[0] = I_ScreenBase(0);
   /* screens[1] is used for the level end sequence (intermission) */
-  screens[1] = CGDOOM_SCREENS_1;
+  screens[1] = I_ScreenBase(1);
   /* screens[2] and screens[3] are used for wipe effects (disabled here) */
   /* screens[4] is used for the status bar (allocated by st_stuff.c) */
-
-  //Blank the screen, to indicate on real hardware that SOMETHING is going on
-  //Done since loading on real hardware takes so damn long
-//  I_PrepScreen();
 }
 
 /* CGDOOM-specific function to clear screen when changing window size */

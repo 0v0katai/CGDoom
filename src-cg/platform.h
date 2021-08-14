@@ -27,6 +27,13 @@ enum {
 #define FLASH_CACHED_START ((const void *)0x80000000)
 #define FLASH_CACHED_END   ((const void *)0x82000000)
 
+/* When loading from Flash, non-fragmented lumps are returned directly via
+   pointers to Flash in order to save heap. Pointers to Flash can't be freed
+   and are detected with the following macro. */
+#define PTR_TO_FLASH(x) ( \
+    ((x) >= FLASH_START && (x) < FLASH_END) || \
+    ((x) >= FLASH_CACHED_START && (x) < FLASH_CACHED_END))
+
 /* Storage unit is a cluster of 512 bytes; Fugue tries to use clusters of 4 kiB
    (8 sectors) but in exceptional circumstances cluster alignment can be lost
    (such as when sectors are dead) */
@@ -67,15 +74,6 @@ enum {
 # define CGDOOM_SCREENS_BASE SaveVRAMBuffer
 #endif
 
-/* The primary/secondary VRAM covers 384*216*2 = 162 kiB:
-   -> Give 320*200 = 64 kB to screens[0] (main display)
-   -> Give 320*200 = 64 kB to screens[1] (intermissions)
-   -> Give 320*32  = 10 kiB to screens[4] (status bar)
-   -> 27 kiB are left */
-#define CGDOOM_SCREENS_0 (CGDOOM_SCREENS_BASE)
-#define CGDOOM_SCREENS_1 (CGDOOM_SCREENS_BASE + 320*200)
-#define CGDOOM_SCREENS_4 (CGDOOM_SCREENS_BASE + 320*200*2)
-
 //---
 
 #include "keyboard.hpp"
@@ -94,19 +92,6 @@ enum {
 #include <string.h>
 #include <stdint.h>
 
-#define WIDTH 384
-#define HEIGHT 216
-
-#define EmulHack_Sleep(x)
 #define ASSERT(x)
-#define InitFlashSimu(filename)
-
-/* Description of a WAD file selectable by user. */
-typedef struct
-{
-    char name[16];
-    uint16_t path[23];
-    int size;
-} WADFileInfo;
 
 #endif //#ifndef PLATFORM_H

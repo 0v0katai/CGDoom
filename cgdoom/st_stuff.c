@@ -1114,5 +1114,5 @@ void ST_Init (void)
 {
   veryfirsttime = 0;
   ST_loadData();
-  screens[4] = CGDOOM_SCREENS_4;
+  screens[4] = I_ScreenBase(4);
 }

@@ -5,7 +5,7 @@
 
 #define WIN32_LEAN_AND_MEAN		// Exclude rarely-used stuff from Windows headers
 #include <windows.h>
-#include "emul.h"
+#include "platform.h"
 #include <tchar.h>
 #include <stdarg.h>
 #include <stdio.h>

@@ -33,7 +33,7 @@ void CGDAppendHex32(const char *pszText,int iNum, int iDigits,char *pszBuf);
 
 int abs(int x);
 
-void I_Error (char *error, ...);
+void I_Error (const char *error, ...);
 void I_ErrorI(const char *str, int i1, int i2, int i3, int i4);
 
 //force compiler error on use following:
@@ -46,11 +46,6 @@ void I_ErrorI(const char *str, int i1, int i2, int i3, int i4);
 int FindInFlash(const void **buf, int size, int readpos);
 //direct read from flash
 int Flash_ReadFile(void *buf, int size, int readpos);
-
-//CGD: bypass for direct pointers to flash
-#define PTR_TO_FLASH(x) ( \
-    ((x) >= FLASH_START && (x) < FLASH_END) || \
-    ((x) >= FLASH_CACHED_START && (x) < FLASH_CACHED_END))
 
 #define min(x,y) ({ \
     __auto_type __x = (x); \
