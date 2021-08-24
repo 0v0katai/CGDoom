@@ -52,7 +52,9 @@ void    Z_DumpHeap (int lowtag, int hightag);
 //void    Z_FileDumpHeap (FILE *f);
 void    Z_CheckHeap (void);
 void    Z_ChangeTag2 (const void *ptr, int tag);
-int     Z_FreeMemory (void);
+
+/* CGDOOM: Returns free memory in specified zone, or all zones if zone < 0 */
+int     Z_FreeMemory (int zone);
 
 /* CGDOOM: Support for multiple zones is added; Z_Init() now does nothing,
    zones need to be added manually (see D_DoomMain()). */

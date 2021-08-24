@@ -354,7 +354,7 @@ int Layout_Event(Layout *l, int key)
 }
 
 int UI_Main(WADFileInfo *wads, int wad_count, int *dev_info, int *use_mmap,
-	int *startmap, int *startepisode)
+	int *startmap, int *startepisode, int *trustunaligned)
 {
 	Layout l;
 	Layout_Init(&l);
@@ -373,6 +373,14 @@ int UI_Main(WADFileInfo *wads, int wad_count, int *dev_info, int *use_mmap,
 				action = "Play Doom Shareware";
 			else if(!strcmp(wads[i].name, "doomu.wad"))
 				action = "Play Ultimate Doom";
+			else if(!strcmp(wads[i].name, "doomu1.wad"))
+				action = "Play Ultimate Doom E1";
+			else if(!strcmp(wads[i].name, "doomu2.wad"))
+				action = "Play Ultimate Doom E2";
+			else if(!strcmp(wads[i].name, "doomu3.wad"))
+				action = "Play Ultimate Doom E3";
+			else if(!strcmp(wads[i].name, "doomu4.wad"))
+				action = "Play Ultimate Doom E4";
 
 			Layout_Text(&l, action, "%s (%d.%dM)",
 				wads[i].name, wads[i].size / 1000000,
@@ -386,6 +394,7 @@ int UI_Main(WADFileInfo *wads, int wad_count, int *dev_info, int *use_mmap,
 		Layout_Spacing(&l, 12);
 		Layout_Checkbox(&l, "Developer info:", dev_info);
 		Layout_Checkbox(&l, "Map file to memory:", use_mmap);
+		Layout_Checkbox(&l, "Trust unaligned lumps:", trustunaligned);
 		Layout_EndFrame(&l);
 		Bdisp_PutDisp_DD();
 

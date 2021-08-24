@@ -61,7 +61,7 @@ typedef struct
    * Z_FreeTags is changed to iterate on all zones
    * Z_CheckHeap is changed to iterate on all zones
    * Z_ChangeTag2 operates on a single block and needs no change
-   * Z_FreeMemory is changed to iterate on all zones */
+   * Z_FreeMemory is changed to iterate on one or all zones */
 static memzone_t *zones[ZONE_MAX];
 static int zone_count;
 
@@ -228,7 +228,7 @@ void* Z_Malloc( int size,  int  tag,  void* user )
 #ifdef CG_EMULATOR
   {
     static int iMaxFree = 1024*1024;
-    int iF = Z_FreeMemory();
+    int iF = Z_FreeMemory(-1);
     if(iF < iMaxFree)
     {
       iMaxFree = iF;
@@ -461,23 +461,29 @@ void Z_ChangeTag2(const void* ptr,int tag )
 //
 // Z_FreeMemory
 //
-int Z_FreeMemory (void)
+int Z_FreeMemory (int zone)
 {
+  if (zone < 0)
+  {
+    int free = 0;
+    for (int i = 0; i < zone_count; i++)
+      free += Z_FreeMemory (i);
+    return free;
+  }
+
   memblock_t* block;
   int free = 0;
 
-  for (int i = 0; i < zone_count; i++)
-  {
-    memzone_t* mainzone = zones[i];
+  memzone_t* mainzone = zones[zone];
 
-    for(block = mainzone->blocklist.next;block != &mainzone->blocklist;block = block->next)
+  for(block = mainzone->blocklist.next;block != &mainzone->blocklist;block = block->next)
+  {
+    if (!block->user || block->tag >= PU_PURGELEVEL)
     {
-      if (!block->user || block->tag >= PU_PURGELEVEL)
-      {
-        free += block->size;
-      }
+      free += block->size;
     }
   }
+
   return free;
 }
 

@@ -377,10 +377,15 @@ static FileMapping gWADMap;
 /* Index of most likely sectors for fragment search. (CGDOOM_WAD_MMAP) */
 static SectorIndexInfo *gIndex = NULL;
 
-/* Developer info */
+/* Developer statistics */
 static int gDevFragments = 0;
 static int gDevIndexHits = 0;
 static const void *gDevLowestFragment = NULL;
+int gDevUnalignedLumpLoads = 0;
+int gDevUnalignedLumpSize = 0;
+
+/* Global options */
+int CGD_TrustUnalignedLumps = 0;
 
 /* Read next sector from file, while caching into a buffer. */
 const void *ReadNextSector(FileAccessCache *fc, int *size)
@@ -629,7 +634,7 @@ int main(void)
 
 	int dev_info = 0;
 	int choice = UI_Main(wads, wad_count, &dev_info, &gWADmethod,
-		&startmap, &startepisode);
+		&startmap, &startepisode, &CGD_TrustUnalignedLumps);
 	if(choice < 0)
 		return 1;
 
@@ -715,6 +720,22 @@ int main(void)
 
 	if(gWADfd >= 0)
 		Bfile_CloseFile_OS(gWADfd);
+
+	if(dev_info) {
+		Layout l;
+		Layout_Init(&l);
+		Bdisp_AllClr_VRAM();
+		Layout_CenteredText(&l, "Developer info");
+		Layout_Spacing(&l, 12);
+		Layout_Text(&l, "Unaligned lumps loaded:", "%d", gDevUnalignedLumpLoads);
+		Layout_Text(&l, "Unaligned size:", "%d B", gDevUnalignedLumpSize);
+		Bdisp_FrameAndColor(3, 16);
+		Bdisp_FrameAndColor(1, 0);
+		Bdisp_PutDisp_DD();
+		while(PRGM_GetKey() != 0) {}
+		int key;
+		GetKey(&key);
+	}
 
 	return 1;
 }

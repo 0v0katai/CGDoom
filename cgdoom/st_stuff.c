@@ -475,10 +475,21 @@ void CGSwitchClip()
 
 void CGFreeMem()
 {
-  static char cRAMBuff[16];
-  int iFree = Z_FreeMemory();
-  CGDAppendNum0_999("Free:",iFree,0,cRAMBuff);
-  plyr->message = cRAMBuff;
+  static char message[64];
+  sprintf(message, "Free: ");
+
+  for (int i = 0;; i++)
+  {
+    int size;
+    byte *ptr = I_ZoneBase(&size, i);
+    if (!ptr)
+      break;
+
+    sprintf(message+strlen(message), "%s%d/%d kB", (i ? ", " : ""),
+      Z_FreeMemory(i) >> 10, size >> 10);
+  }
+
+  plyr->message = message;
 }
 
 int giRefreshMask = 1;

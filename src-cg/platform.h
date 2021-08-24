@@ -51,6 +51,11 @@ enum {
    almost always 4 kiB-aligned, and only occasionally not */
 #define FLASH_INDEX_SIZE ((FLASH_END-FLASH_FS_HINT) / 4096)
 
+/* Whether to trust unaligned lumps. If this is set, all non-fragmented lumps
+   will be accessed from ROM. Otherwise, lumps that are not 4-aligned will be
+   loaded to the heap even if they are available. */
+extern int CGD_TrustUnalignedLumps;
+
 //---
 // Display driver access
 //---

@@ -63,10 +63,11 @@ int Layout_Event(Layout *l, int key);
 
 /* Show the program's main screen; returns index of selected WAD file. */
 int UI_Main(WADFileInfo *wads, int wad_count,
-    int *dev_info,      /* Enable technical detail screens */
-    int *use_mmap,      /* Map file to memory (as opposed to using Bfile) */
-    int *startmap,      /* Warp to this map */
-    int *startepisode   /* Warp to this episode */
+    int *dev_info,        /* Enable technical detail screens */
+    int *use_mmap,        /* Map file to memory (as opposed to using Bfile) */
+    int *startmap,        /* Warp to this map */
+    int *startepisode,    /* Warp to this episode */
+    int *trustunaligned   /* Trust unaligned lumps */
 );
 
 #endif /* CGDOOM_UI_H */
