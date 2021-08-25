@@ -38,6 +38,7 @@
 #endif*/
 
 #include "os.h"
+#include "cgdoom.h"
 #include "cgdoom-alloc.h"
 
 #include "doomtype.h"
@@ -322,8 +323,17 @@ void * W_ReadLumpWithZ_Malloc(int lump,int tag,int iEnableFlash)
      the heap would provide. */
   if(!full || !aligned)
   {
+    prof_enter(CGD_Perf.LumpLoading);
+    if(!aligned)
+      prof_enter(CGD_Perf.UnalignedLumpLoading);
+
+
     Z_Malloc (lumpinfo[lump].size, tag, &lumpcache[lump]);
     W_ReadLump (lump, lumpcache[lump]);
+
+    if(!aligned)
+      prof_leave(CGD_Perf.UnalignedLumpLoading);
+    prof_leave(CGD_Perf.LumpLoading);
   }
 
   return lumpcache[lump];

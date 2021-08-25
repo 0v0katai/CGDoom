@@ -21,11 +21,11 @@
 //
 //-----------------------------------------------------------------------------
 
-//static const char 
-
 #include "z_zone.h"
 #include "i_system.h"
 #include "doomdef.h"
+
+#include "cgdoom.h"
 
 
 //
@@ -152,6 +152,7 @@ void Z_Free (const void* ptr)
     return;
   }
 
+  prof_enter(CGD_Perf.DynamicAllocation);
   block = (memblock_t *) ( (byte *)ptr - sizeof(memblock_t));
 
   if (block->id != ZONEID)
@@ -203,6 +204,8 @@ void Z_Free (const void* ptr)
       zone->rover = block;
     }
   }
+
+  prof_leave(CGD_Perf.DynamicAllocation);
 }
 
 
@@ -216,6 +219,8 @@ void Z_Free (const void* ptr)
 
 void* Z_Malloc( int size,  int  tag,  void* user )
 {
+  prof_enter(CGD_Perf.DynamicAllocation);
+
   static int iCalled = 0;
   int extra;
   memblock_t* start;
@@ -305,6 +310,7 @@ void* Z_Malloc( int size,  int  tag,  void* user )
       else
       {
         I_ErrorI ("Z_Malloc failure", size, 0, 0, 0);
+        prof_leave(CGD_Perf.DynamicAllocation);
         return NULL;
       }
     }
@@ -354,6 +360,7 @@ void* Z_Malloc( int size,  int  tag,  void* user )
 
   base->id = ZONEID;
 
+  prof_leave(CGD_Perf.DynamicAllocation);
   return (void *) ((byte *)base + sizeof(memblock_t));
 }
 

@@ -118,6 +118,7 @@ static int DoomKeyToKeycode(int key)
     case SKEY_FREEMEM:      return KEYCODE_FD;
     case SKEY_FPSCOUNTER:   return KEYCODE_LEFTP;
     case SKEY_FRAMESKIP:    return KEYCODE_VARS;
+    case SKEY_PROFILER:     return KEYCODE_RIGHTP;
 
     default:                return -1;
     }

@@ -139,6 +139,8 @@ static int firstflipdone = 0;
 
 void I_Flip (void)
 {
+  prof_enter(CGD_Perf.DisplayInterface);
+
   if (!firstflipdone)
   {
     SetWindow(0, 0, 396, 224);
@@ -182,6 +184,8 @@ void I_Flip (void)
       j++;
     }
   }
+
+  prof_leave(CGD_Perf.DisplayInterface);
 }
 
 void I_InitGraphics(void)
@@ -207,6 +211,8 @@ void I_ReinitAfterError(void)
 
 void I_Flip (void)
 {
+  prof_enter(CGD_Perf.DisplayInterface);
+
   /* Set a black frame if the current one is white */
   if ((Bdisp_FrameAndColor(0, 0) & 1) == 0)
   {
@@ -223,6 +229,8 @@ void I_Flip (void)
     }
   }
   Bdisp_PutDisp_DD();
+
+  prof_leave(CGD_Perf.DisplayInterface);
 }
 
 void I_InitGraphics(void)

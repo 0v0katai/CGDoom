@@ -2,6 +2,7 @@
 #include "os.h"
 #include "cgdoom.h"
 #include <stdlib.h>
+#include "libprof.h"
 
 #ifndef CG_EMULATOR
 # include "cgdoom-alloc.h"
@@ -387,6 +388,9 @@ int gDevUnalignedLumpSize = 0;
 /* Global options */
 int CGD_TrustUnalignedLumps = 0;
 
+/* Performance counters */
+struct CGD_Perf CGD_Perf;
+
 /* Read next sector from file, while caching into a buffer. */
 const void *ReadNextSector(FileAccessCache *fc, int *size)
 {
@@ -629,6 +633,8 @@ int main(void)
 	Bdisp_FrameAndColor(3, 16);
 	Bdisp_FrameAndColor(1, 0);
 
+	prof_init();
+
 	WADFileInfo wads[16];
 	int wad_count = FindWADs(wads, 16);
 
@@ -737,6 +743,7 @@ int main(void)
 		GetKey(&key);
 	}
 
+	prof_quit();
 	return 1;
 }
 

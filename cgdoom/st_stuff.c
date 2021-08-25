@@ -27,6 +27,7 @@
 
 
 #include "os.h"
+#include "cgdoom.h"
 
 #include "i_system.h"
 #include "i_video.h"
@@ -514,6 +515,18 @@ void CGCycleGamma()
 
   static char message[32];
   sprintf(message, GAMMALV, usegamma);
+  plyr->message = message;
+}
+
+void CGProfilerResults()
+{
+  static char message[72];
+  sprintf(message, "DA:%ums GR:%ums DI:%ums LL:%ums ULL:%ums",
+    ((unsigned int)prof_time(CGD_Perf.DynamicAllocation) + 500) / 1000,
+    ((unsigned int)prof_time(CGD_Perf.GraphicsRendering) + 500) / 1000,
+    ((unsigned int)prof_time(CGD_Perf.DisplayInterface) + 500) / 1000,
+    ((unsigned int)prof_time(CGD_Perf.LumpLoading) + 500) / 1000,
+    ((unsigned int)prof_time(CGD_Perf.UnalignedLumpLoading) + 500) / 1000);
   plyr->message = message;
 }
 

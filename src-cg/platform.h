@@ -79,6 +79,8 @@ extern int CGD_TrustUnalignedLumps;
 # define CGDOOM_SCREENS_BASE SaveVRAMBuffer
 #endif
 
+extern struct CGD_Perf CGD_Perf;
+
 //---
 
 #include "keyboard.hpp"

@@ -4,6 +4,7 @@
 /* CGDoom-specific definitions that cover both calculator and native builds. */
 
 #include <stdint.h>
+#include "libprof.h"
 
 /* VRAM pointer and size */
 extern uint16_t *VRAM;
@@ -36,6 +37,7 @@ extern int startmap, startepisode;
 #define SKEY_FREEMEM     0x10006
 #define SKEY_FPSCOUNTER  0x10007
 #define SKEY_FRAMESKIP   0x10008
+#define SKEY_PROFILER    0x10009
 
 // Scan keyboard (the previous state is also retained).
 void UpdateKeyboardState(void);
@@ -43,5 +45,18 @@ void UpdateKeyboardState(void);
 // Check if a Doom key has just been pressed, or released.
 int KeyWasJustPressed(int key);
 int KeyWasJustReleased(int key);
+
+//---
+// Performance metrics
+//---
+
+struct CGD_Perf
+{
+   prof_t DynamicAllocation;
+   prof_t GraphicsRendering;
+   prof_t DisplayInterface;
+   prof_t LumpLoading;
+   prof_t UnalignedLumpLoading;
+};
 
 #endif /* CGDOOM_H */

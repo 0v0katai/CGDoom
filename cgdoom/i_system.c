@@ -259,9 +259,14 @@ static void R_SetViewSizeChange(int iDiff)
 
 void I_StartTic (void)
 {
+    extern int giRefreshMask;
+
+    //---
+    // FPS counter
+    //---
+
     extern boolean fpscounteractive;
     extern int fpscounter_data;
-    extern int giRefreshMask;
 
     /* Number of frames since FPS count started */
     static int fps_frames = 0;
@@ -283,6 +288,10 @@ void I_StartTic (void)
         fps_frames = 0;
     }
 
+    //---
+    // Special keys
+    //---
+
     UpdateKeyboardState();
 
     /* Capture events for special keys */
@@ -302,6 +311,32 @@ void I_StartTic (void)
         fpscounteractive = !fpscounteractive;
     if (KeyWasJustPressed(SKEY_FRAMESKIP))
         CGRefreshSwitch();
+
+    //---
+    // Profiler
+    //---
+
+    /* Number of ticks left before reporting results */
+    static int profiler_ticks = -1;
+
+    if (KeyWasJustPressed(SKEY_PROFILER)) {
+        prof_t *counters = (prof_t *)&CGD_Perf;
+        for(int i = 0; i < sizeof CGD_Perf / sizeof (prof_t); i++) {
+            counters[i] = prof_make();
+        }
+        profiler_ticks = 40;
+    }
+    else {
+        profiler_ticks--;
+        if(profiler_ticks == 0) {
+            CGProfilerResults();
+            profiler_ticks = -1;
+        }
+    }
+
+    //---
+    // Normal keys
+    //---
 
     static int keys[] = {
         KEY_LEFTARROW, KEY_RIGHTARROW, KEY_UPARROW, KEY_DOWNARROW,

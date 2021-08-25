@@ -25,8 +25,8 @@
 
 
 
-//#include <math.h>
 #include "os.h"
+#include "cgdoom.h"
 
 
 #include "doomdef.h"
@@ -758,6 +758,8 @@ void R_SetupFrame (player_t* player)
 //
 void R_RenderPlayerView (player_t* player)
 {
+  prof_enter(CGD_Perf.GraphicsRendering);
+
   R_SetupFrame (player);
   // Clear buffers.
   R_ClearClipSegs ();
@@ -772,4 +774,6 @@ void R_RenderPlayerView (player_t* player)
 
   R_DrawMasked ();
   //I_Error("poof");
+
+  prof_leave(CGD_Perf.GraphicsRendering);
 }
