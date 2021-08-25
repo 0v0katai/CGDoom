@@ -322,7 +322,7 @@ static const patch_t*    tallpercent;
 static const patch_t*    shortnum[10];
 
 // 3 key-cards, 3 skulls
-static const patch_t*    keys[3];
+static const patch_t*    keys[6];
 
 // face status patches
 static const patch_t*    faces[ST_NUMFACES];
@@ -760,11 +760,11 @@ void ST_updateWidgets(void)
 
   // update keycard multiple widgets
   keyboxes_0 = plyr->cards[0] ? 0 : -1;
-  //if (plyr->cards[3]) keyboxes_0 = 3; //would crash
+  if (plyr->cards[3]) keyboxes_0 = 3;
   keyboxes_1 = plyr->cards[1] ? 1 : -1;
-  //if (plyr->cards[4]) keyboxes_1 = 4; //would crash
+  if (plyr->cards[4]) keyboxes_1 = 4;
   keyboxes_2 = plyr->cards[2] ? 2 : -1;
-  //if (plyr->cards[5]) keyboxes_2 = 5; //would crash
+  if (plyr->cards[5]) keyboxes_2 = 5;
 
   // refresh everything if this is him coming back to life
   ST_updateFaceWidget();
@@ -912,6 +912,13 @@ void ST_loadGraphics(void)
   keys[0] = W_CacheLumpNamePatch("STKEYS0", PU_STATIC);
   keys[1] = W_CacheLumpNamePatch("STKEYS1", PU_STATIC);
   keys[2] = W_CacheLumpNamePatch("STKEYS2", PU_STATIC);
+
+  if(W_CheckNumForName("STKEYS3") >= 0)
+    keys[3] = W_CacheLumpNamePatch("STKEYS3", PU_STATIC);
+  if(W_CheckNumForName("STKEYS4") >= 0)
+    keys[4] = W_CacheLumpNamePatch("STKEYS4", PU_STATIC);
+  if(W_CheckNumForName("STKEYS5") >= 0)
+    keys[5] = W_CacheLumpNamePatch("STKEYS5", PU_STATIC);
 
 
   // arms background
