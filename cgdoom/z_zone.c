@@ -61,9 +61,14 @@ typedef struct
    * Z_FreeTags is changed to iterate on all zones
    * Z_CheckHeap is changed to iterate on all zones
    * Z_ChangeTag2 operates on a single block and needs no change
-   * Z_FreeMemory is changed to iterate on one or all zones */
+   * Z_FreeMemory is changed to iterate on one or all zones
+
+   In addition to that, the next-fit strategy with a rover also runs over zones
+   since starting at the first zone when it's full loses *a lot* of time. */
 static memzone_t *zones[ZONE_MAX];
 static int zone_count;
+
+static int zone_rover = 0;
 
 // static memzone_t*  mainzone;
 
@@ -250,7 +255,8 @@ void* Z_Malloc( int size,  int  tag,  void* user )
   // account for size of block header
   size += sizeof(memblock_t);
 
-  int zone_no = 0;
+  int zone_start = zone_rover;
+  int zone_no = zone_rover;
   memzone_t *zone = zones[zone_no];
 
   for (;;)
@@ -302,17 +308,16 @@ void* Z_Malloc( int size,  int  tag,  void* user )
 
     if (failed)
     {
-      if (zone_no + 1 < zone_count)
-      {
-        zone = zones[++zone_no];
-        continue;
-      }
-      else
+      zone_no++;
+      if(zone_no == zone_count)
+        zone_no = 0;
+      if(zone_no == zone_start)
       {
         I_ErrorI ("Z_Malloc failure", size, 0, 0, 0);
         prof_leave(CGD_Perf.DynamicAllocation);
         return NULL;
       }
+      zone = zones[zone_no];
     }
     else break;
   }
@@ -357,6 +362,7 @@ void* Z_Malloc( int size,  int  tag,  void* user )
 
   // next allocation will start looking here
   zone->rover = base->next;
+  zone_rover = zone_no;
 
   base->id = ZONEID;
 
