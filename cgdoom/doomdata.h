@@ -90,7 +90,7 @@ typedef struct
   short		tagLE;
   // sidenum[1] will be -1 if one sided
   short		sidenum[2];		
-} maplinedef_t;
+} __attribute__((packed, aligned(1))) maplinedef_t;
 
 
 //
@@ -193,7 +193,7 @@ typedef struct
   // else it's a node of another subtree.
   unsigned short	children[2];
 
-} mapnode_t;
+} __attribute__((packed, aligned(1))) mapnode_t;
 
 
 
@@ -207,7 +207,7 @@ typedef struct
     short		angle;
     short		type;
     short		options;
-} mapthing_t;
+} __attribute__((packed, aligned(1))) mapthing_t;
 
 
 
