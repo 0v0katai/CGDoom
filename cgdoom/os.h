@@ -1,18 +1,15 @@
 #include "platform.h"
 
+#define SYSTEM_STACK_SAFE (64*1024)
+#define USER_STACK_SAFE (32*1024)
 
-//CGDOOM 
-#define SYSTEM_STACK_SAFE (90*1024)
-#define USER_STACK_SAFE (40*1024)
-
-//memory mapping:
-//0x880A2AD5..0x880CB2D5:SaveVRAMBuffer 165888 bytes
+// SaveVRAMBuffer 165888 bytes
 #define SAVE_VRAM_SIZE (WIDTH*HEIGHT*2-3)
-extern unsigned char *SaveVRAMBuffer;//[SAVE_VRAM_SIZE]; 
+extern unsigned char *SaveVRAMBuffer;
 
-//0xA80F0000..0xA815FFFF: system stack (512 kB).
+// system stack (512 kB).
 #define SYSTEM_STACK_SIZE (512*1024-SYSTEM_STACK_SAFE)
-extern unsigned char *SystemStack;//[SYSTEM_STACK_SIZE]; 
+extern unsigned char *SystemStack;
 
 extern unsigned short *VRAM;
 void * CGDMalloc(int iSize);

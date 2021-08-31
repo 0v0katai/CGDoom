@@ -302,7 +302,6 @@ void * W_ReadLumpWithZ_Malloc(int lump,int tag,int iEnableFlash)
   {
     c = FindInFlash((const void **)&lumpcache[lump], lumpinfo[lump].size, lumpinfo[lump].position);
   }
-//  else ASSERT(lumpinfo[lump].size != 10240);
 
   int full = (c == lumpinfo[lump].size);
   int aligned = (((uint32_t)lumpcache[lump] & 1) == 0);
@@ -311,11 +310,10 @@ void * W_ReadLumpWithZ_Malloc(int lump,int tag,int iEnableFlash)
     aligned = 1;
 
   /* Record statistics on loading unaligned but full lumps */
-  extern int gDevUnalignedLumpLoads;
-  extern int gDevUnalignedLumpSize;
+  extern struct CGD_Stats CGD_Stats;
   if(full && !aligned) {
-    gDevUnalignedLumpLoads++;
-    gDevUnalignedLumpSize += lumpinfo[lump].size;
+    CGD_Stats.UnalignedLumpsLoaded++;
+    CGD_Stats.UnalignedLumpsLoadedTotal += lumpinfo[lump].size;
   }
 
   /* Allocate only if the lump spans several fragments, or is misaligned;
@@ -323,10 +321,12 @@ void * W_ReadLumpWithZ_Malloc(int lump,int tag,int iEnableFlash)
      the heap would provide. */
   if(!full || !aligned)
   {
+    CGD_Stats.LumpsLoaded++;
+    CGD_Stats.LumpsLoadedTotal += lumpinfo[lump].size;
+
     prof_enter(CGD_Perf.LumpLoading);
     if(!aligned)
       prof_enter(CGD_Perf.UnalignedLumpLoading);
-
 
     Z_Malloc (lumpinfo[lump].size, tag, &lumpcache[lump]);
     W_ReadLump (lump, lumpcache[lump]);
@@ -334,6 +334,11 @@ void * W_ReadLumpWithZ_Malloc(int lump,int tag,int iEnableFlash)
     if(!aligned)
       prof_leave(CGD_Perf.UnalignedLumpLoading);
     prof_leave(CGD_Perf.LumpLoading);
+  }
+  else
+  {
+    CGD_Stats.LumpsReferenced++;
+    CGD_Stats.LumpsReferencedTotal += lumpinfo[lump].size;
   }
 
   return lumpcache[lump];
@@ -345,28 +350,19 @@ void * W_ReadLumpWithZ_Malloc(int lump,int tag,int iEnableFlash)
 //
 static void* W_CacheLumpNumCommon( int lump, int tag,int iEnableFlash)
 {
-
   if (lump >= numlumps)
   {
     I_Error ("W_CacheLumpNum: %i >= numlumps (%i)",lump,numlumps);
   }
 
-
-  //printf("x");
-
   if (!lumpcache[lump])
   {
-    // try to find in flash (may fail if the piece is in 2 fragments (file fragmentaion)
     W_ReadLumpWithZ_Malloc(lump,tag,iEnableFlash);
   }
   else
   {
-    //printf ("cache hit on lump %i\n",lump);
     Z_ChangeTag (lumpcache[lump],tag);
   }
-
-  /*if (lump==1203)
-  printf("sky access, returning %x \n",lumpcache[lump]);*/
 
   if(lumpcache[lump] == NULL)
     I_ErrorI("W_CacheLumpNumCommon", (int)lumpcache[lump], lump, 0, 0);

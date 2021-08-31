@@ -51,7 +51,7 @@ typedef struct
   memblock_t* rover;
 } memzone_t;
 
-/* CGDOOM: In order to increase available memory, we need to support multiple
+/* CGDoom: In order to increase available memory, we need to support multiple
    zones. The code below is adapted to do that:
 
    * Z_ClearZone is already parameterized, nothing to do (it's never called)
@@ -64,13 +64,16 @@ typedef struct
    * Z_FreeMemory is changed to iterate on one or all zones
 
    In addition to that, the next-fit strategy with a rover also runs over zones
-   since starting at the first zone when it's full loses *a lot* of time. */
-static memzone_t *zones[ZONE_MAX];
-static int zone_count;
+   since starting at the first zone when it's full loses *a lot* of time.
 
+   However, the next-fit strategy tends to produce *a lot* of fragmentation,
+   resulting in early allocation failures due to the lack of large spaces. For
+   this reason, the last region is not part of the zone rover rotation. */
+
+static memzone_t *zones[ZONE_MAX]; /* static memzone_t *mainzone; */
+static int zone_count;
 static int zone_rover = 0;
 
-// static memzone_t*  mainzone;
 
 
 //
@@ -225,6 +228,7 @@ void Z_Free (const void* ptr)
 void* Z_Malloc( int size,  int  tag,  void* user )
 {
   prof_enter(CGD_Perf.DynamicAllocation);
+  CGD_Stats.MemoryAllocated += size;
 
   static int iCalled = 0;
   int extra;
@@ -308,15 +312,22 @@ void* Z_Malloc( int size,  int  tag,  void* user )
 
     if (failed)
     {
-      zone_no++;
-      if(zone_no == zone_count)
-        zone_no = 0;
-      if(zone_no == zone_start)
+      if (zone_no == zone_count - 1)
       {
         I_ErrorI ("Z_Malloc failure", size, 0, 0, 0);
         prof_leave(CGD_Perf.DynamicAllocation);
         return NULL;
       }
+
+      /* When rotating, perform a full cycle before defaulting to the last
+         zone; this preserves the last zone to avoid fragmentation and absorb
+         occasional large chunks */
+      zone_no++;
+      if(zone_no == zone_count - 1)
+        zone_no = 0;
+      if(zone_no == zone_start)
+        zone_no = zone_count - 1;
+
       zone = zones[zone_no];
     }
     else break;
@@ -362,7 +373,8 @@ void* Z_Malloc( int size,  int  tag,  void* user )
 
   // next allocation will start looking here
   zone->rover = base->next;
-  zone_rover = zone_no;
+  if (zone_no != zone_count - 1)
+    zone_rover = zone_no;
 
   base->id = ZONEID;
 
@@ -500,3 +512,37 @@ int Z_FreeMemory (int zone)
   return free;
 }
 
+
+
+//
+// Z_LargestFreeBlock
+//
+int Z_LargestFreeBlock (int zone)
+{
+  if (zone < 0)
+  {
+    int maxsize = 0;
+    for (int i = 0; i < zone_count; i++) {
+      int n = Z_LargestFreeBlock(i);
+      if (n > maxsize)
+        maxsize = n;
+    }
+    return maxsize;
+  }
+
+  memblock_t* block;
+  int maxsize = 0;
+
+  memzone_t* mainzone = zones[zone];
+
+  for(block = mainzone->blocklist.next;block != &mainzone->blocklist;block = block->next)
+  {
+    if (!block->user || block->tag >= PU_PURGELEVEL)
+    {
+      if (block->size > maxsize)
+        maxsize = block->size;
+    }
+  }
+
+  return maxsize;
+}

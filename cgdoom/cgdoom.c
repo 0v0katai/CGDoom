@@ -378,18 +378,13 @@ static FileMapping gWADMap;
 /* Index of most likely sectors for fragment search. (CGDOOM_WAD_MMAP) */
 static SectorIndexInfo *gIndex = NULL;
 
-/* Developer statistics */
-static int gDevFragments = 0;
-static int gDevIndexHits = 0;
-static const void *gDevLowestFragment = NULL;
-int gDevUnalignedLumpLoads = 0;
-int gDevUnalignedLumpSize = 0;
-
 /* Global options */
 int CGD_TrustUnalignedLumps = 0;
 
 /* Performance counters */
 struct CGD_Perf CGD_Perf;
+/* Developer statistics */
+struct CGD_Stats CGD_Stats;
 
 /* Read next sector from file, while caching into a buffer. */
 const void *ReadNextSector(FileAccessCache *fc, int *size)
@@ -451,7 +446,7 @@ int FindSectorInFlash(const void *buf, int size)
 	typeof(&memcmp) memcmp_fun = &memcmp;
 	if(size == FLASH_PAGE_SIZE) memcmp_fun = &CGD_sector_memcmp;
 
-	gDevFragments++;
+	CGD_Stats.WADFragments++;
 
 #ifdef FLASH_INDEX
 	/* If an index has been built, search in it */
@@ -459,7 +454,7 @@ int FindSectorInFlash(const void *buf, int size)
 	IndexSearchSector(gIndex, buf, &lo, &hi);
 	for(int i = lo; i < hi; i++) {
 		if(!memcmp_fun(buf, gIndex[i].sector, size)) {
-			gDevIndexHits++;
+			CGD_Stats.WADIndexHits++;
 			return (gIndex[i].sector - FLASH_START) / FLASH_PAGE_SIZE;
 		}
 	}
@@ -515,8 +510,8 @@ int CreateFileMapping(int fd, FileMapping *pMap)
 
 		/* Look for consecutive sectors in the same fragment */
 		const void *pFragment = FLASH_START + (iSectorID * FLASH_PAGE_SIZE);
-		if(!gDevLowestFragment || pFragment < gDevLowestFragment)
-			gDevLowestFragment = pFragment;
+		if(!CGD_Stats.WADLowestFragment || pFragment<CGD_Stats.WADLowestFragment)
+			CGD_Stats.WADLowestFragment = pFragment;
 
 		for(;;)
 		{
@@ -701,11 +696,11 @@ int main(void)
 			Bdisp_AllClr_VRAM();
 			Layout_CenteredText(&l, "Developer info");
 			Layout_Spacing(&l, 12);
-			Layout_Text(&l, "Fragments:", "%d", gDevFragments);
-			Layout_Text(&l, "Index hits:", "%d (%d%%)", gDevIndexHits,
-				(gDevIndexHits * 100 / gDevFragments));
+			Layout_Text(&l, "Fragments:", "%d", CGD_Stats.WADFragments);
+			Layout_Text(&l, "Index hits:", "%d (%d%%)", CGD_Stats.WADIndexHits,
+				(CGD_Stats.WADIndexHits * 100 / CGD_Stats.WADFragments));
 			Layout_Text(&l, "Lowest fragment:", "%p",
-				gDevLowestFragment);
+				CGD_Stats.WADLowestFragment);
 			Layout_Spacing(&l, 12);
 			Layout_Text(&l, "Index build time:", "%d ms", ms_index);
 			Layout_Text(&l, "File mapping time:", "%d ms", ms_mmap);
@@ -733,8 +728,20 @@ int main(void)
 		Bdisp_AllClr_VRAM();
 		Layout_CenteredText(&l, "Developer info");
 		Layout_Spacing(&l, 12);
-		Layout_Text(&l, "Unaligned lumps loaded:", "%d", gDevUnalignedLumpLoads);
-		Layout_Text(&l, "Unaligned size:", "%d B", gDevUnalignedLumpSize);
+
+		Layout_Text(&l, "Memory allocated:", "%d kB",
+			CGD_Stats.MemoryAllocated >> 10);
+		Layout_Spacing(&l, 12);
+
+		Layout_Text(&l, "Lumps loaded:", "%d (%d kB)",
+			CGD_Stats.LumpsLoaded,
+			(int)(CGD_Stats.LumpsLoadedTotal >> 10));
+		Layout_Text(&l, "... of which unaligned:", "%d (%d kB)",
+			CGD_Stats.UnalignedLumpsLoaded,
+			(int)(CGD_Stats.UnalignedLumpsLoadedTotal >> 10));
+		Layout_Text(&l, "Lumps referenced:", "%d (%d kB)",
+			CGD_Stats.LumpsReferenced,
+			(int)(CGD_Stats.LumpsReferencedTotal >> 10));
 		Bdisp_FrameAndColor(3, 16);
 		Bdisp_FrameAndColor(1, 0);
 		Bdisp_PutDisp_DD();

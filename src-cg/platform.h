@@ -80,6 +80,7 @@ extern int CGD_TrustUnalignedLumps;
 #endif
 
 extern struct CGD_Perf CGD_Perf;
+extern struct CGD_Stats CGD_Stats;
 
 //---
 

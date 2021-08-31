@@ -25,8 +25,7 @@
 
 
 
-const char* endmsg[NUM_QUITMESSAGES+1]=
-{
+const char * const endmsg[NUM_QUITMESSAGES+1] = {
   // DOOM1
   QUITMSG,
   "please don't leave, there's more\ndemons to toast!",

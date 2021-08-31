@@ -46,7 +46,7 @@
 // QuitDOOM messages
 #define NUM_QUITMESSAGES   22
 
-extern const char* endmsg[];
+extern const char * const endmsg[];
 
 
 #endif

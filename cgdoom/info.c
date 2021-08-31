@@ -54,7 +54,7 @@ const char sprnames[NUMSPRITES][5] = {
 };
 
 
-state_t	states[NUMSTATES] = {
+state_t	const states[NUMSTATES] = {
     {SPR_TROO,0,-1,0,S_NULL,0,0},	// S_NULL
     {SPR_SHTG,4,0,TA_Light0,S_NULL,0,0},	// S_LIGHTDONE
     {SPR_PUNG,0,1,TA_WeaponReady,S_PUNCH,0,0},	// S_PUNCH

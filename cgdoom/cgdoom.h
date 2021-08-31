@@ -59,4 +59,28 @@ struct CGD_Perf
    prof_t UnalignedLumpLoading;
 };
 
+struct CGD_Stats
+{
+   /* Fragments in the WAD file */
+   int WADFragments;
+   /* Lowest fragment address (hints at filesystem entry point) */
+   void const *WADLowestFragment;
+   /* Number of index hits during fragment search */
+   int WADIndexHits;
+
+   /* Total memory allocated with Z_Malloc (bytes) */
+   uint32_t MemoryAllocated;
+
+   /* Number of lumps loaded, number of lumps not loaded (addressed directly in
+      ROM), number of unaligned lumps loaded */
+   int LumpsLoaded;
+   int LumpsReferenced;
+   int UnalignedLumpsLoaded;
+
+   /* The total size for these three catefories (bytes) */
+   uint64_t LumpsLoadedTotal;
+   uint64_t LumpsReferencedTotal;
+   uint64_t UnalignedLumpsLoadedTotal;
+};
+
 #endif /* CGDOOM_H */
