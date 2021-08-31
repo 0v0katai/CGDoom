@@ -292,6 +292,7 @@ void P_TouchSpecialThing ( mobj_t* special, mobj_t* toucher )
   player_t*	player;
   int		i;
   fixed_t	delta;
+  int medikit_variant;
   //int		sound;
 
   delta = special->z - toucher->z;
@@ -422,12 +423,13 @@ void P_TouchSpecialThing ( mobj_t* special, mobj_t* toucher )
     break;
 
   case SPR_MEDI:
-    if (player->health < 25)
+    medikit_variant = (player->health < 25);
+    if (!P_GiveBody (player, 25))
+      return;
+    if (medikit_variant)
       player->message = GOTMEDINEED;
     else
       player->message = GOTMEDIKIT;
-    if (!P_GiveBody (player, 25))
-      return;
     break;
 
 
