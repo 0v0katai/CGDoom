@@ -14,8 +14,8 @@ extern uint16_t *VRAM;
 /* Description of a WAD file selectable by user. */
 typedef struct
 {
-    char name[16];
-    uint16_t path[23];
+    char name[32];
+    uint16_t path[7+32];
     int size;
 } WADFileInfo;
 

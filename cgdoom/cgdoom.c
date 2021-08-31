@@ -348,7 +348,7 @@ typedef struct
 /* Find WAD files in the filesystem. */
 int FindWADs(WADFileInfo *files, int max)
 {
-	uint16_t path[16];
+	uint16_t path[32];
 	Bfile_FileInfo info;
 
 	int sd, rc, total=0;
@@ -357,8 +357,8 @@ int FindWADs(WADFileInfo *files, int max)
 	while(rc != -16 && total < max)
 	{
 		memcpy(files[total].path, u"\\\\fls0\\", 14);
-		memcpy(files[total].path+7, path, 16*2);
-		Bfile_NameToStr_ncpy(files[total].name, path, 16);
+		memcpy(files[total].path+7, path, 32*2);
+		Bfile_NameToStr_ncpy(files[total].name, path, 32);
 		files[total].size = info.fsize;
 		total++;
 
