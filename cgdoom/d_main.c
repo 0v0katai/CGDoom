@@ -420,37 +420,6 @@ void D_DoomMain()
 #endif 
   }
 
-  if(maxepisode>1) {}
-#if 0 //TODO !
-    do
-    {
-      if(maxepisode>1)
-      { if(isKeyPressed(KEY_NSPIRE_RP) && episode<maxepisode) { episode++; repisode=1; while(isKeyPressed(KEY_NSPIRE_RP)); }
-      if(isKeyPressed(KEY_NSPIRE_LP) && episode>1)  { episode--; repisode=1; while(isKeyPressed(KEY_NSPIRE_LP)); }
-      if(repisode)
-      { sprintf(temp,"%i",episode);
-      drwBufStr(SCREEN_BASE_ADDRESS, 13*CHAR_WIDTH,  14*CHAR_HEIGHT, temp, 0, 0);
-      repisode = 0;
-      }
-      }
-      if(isKeyPressed(KEY_NSPIRE_PLUS) && skill<4) { skill++; rskill=1; while(isKeyPressed(KEY_NSPIRE_PLUS)); }
-      if(isKeyPressed(KEY_NSPIRE_MINUS) && skill>0)  { skill--; rskill=1; while(isKeyPressed(KEY_NSPIRE_MINUS)); }
-      if(rskill)
-      { if(skill==0) tmp="I'm too young to die";
-      else if(skill==1) tmp="  Hey, not to rough ";
-      else if(skill==2) tmp="   Hurt me plenty   ";
-      else if(skill==3) tmp="   Ultra-Violence   ";
-      else if(skill==4) tmp="     Nightmare!     ";
-      drwBufStr(SCREEN_BASE_ADDRESS, 11*CHAR_WIDTH, 11*CHAR_HEIGHT, tmp, 0, 0);
-      rskill = 0;
-      }
-    }
-    while(!isKeyPressed(KEY_NSPIRE_ESC) && !isKeyPressed(KEY_NSPIRE_ENTER) && !isKeyPressed(KEY_NSPIRE_RET) && !isKeyPressed(KEY_NSPIRE_CLICK));
-#endif 
-
-    //if(isKeyPressed(KEY_NSPIRE_ESC)) // CX port
-    //return; // CX port
-
     nomonsters = 0;
     respawnparm = 0;
     fastparm = 0;
