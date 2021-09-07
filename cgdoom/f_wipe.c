@@ -233,17 +233,14 @@ int wipe_EndScreen( int x, int y, int width, int height )
 int wipe_ScreenWipe ( int wipeno, int width, int height, int ticks )
 {
   int rc;
-
-  //FUCK YOU, CARMACK!!!!
-  //FUCK YOU AND YOUR FUCKING FUNCTION POINTERS!!!
-  //ESPECIALLY YOUR FUCKING FUNCTION POINTERS!!!
-  //FUCK!!!!
-
-  /*static int (*wipes[])(int, int, int) =
+  static int (*wipes[])(int, int, int) =
   {
-  wipe_initColorXForm, wipe_doColorXForm, wipe_exitColorXForm,
-  wipe_initMelt, wipe_doMelt, wipe_exitMelt
-  };*/
+    wipe_initColorXForm, wipe_doColorXForm, wipe_exitColorXForm,
+    wipe_initMelt, wipe_doMelt, wipe_exitMelt
+  };
+
+  if (wipeno < 0 || wipeno >= wipe_NUMWIPES)
+    return 1;
 
   // initial stuff
   if (!go)
@@ -251,89 +248,19 @@ int wipe_ScreenWipe ( int wipeno, int width, int height, int ticks )
     go = 1;
     //wipe_scr = (byte *) Z_Malloc(width*height, PU_STATIC, 0); // carmack debug, don't touch!
     wipe_scr = screens[0];
-    //(*wipes[wipeno*3])(width, height, ticks);
-    switch (wipeno*3)
-    {
-    case 0:
-      wipe_initColorXForm(width, height, ticks);
-      break;
-      /*case 1:
-      wipe_doColorXForm(width, height, ticks);
-      break;
-      case 2:
-      wipe_exitColorXForm(width, height, ticks);
-      break;*/
-    case 3:
-      wipe_initMelt(width, height, ticks);
-      break;
-      /*case 4:
-      wipe_doMelt(width, height, ticks);
-      break;
-      case 5:
-      wipe_exitMelt(width, height, ticks);
-      break;*/
-    default:
-      I_Error("wipe_ScreenWipe: INVALID FUNCTION INDICATOR");
-    }
+    (*wipes[wipeno*3])(width, height, ticks);
   }
 
   // do a piece of wipe-in
   V_MarkRect(0, 0, width, height);
-  //rc = (*wipes[wipeno*3+1])(width, height, ticks);
-  switch (1 + wipeno*3)
-  {
-    /*case 0:
-    rc= wipe_initColorXForm(width, height, ticks);
-    break;*/
-  case 1:
-    rc= wipe_doColorXForm(width, height, ticks);
-    break;
-    /*case 2:
-    rc= wipe_exitColorXForm(width, height, ticks);
-    break;
-    case 3:
-    rc= wipe_initMelt(width, height, ticks);
-    break;*/
-  case 4:
-    rc= wipe_doMelt(width, height, ticks);
-    break;
-    /*case 5:
-    rc= wipe_exitMelt(width, height, ticks);
-    break;*/
-  default:
-    rc= 0;
-    I_Error("wipe_ScreenWipe: INVALID FUNCTION INDICATOR");
-  }
+  rc = (*wipes[wipeno*3+1])(width, height, ticks);
   //V_DrawBlock(x, y, 0, width, height, wipe_scr); // carmack debug, don't touch!
 
   // final stuff
   if (rc)
   {
     go = 0;
-    switch (2 + wipeno*3)
-    {
-      /*case 0:
-      wipe_initColorXForm(width, height, ticks);
-      break;
-      case 1:
-      wipe_doColorXForm(width, height, ticks);
-      break;*/
-    case 2:
-      wipe_exitColorXForm(width, height, ticks);
-      break;
-      /*case 3:
-      wipe_initMelt(width, height, ticks);
-      break;
-      case 4:
-      wipe_doMelt(width, height, ticks);
-      break;*/
-    case 5:
-      wipe_exitMelt(width, height, ticks);
-      break;
-    default:
-      I_Error("wipe_ScreenWipe: INVALID FUNCTION INDICATOR");
-    }
-    //(*wipes[wipeno*3+2])(width, height, ticks);
+    (*wipes[wipeno*3+2])(width, height, ticks);
   }
 
   return !go;
