@@ -48,8 +48,8 @@ typedef enum
   indetermined	// Well, no IWAD found.
   
 } GameMode_t;
-//CGGOOM
-//#define ENABLE_F_WIPE
+
+#define ENABLE_F_WIPE
 
 
 // Mission packs - might be useful for TC stuff?

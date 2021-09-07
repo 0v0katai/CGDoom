@@ -46,24 +46,6 @@ static byte* wipe_scr_end;
 static byte* wipe_scr;
 
 
-void wipe_shittyColMajorXform( short* array, int  width, int  height )
-{
-  int  x;
-  int  y;
-  short* dest;
-
-  dest = (short*) Z_Malloc(width*height*2, PU_STATIC, 0);
-
-  for(y=0;y<height;y++)
-    for(x=0;x<width;x++)
-      dest[x*height+y] = array[y*width+x];
-
-  memcpy(array, dest, width*height*2);
-
-  Z_Free(dest);
-
-}
-
 int wipe_initColorXForm( int width, int height, int ticks )
 {
   ticks= 0; //Shuts up GCC
@@ -134,10 +116,14 @@ int wipe_initMelt( int width, int height, int ticks )
   // copy start screen to main screen
   memcpy(wipe_scr, wipe_scr_start, width*height);
 
+  /* CGDoom: Normally the wipe effect transposes the buffers in color-major
+     order to better use the cache, but uses a screen-sized temporary buffer in
+     the process. We don't need the added speed, but we sure need every bit of
+     memory we can scrape. So we keep the row-major order. */
   // makes this wipe faster (in theory)
   // to have stuff in column-major format
-  wipe_shittyColMajorXform((short*)wipe_scr_start, width/2, height);
-  wipe_shittyColMajorXform((short*)wipe_scr_end, width/2, height);
+//  wipe_shittyColMajorXform((short*)wipe_scr_start, width/2, height);
+//  wipe_shittyColMajorXform((short*)wipe_scr_end, width/2, height);
 
   // setup initial column positions
   // (y<0 => not ready to scroll yet)
@@ -154,8 +140,29 @@ int wipe_initMelt( int width, int height, int ticks )
   return 0;
 }
 
+/* See wipe_doMelt(). */
+short SPU2_read16(short *x)
+{
+  if ((int)x & 2) {
+    volatile int *z = (int *)(x - 1);
+    return *z & 0xffff;
+  }
+  else {
+    volatile int *z = (int *)x;
+    return *z >> 16;
+  }
+}
+
 int wipe_doMelt( int width, int height, int ticks )
 {
+  /* CGDoom: To spare memory, we have left both wipe_scr_start and wipe_scr_end
+     in row-major order. This affects the computation of (short *s) as well as
+     its stride (now a full row instead of 2 pixels).
+
+     In addition, the screen wipe buffers are allocated in PRAM to reduce
+     pressure on the heap. Therefore, only 4-byte accesses are possible, so we
+     read with SPU2_read16() to keep everything working. */
+
   int  i;
   int  j;
   int  dy;
@@ -179,21 +186,23 @@ int wipe_doMelt( int width, int height, int ticks )
       {
         dy = (y[i] < 16) ? y[i]+1 : 8;
         if (y[i]+dy >= height) dy = height - y[i];
-        s = &((short *)wipe_scr_end)[i*height+y[i]];
+        s = &((short *)wipe_scr_end)[y[i]*width+i]; /* Row-major order */
         d = &((short *)wipe_scr)[y[i]*width+i];
         idx = 0;
         for (j=dy;j;j--)
         {
-          d[idx] = *(s++);
+          d[idx] = SPU2_read16(s);
+          s += width; /* Row-major order */
           idx += width;
         }
         y[i] += dy;
-        s = &((short *)wipe_scr_start)[i*height];
+        s = &((short *)wipe_scr_start)[i]; /* Row-major order */
         d = &((short *)wipe_scr)[y[i]*width+i];
         idx = 0;
         for (j=height-y[i];j;j--)
         {
-          d[idx] = *(s++);
+          d[idx] = SPU2_read16(s);
+          s += width; /* Row-major order */
           idx += width;
         }
         done = false;
@@ -226,7 +235,12 @@ int wipe_EndScreen( int x, int y, int width, int height )
 {
   wipe_scr_end = screens[3];
   I_ReadScreen(wipe_scr_end);
+
+  /* CGDoom: The wipe buffer is in PRAM, so the V_DrawBlock() below may not
+     at every position on screen. But we always wipe the whole screen, so
+     that's not going to be a problem. */
   V_DrawBlock(x, y, 0, width, height, wipe_scr_start); // restore start scr.
+
   return 0;
 }
 

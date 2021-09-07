@@ -355,11 +355,14 @@ void V_Init (void)
   screens[0] = I_ScreenBase(0);
   /* screens[1] is used for the level end sequence (intermission) */
   screens[1] = I_ScreenBase(1);
-  /* screens[2] and screens[3] are used for wipe effects (disabled here) */
+  /* screens[2] and screens[3] are used for wipe effects */
+  screens[2] = I_ScreenBase(2);
+  screens[3] = I_ScreenBase(3);
   /* screens[4] is used for the status bar (allocated by st_stuff.c) */
+  screens[4] = NULL;
 }
 
-/* CGDOOM-specific function to clear screen when changing window size */
+/* CGDoom-specific function to clear screen when changing window size */
 void V_Clear (void)
 {
   memset(screens[0], 0, 320*(200-32));

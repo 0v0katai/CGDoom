@@ -248,3 +248,12 @@ void I_SetWindowAfterError(void)
 }
 
 #endif
+
+
+//
+// I_ReadScreen
+//
+void I_ReadScreen (byte* scr)
+{
+  memcpy(scr, screens[0], SCREENWIDTH*SCREENHEIGHT);
+}

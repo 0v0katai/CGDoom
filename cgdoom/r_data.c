@@ -374,8 +374,8 @@ const byte* R_GetColumn ( int	tex, int col )
   lump = texturecolumnlump[tex][col];
   ofs = texturecolumnofs[tex][col];
 
-  /* CGDOOM: To save RAM in WADs bound by limited memory, composite textures
-     can be allowed only up to a certain size. Original CGDOOM limits to 8192
+  /* CGDoom: To save RAM in WADs bound by limited memory, composite textures
+     can be allowed only up to a certain size. Original CGDoom limits to 8192
      bytes so that switches can appear, but some other textures fail. */
 #if 0
   if(lump <= 0 && texturecompositesize[tex] > 8192)

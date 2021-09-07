@@ -24,6 +24,7 @@
 
 #include "platform.h"
 #include "cgdoom.h"
+#include "cgdoom-alloc.h"
 #include <stdlib.h>
 
 #include "doomdef.h"
@@ -130,6 +131,13 @@ byte *I_ScreenBase(int screen)
         return CGDOOM_SCREENS_BASE + 320*200;
     if (screen == 4)
         return CGDOOM_SCREENS_BASE + 320*200*2;
+
+    /* For the wipe buffers, use PRAM. This can be done with rather little
+       changes because the wipe buffers are used only in f_wipe.c. */
+    if (screen == 2)
+        return CGD_PRAM_Malloc(320*200);
+    if (screen == 3)
+        return CGD_PRAM_Malloc(320*200);
 
     return NULL;
 }
