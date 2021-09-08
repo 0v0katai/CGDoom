@@ -60,9 +60,9 @@
 
 // Location of each lump on disk.
 lumpinfo_t*  lumpinfo;
-static int  numlumps;
+static int  numlumps = 0;
 
-void**   lumpcache;
+void**   lumpcache = NULL;
 
 
 //
@@ -157,12 +157,15 @@ static int W_AddFile ()
 //
 int W_InitMultipleFiles(void)
 {
+  int previous_numlumps = numlumps;
+
   // open all the files, load headers, and count lumps
   numlumps = 0;
 
+  /* CGDoom: Loading multiples files hasn't been tested for a long time and may
+     not work due to the allocation of lumpcache */
+
   // will be realloced as lumps are added
-  //lumpinfo = (lumpinfo_t*)CGDMalloc(1); 
-  //CGD: CGDrealloc accepts NULL
   lumpinfo = NULL;
   if(!W_AddFile ()) 
   {
@@ -176,7 +179,12 @@ int W_InitMultipleFiles(void)
 
   // set up caching
   //printf ("numlumps = %i \n",numlumps);
-  lumpcache = (void **)CGD_PRAM_Zalloc(numlumps * sizeof(*lumpcache));
+  if (lumpcache != NULL && numlumps <= previous_numlumps) {
+    /* Don't realloc when not needed */
+  }
+  else {
+    lumpcache = (void **)CGD_PRAM_Zalloc(numlumps * sizeof(*lumpcache));
+  }
 
   if (!lumpcache)
   {

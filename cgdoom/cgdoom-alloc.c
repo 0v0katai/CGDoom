@@ -91,8 +91,8 @@ void CGD_PRAM_Free(void *ptr)
 
 void *CGD_PRAM_Zalloc(size_t size)
 {
-	uint32_t *ptr = CGD_PRAM_Malloc(size);
+	uint32_t volatile *ptr = CGD_PRAM_Malloc(size);
 	if(!ptr) return NULL;
 	for(int i = 0; i < size / 4; i++) ptr[i] = 0;
-	return ptr;
+	return (void *)ptr;
 }
