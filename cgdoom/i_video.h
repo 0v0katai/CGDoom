@@ -41,8 +41,9 @@ void I_InitGraphics (void);
 
 void I_ShutdownGraphics(void);
 
-/* Regenerate palette based on gamma correction level. */
-void I_SetPalette (int gamma_correction);
+/* CGDoom: Set palette (also applies gamma; if pal=NULL refreshes gamma without
+   updating the palette). */
+void I_SetPalette(byte* pal);
 
 void I_Flip (void);
 

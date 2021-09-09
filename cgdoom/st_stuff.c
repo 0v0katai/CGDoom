@@ -511,7 +511,7 @@ void CGCycleGamma()
 {
   extern int usegamma;
   usegamma = (usegamma + 1) % 5;
-  I_SetPalette(usegamma);
+  I_SetPalette(NULL);
 
   static char message[32];
   sprintf(message, GAMMALV, usegamma);
@@ -805,7 +805,57 @@ void ST_Ticker (void)
 
 static int st_palette = 0;
 
-#define ST_doPaletteStuff()
+void ST_doPaletteStuff(void)
+{
+  int   palette;
+  byte* pal;
+  int   cnt;
+  int   bzc;
+
+  cnt = plyr->damagecount;
+
+  if (plyr->powers[pw_strength])
+  {
+    // slowly fade the berzerk out
+    bzc = 12 - (plyr->powers[pw_strength]>>6);
+
+  if (bzc > cnt)
+    cnt = bzc;
+  }
+
+  if (cnt)
+  {
+    palette = (cnt+7)>>3;
+
+    if (palette >= NUMREDPALS)
+      palette = NUMREDPALS-1;
+
+    palette += STARTREDPALS;
+  }
+
+  else if (plyr->bonuscount)
+  {
+    palette = (plyr->bonuscount+7)>>3;
+
+    if (palette >= NUMBONUSPALS)
+      palette = NUMBONUSPALS-1;
+
+    palette += STARTBONUSPALS;
+  }
+
+  else if ( plyr->powers[pw_ironfeet] > 4*32
+      || plyr->powers[pw_ironfeet]&8)
+    palette = RADIATIONPAL;
+  else
+    palette = 0;
+
+  if (palette != st_palette)
+  {
+    st_palette = palette;
+    pal = (byte *) W_CacheLumpNumConst (lu_palette, PU_CACHE)+palette*768;
+    I_SetPalette (pal);
+  }
+}
 
 void ST_drawWidgets(boolean refresh)
 {
