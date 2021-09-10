@@ -198,6 +198,10 @@ void D_Display (void)
   if (gamestate == GS_LEVEL && gametic)
     HU_Drawer ();
 
+  // clean up border stuff
+  if (gamestate != oldgamestate && gamestate != GS_LEVEL)
+    I_SetPalette ((byte *)W_CacheLumpNameConst ("PLAYPAL", PU_CACHE));
+
   menuactivestate = menuactive;
   viewactivestate = viewactive;
   inhelpscreensstate = inhelpscreens;
@@ -332,12 +336,51 @@ int skill = 2;
 //
 void D_DoAdvanceDemo (void)
 {
-  pagename = "TITLEPIC";
-  gamestate= GS_LEVEL;
-  G_DeferedInitNew((skill_t)skill,episode,map);
-  advancedemo= false;
-}
+    players[consoleplayer].playerstate = PST_LIVE;  // not reborn
+    advancedemo = false;
+    usergame = false;               // no save / end game here
+    paused = false;
+    gameaction = ga_nothing;
 
+    if ( gamemode == retail )
+      demosequence = (demosequence+1)%3;
+    else
+      demosequence = (demosequence+1)%2;
+
+    switch (demosequence)
+    {
+      case 0:
+        if ( gamemode == commercial )
+            pagetic = 35 * 11;
+        else
+            pagetic = 170;
+        gamestate = GS_DEMOSCREEN;
+        pagename = "TITLEPIC";
+        break;
+      case 1:
+        pagetic = 200;
+        gamestate = GS_DEMOSCREEN;
+        pagename = "CREDIT";
+        break;
+      case 2:
+        gamestate = GS_DEMOSCREEN;
+        if ( gamemode == commercial)
+        {
+            pagetic = 35 * 11;
+            pagename = "TITLEPIC";
+        }
+        else
+        {
+            pagetic = 200;
+
+            if ( gamemode == retail )
+              pagename = "CREDIT";
+            else
+              pagename = "HELP2";
+        }
+        break;
+    }
+}
 
 
 //

@@ -458,6 +458,9 @@ void G_Ticker (void)
     case ga_savegame: 
       G_DoSaveGame (); 
       break; 
+    case ga_playdemo:
+      /* CGDoom: Main menu demo is disabled (code removed) */
+      break;
     case ga_completed: 
       G_DoCompleted (); 
       break; 
