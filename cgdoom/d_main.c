@@ -413,7 +413,7 @@ void D_DoomMain()
 //  int repisode=1;
 //  int rmap=1;
 
-  /* CGDOOM: Z_Init is executed early because we rely on the larger heap to
+  /* CGDoom: Z_Init is executed early because we rely on the larger heap to
      allocate the lump cache and lump info; normal heap isn't enough for WADs
      larger than the shareware WAD */
   Z_Init ();

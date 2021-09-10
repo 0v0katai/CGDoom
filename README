@@ -8,7 +8,7 @@ Credit goes to:
 * ComputerNerd for the first attempts at an fx-CG 50 port.
 * Lephenixnoir for the final fixes and fx-CG 50 version.
 
-CGDOOM is licensed under GPLv2 as a derivative work of both the original DOOM
+CGDoom is licensed under GPLv2 as a derivative work of both the original DOOM
 sources (GPL) and nDoom (GPLv2). See LICENSE.
 
 UI improvements TODO:
@@ -36,7 +36,7 @@ Technical support TODO:
 -> Reenable LTO if possible
 -> Built-in overclocking?
 
-CGDOOM used to be compiled with the mini-SDK. However, it's become quite
+CGDoom used to be compiled with the mini-SDK. However, it's become quite
 difficult to get a copy of that. Instead, this port is built with a modified
 PrizmSDK from Jonimoose/libfxcg [1]. I attempted to list differences at first,
 but there are quite a lot of bugfixes so I might simply push it later.

@@ -109,7 +109,7 @@ void P_InitSwitchList(void)
   int		index;
   int		episode;
 
-  /* CGDOOM: Load all the switches, don't ask where the WADs came from. */
+  /* CGDoom: Load all the switches, don't ask where the WADs came from. */
   episode = 3;
 #if 0
   episode = 1;
@@ -132,7 +132,7 @@ void P_InitSwitchList(void)
 
     if (alphSwitchList[i].episode <= episode)
     {
-      /* CGDOOM: Since we forced all switches to appear, some of them may not
+      /* CGDoom: Since we forced all switches to appear, some of them may not
          actually be in the WAD. Use the Check function to not fail. */
       switchlist[index++] = R_CheckTextureNumForName(alphSwitchList[i].name1);
       switchlist[index++] = R_CheckTextureNumForName(alphSwitchList[i].name2);

@@ -30,7 +30,7 @@
 #pragma interface
 #endif
 
-/* CGDOOM: I_ZoneBase() is extended with a second argument to support multiple
+/* CGDoom: I_ZoneBase() is extended with a second argument to support multiple
    allocation zones, for more memory */
 
 // Called by startup code

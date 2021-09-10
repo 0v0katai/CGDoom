@@ -573,7 +573,7 @@ void R_ExecuteSetViewSize (void)
   int		startmap; 	
 
   setsizeneeded = false;
-  /* CGDOOM-specific function */
+  /* CGDoom-specific function */
   V_Clear();
 
   if (setblocks == 11)
