@@ -73,7 +73,6 @@
 #define GAMMALVL2	"Gamma correction level 2"
 #define GAMMALVL3	"Gamma correction level 3"
 #define GAMMALVL4	"Gamma correction level 4"
-#define GAMMALV		"Brightness: %d/4"
 #define EMPTYSTRING	"empty slot"
 
 #define NOTIMP		"not implemented in cgdoom yet!"

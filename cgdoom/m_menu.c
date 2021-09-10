@@ -96,14 +96,14 @@ void    (*messageRoutine)(int response);
 
 #define SAVESTRINGSIZE 	24
 
-/*char gammamsg[5][26] =
+char gammamsg[5][26] =
 {
     GAMMALVL0,
     GAMMALVL1,
     GAMMALVL2,
     GAMMALVL3,
     GAMMALVL4
-};*/
+};
 
 // we are going to be entering a savegame string
 int			saveStringEnter;              

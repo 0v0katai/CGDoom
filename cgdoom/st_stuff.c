@@ -513,9 +513,8 @@ void CGCycleGamma()
   usegamma = (usegamma + 1) % 5;
   I_SetPalette(NULL);
 
-  static char message[32];
-  sprintf(message, GAMMALV, usegamma);
-  plyr->message = message;
+  extern char gammamsg[5][26];
+  plyr->message = gammamsg[usegamma];
 }
 
 void CGProfilerResults()
