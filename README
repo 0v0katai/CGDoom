@@ -6,7 +6,8 @@ Credit goes to:
   number of WAD files).
 * MPoupe for the original fx-CG 10/20 port of DOOM.
 * ComputerNerd for the first attempts at an fx-CG 50 port.
-* Lephenixnoir for the final fixes and fx-CG 50 version.
+* Lephenixnoir for this fx-CG 50 version, with extensive feedback and testing
+  by Computer_Freak_2004 that made everyhing 10 times better.
 
 CGDoom is licensed under GPLv2 as a derivative work of both the original DOOM
 sources (GPL) and nDoom (GPLv2). See LICENSE.
@@ -14,24 +15,17 @@ sources (GPL) and nDoom (GPLv2). See LICENSE.
 UI improvements TODO:
 -> Better keyboard layout (including more keys, eg. Run)
    => Edit messages accordingly ("press y"/etc)
--> Use MENU for the escape and EXE to validate in menus
 
 WAD support TODO:
--> Unmodified 1.9 shareware WAD works all the way through?
--> Shareware WAD from Planète Casio should work 100%
-   => Check the finale and the end of E1M9
--> Ultimate Doom WAD:
-   => Episode 1 should be 100%
-   => E2M7 may not load based on fragmentation
-   => Episodes 3 & 4 seem to be OK
+-> Shareware WAD should work 100% (if not, it's a bug)
+-> Ultimate Doom WAD should work 100% (if not, it's a bug)
+-> Doom II WAD seems to run out of memory halfway through
 
 Technical support TODO:
 -> Supply more VRAM memory to internal allocator
    => Merge internal heap into Z_Zone? (< 50 kB)
    => Remove multiply-avoiding lookup tables?
 -> Rate-limit the game when overclocking
--> Add more SHORT() to avoid having to copy-align lumps
-   (note left by MPoupe in m_swap.h)
 -> Load/Save game would be very cool
 -> Reenable LTO if possible
 -> Built-in overclocking?
