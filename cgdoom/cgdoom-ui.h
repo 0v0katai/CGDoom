@@ -67,7 +67,8 @@ int UI_Main(WADFileInfo *wads, int wad_count,
     int *use_mmap,        /* Map file to memory (as opposed to using Bfile) */
     int *startmap,        /* Warp to this map */
     int *startepisode,    /* Warp to this episode */
-    int *trustunaligned   /* Trust unaligned lumps */
+    int *trustunaligned,  /* Trust unaligned lumps */
+    int *autostart        /* Skip main menu, straight to gameplay */
 );
 
 #endif /* CGDOOM_UI_H */

@@ -354,7 +354,8 @@ int Layout_Event(Layout *l, int key)
 }
 
 int UI_Main(WADFileInfo *wads, int wad_count, int *dev_info, int *use_mmap,
-	int *startmap, int *startepisode, int *trustunaligned)
+	int *startmap, int *startepisode, int *trustunaligned,
+	int *autostart)
 {
 	Layout l;
 	Layout_Init(&l);
@@ -390,6 +391,7 @@ int UI_Main(WADFileInfo *wads, int wad_count, int *dev_info, int *use_mmap,
 		Layout_Spacing(&l, 12);
 		Layout_Integer(&l, "Start at episode:", startepisode);
 		Layout_Integer(&l, "Start at map:", startmap);
+		Layout_Checkbox(&l, "Skip title screen:", autostart);
 
 		Layout_Spacing(&l, 12);
 		Layout_Checkbox(&l, "Developer info:", dev_info);

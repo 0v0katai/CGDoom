@@ -475,10 +475,6 @@ void D_DoomMain()
     else if(skill==3) startskill = sk_hard;
     else if(skill==4) startskill = sk_nightmare;
 
-    episode = startepisode;
-    map = startmap;
-    autostart = false;
-
     // init subsystems
     //printf ("V_Init: Allocate screens\n");
     V_Init ();
@@ -532,7 +528,12 @@ void D_DoomMain()
     //printf ("ST_Init: Init status bar\n");
     ST_Init ();
     //printf ("Engage... \n");
-    D_StartTitle ();
+
+    if (autostart)
+      G_DeferedInitNew (startskill, startepisode, startmap);
+    else
+      D_StartTitle ();
+
     D_DoomLoop ();  // never returns, except when it does
     I_Restore (); //calckill = bad
 

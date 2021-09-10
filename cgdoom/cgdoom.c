@@ -3,6 +3,7 @@
 #include "cgdoom.h"
 #include <stdlib.h>
 #include "libprof.h"
+#include "doomtype.h"
 
 #ifndef CG_EMULATOR
 # include "cgdoom-alloc.h"
@@ -616,6 +617,8 @@ void abort(void){
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 int main(void)
 {
+	extern boolean autostart;
+	int autostart_ = 0;
 	startmap = 1;
 	startepisode = 1;
 
@@ -635,9 +638,11 @@ int main(void)
 
 	int dev_info = 0;
 	int choice = UI_Main(wads, wad_count, &dev_info, &gWADmethod,
-		&startmap, &startepisode, &CGD_TrustUnalignedLumps);
+		&startmap, &startepisode, &CGD_TrustUnalignedLumps, &autostart_);
 	if(choice < 0)
 		return 1;
+
+	autostart = autostart_;
 
 	unsigned tmp=((unsigned)getSecondaryVramAddress()+3)&(~3);
 	SaveVRAMBuffer = (unsigned char*)tmp;
