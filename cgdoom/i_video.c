@@ -210,8 +210,11 @@ void I_ShutdownGraphics(void)
 {
 }
 
-void I_SetWindowAfterError(void)
+void I_ReinitAfterError(void)
 {
+    /* Redraw status bar over help message */
+    extern boolean st_firsttime;
+    st_firsttime = true;
 }
 
 #endif
