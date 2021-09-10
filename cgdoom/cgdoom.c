@@ -380,7 +380,7 @@ static FileMapping gWADMap;
 static SectorIndexInfo *gIndex = NULL;
 
 /* Global options */
-int CGD_TrustUnalignedLumps = 0;
+int CGD_TrustUnalignedLumps = 1;
 
 /* Performance counters */
 struct CGD_Perf CGD_Perf;
