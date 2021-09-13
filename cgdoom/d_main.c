@@ -343,9 +343,9 @@ void D_DoAdvanceDemo (void)
     gameaction = ga_nothing;
 
     if ( gamemode == retail )
-      demosequence = (demosequence+1)%3;
+      demosequence = (demosequence+1)%4;
     else
-      demosequence = (demosequence+1)%2;
+      demosequence = (demosequence+1)%3;
 
     switch (demosequence)
     {
@@ -358,11 +358,14 @@ void D_DoAdvanceDemo (void)
         pagename = "TITLEPIC";
         break;
       case 1:
+        G_DeferedPlayDemo ("demo1");
+        break;
+      case 2:
         pagetic = 200;
         gamestate = GS_DEMOSCREEN;
         pagename = "CREDIT";
         break;
-      case 2:
+      case 3:
         gamestate = GS_DEMOSCREEN;
         if ( gamemode == commercial)
         {

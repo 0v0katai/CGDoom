@@ -82,6 +82,7 @@ void     G_DoReborn (void);
 void     G_DoLoadLevel (void); 
 void     G_DoNewGame (void); 
 void     G_DoLoadGame (void); 
+void     G_DoPlayDemo (void);
 void     G_DoCompleted (void); 
 void     G_DoVictory (void); 
 void     G_DoWorldDone (void); 
@@ -108,24 +109,25 @@ int      starttime;           // for comparative timing purposes
 boolean     viewactive; 
 
 boolean     deathmatch;            // only if started as net death 
-const boolean     netgame = 0;                // only true if packets are broadcast 
+boolean     netgame = 0;                // only true if packets are broadcast
 boolean     playeringame[MAXPLAYERS]; 
 player_t    players[MAXPLAYERS]; 
 
-const      int consoleplayer = 0;          // player taking events and displaying 
+int consoleplayer = 0;          // player taking events and displaying
 int      displayplayer;          // view being displayed 
 int                gametic; 
 int               levelstarttic;          // gametic at level start 
 int               totalkills, totalitems, totalsecret;    // for intermission 
 
 //char     demoname[32]; 
-const boolean     netdemo = 0; 
+boolean         demoplayback;
+boolean     netdemo = 0;
 byte*     demobuffer;
 byte*     demo_p;
 byte*     demoend; 
 boolean           singledemo;             // quit after playing a demo from cmdline 
 
-const boolean          precache = false;        // if true, load all graphics at start 
+boolean          precache = false;        // if true, load all graphics at start
 
 wbstartstruct_t   wminfo;                // parms for world map / intermission 
 
@@ -459,7 +461,7 @@ void G_Ticker (void)
       G_DoSaveGame (); 
       break; 
     case ga_playdemo:
-      /* CGDoom: Main menu demo is disabled (code removed) */
+      G_DoPlayDemo ();
       break;
     case ga_completed: 
       G_DoCompleted (); 
@@ -1126,6 +1128,46 @@ void G_DeferedPlayDemo (char* name)
   defdemoname = name; 
   gameaction = ga_playdemo; 
 } 
+
+void G_DoPlayDemo (void)
+{
+  skill_t skill;
+  int i, episode, map;
+
+  gameaction = ga_nothing;
+  demobuffer = demo_p = (byte *)W_CacheLumpNameConst (defdemoname, PU_STATIC);
+  if ( *demo_p++ != VERSION)
+  {
+    // fprintf( stderr, "Demo is from a different game version!\n");
+    gameaction = ga_nothing;
+    return;
+  }
+
+  skill = *demo_p++;
+  episode = *demo_p++;
+  map = *demo_p++;
+  deathmatch = *demo_p++;
+  respawnparm = *demo_p++;
+  fastparm = *demo_p++;
+  nomonsters = *demo_p++;
+  consoleplayer = *demo_p++;
+
+  for (i=0 ; i<MAXPLAYERS ; i++)
+    playeringame[i] = *demo_p++;
+  if (playeringame[1])
+  {
+    netgame = true;
+    netdemo = true;
+  }
+
+  // don't spend a lot of time in loadlevel
+  precache = false;
+  G_InitNew (skill, episode, map);
+  precache = true;
+
+  usergame = false;
+  demoplayback = true;
+}
 
 //
 // G_TimeDemo 

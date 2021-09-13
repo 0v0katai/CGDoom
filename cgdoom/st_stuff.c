@@ -818,8 +818,8 @@ void ST_doPaletteStuff(void)
     // slowly fade the berzerk out
     bzc = 12 - (plyr->powers[pw_strength]>>6);
 
-  if (bzc > cnt)
-    cnt = bzc;
+    if (bzc > cnt)
+      cnt = bzc;
   }
 
   if (cnt)

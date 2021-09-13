@@ -81,7 +81,7 @@ extern  int		gamemap;
 extern  boolean         respawnmonsters;
 
 // Netgame? Only true if >1 player.
-extern  const boolean	netgame;
+extern  boolean	netgame;
 
 // Flag: true only if started as net deathmatch.
 // An enum might handle altdeath/cooperative better.
@@ -147,7 +147,7 @@ extern	int		scaledviewwidth;
 extern  int	viewangleoffset;
 
 // Player taking events, and displaying.
-extern  const int	consoleplayer;	
+extern  int	consoleplayer;
 extern  int	displayplayer;
 
 
@@ -234,7 +234,7 @@ extern  const int					maxammo[NUMAMMO];
 //extern  FILE*				debugfile;
 
 // if true, load all graphics at level load
-extern  const boolean				precache;
+extern  boolean				precache;
 
 
 // wipegamestate can be set to -1
