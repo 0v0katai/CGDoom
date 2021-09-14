@@ -30,6 +30,7 @@
 
 
 #include "os.h"
+#include "cgdoom.h"
 #include "cgdoom-alloc.h"
 #include <stdlib.h>
 
@@ -343,9 +344,9 @@ void D_DoAdvanceDemo (void)
     gameaction = ga_nothing;
 
     if ( gamemode == retail )
-      demosequence = (demosequence+1)%4;
+      demosequence = (demosequence+1)%7;
     else
-      demosequence = (demosequence+1)%3;
+      demosequence = (demosequence+1)%6;
 
     switch (demosequence)
     {
@@ -366,6 +367,9 @@ void D_DoAdvanceDemo (void)
         pagename = "CREDIT";
         break;
       case 3:
+        G_DeferedPlayDemo ("demo2");
+        break;
+      case 4:
         gamestate = GS_DEMOSCREEN;
         if ( gamemode == commercial)
         {
@@ -382,6 +386,17 @@ void D_DoAdvanceDemo (void)
               pagename = "HELP2";
         }
         break;
+      case 5:
+        G_DeferedPlayDemo ("demo3");
+        break;
+      case 6:
+        G_DeferedPlayDemo ("demo4");
+        break;
+    }
+
+    /* CGDoom: Skip demos on option (often incompatible) */
+    if (gameaction == ga_playdemo && !CGD_EnableDemos) {
+      D_DoAdvanceDemo();
     }
 }
 
@@ -446,25 +461,20 @@ void D_DoomMain()
   if(gamemode == indetermined) // CX port
     return; // CX port
 
-  {//save sprintf
-    if (W_CheckNumForName("E2M1")!=-1)
-    {
-      maxepisode = 2;
-      if (W_CheckNumForName("E3M1")!=-1)
-        maxepisode = 3;
-    }
-#if 0 //CG:seem to be useless
-    while(true)
-    { if(gamemode==commercial)
-    sprintf(res,"MAP%02i",maxmap+1);
-    else
-      sprintf(res,"E1M%i",maxmap+1);
-    if (W_CheckNumForName(res)==-1)
-      break;
-    maxmap++;
-    }
-#endif 
+  if (W_CheckNumForName("E4M1")!=-1)
+    maxepisode = 4;
+  else if (W_CheckNumForName("E3M1")!=-1)
+    maxepisode = 3;
+  else if (W_CheckNumForName("E2M1")!=-1)
+    maxepisode = 2;
+
+  /* CGDoom: Override game mode for split WADs; we have single-episode WADs for
+     all episodes of Ultimate Doom, and they should identify as retail */
+  if (CGD_SingleEpisodeUltimate > 0) {
+    gamemode=retail;
+    maxepisode = CGD_SingleEpisodeUltimate;
   }
+
 
     nomonsters = 0;
     respawnparm = 0;

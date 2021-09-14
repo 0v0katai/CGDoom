@@ -24,6 +24,7 @@
 //static const char 
 
 #include "os.h"
+#include "cgdoom.h"
 
 #include "doomdef.h" 
 #include "doomstat.h"
@@ -485,7 +486,10 @@ void G_Ticker (void)
   { 
     cmd = &players[0].cmd;
 
-    G_BuildTiccmd (cmd);
+    if (demoplayback)
+      G_ReadDemoTiccmd (cmd);
+    else
+      G_BuildTiccmd (cmd);
 
     if (players[0].cmd.buttons & BT_SPECIAL) 
     { 
@@ -789,6 +793,9 @@ void G_DoCompleted (void)
   wminfo.epsd = gameepisode -1; 
   wminfo.last = gamemap -1;
 
+  if (CGD_SingleEpisodeUltimate)
+    wminfo.epsd = CGD_SingleEpisodeUltimate - 1;
+
   // wminfo.next is 0 biased, unlike gamemap
   if ( gamemode == commercial)
   {
@@ -955,15 +962,16 @@ void G_DeferedInitNew( skill_t skill, int  episode, int  map)
 
 void G_DoNewGame (void) 
 {
-//  netdemo = false;
-//  netgame = false;
+  demoplayback = false;
+  netdemo = false;
+  netgame = false;
   deathmatch = false;
   playeringame[0] = true;
   playeringame[1] = playeringame[2] = playeringame[3] = 0;
   respawnparm = false;
   fastparm = false;
   nomonsters = false;
-//  consoleplayer = 0;
+  consoleplayer = 0;
   G_InitNew (d_skill, d_episode, d_map);
   gameaction = ga_nothing; 
 } 
@@ -1031,6 +1039,7 @@ void G_InitNew ( skill_t skill, int episode, int map )
 
   usergame = true;                // will be set false if a demo 
   paused = false; 
+  demoplayback = false;
   automapactive = false; 
   viewactive = true; 
   gameepisode = episode; 
@@ -1136,7 +1145,11 @@ void G_DoPlayDemo (void)
 
   gameaction = ga_nothing;
   demobuffer = demo_p = (byte *)W_CacheLumpNameConst (defdemoname, PU_STATIC);
-  if ( *demo_p++ != VERSION)
+
+  /* CGDoom: We have old WADs with demos at versions 108 and 109. They don't
+     really work whell though */
+  byte version = *demo_p++;
+  if (version != VERSION && version != 109 && version != 108)
   {
     // fprintf( stderr, "Demo is from a different game version!\n");
     gameaction = ga_nothing;

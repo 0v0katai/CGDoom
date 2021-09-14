@@ -381,6 +381,8 @@ static SectorIndexInfo *gIndex = NULL;
 
 /* Global options */
 int CGD_TrustUnalignedLumps = 1;
+int CGD_EnableDemos = 0;
+int CGD_SingleEpisodeUltimate = 0;
 
 /* Performance counters */
 struct CGD_Perf CGD_Perf;
@@ -638,11 +640,22 @@ int main(void)
 
 	int dev_info = 0;
 	int choice = UI_Main(wads, wad_count, &dev_info, &gWADmethod,
-		&startmap, &startepisode, &CGD_TrustUnalignedLumps, &autostart_);
+		&startmap, &startepisode, &CGD_TrustUnalignedLumps, &autostart_,
+		&CGD_EnableDemos);
 	if(choice < 0)
 		return 1;
 
 	autostart = autostart_;
+
+	/* Override version detection for single-episode Ultimate Doom WADs */
+	if (!CGDstrcmp(wads[choice].name, "doomu1.wad"))
+		CGD_SingleEpisodeUltimate = 1;
+	if (!CGDstrcmp(wads[choice].name, "doomu2.wad"))
+		CGD_SingleEpisodeUltimate = 2;
+	if (!CGDstrcmp(wads[choice].name, "doomu3.wad"))
+		CGD_SingleEpisodeUltimate = 3;
+	if (!CGDstrcmp(wads[choice].name, "doomu4.wad"))
+		CGD_SingleEpisodeUltimate = 4;
 
 	unsigned tmp=((unsigned)getSecondaryVramAddress()+3)&(~3);
 	SaveVRAMBuffer = (unsigned char*)tmp;

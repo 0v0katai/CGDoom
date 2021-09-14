@@ -1,7 +1,7 @@
 #ifndef CGDOOM_H
 #define CGDOOM_H
 
-/* CGDoom-specific definitions that cover both calculator and native builds. */
+// CGDoom-specific definitions that cover both calculator and native builds.
 
 #include <stdint.h>
 #include "libprof.h"
@@ -19,14 +19,24 @@ typedef struct
     int size;
 } WADFileInfo;
 
-// TODO: Move developer info here
+/* CGDoom statistics */
+extern struct CGD_Perf CGD_Perf;
+extern struct CGD_Stats CGD_Stats;
 
-/* Global variables interfacing with Doom itself. */
+// CGDoom options (some more are specified in platform.h)
+
+/* Enable demos in the title screen (most are incompatible and look bad) */
+extern int CGD_EnableDemos;
+/* The selected WAD is a split Ultimate Doom WAD with a single episode (this
+   exists on the fx-CG 50 and is incorrectly detected by normal logic) */
+extern int CGD_SingleEpisodeUltimate;
+
+// Global variables interfacing with Doom itself.
 
 /* Map and episode to start at when loading the game. */
 extern int startmap, startepisode;
 
-/* Keyboard interface. */
+// Keyboard interface.
 
 // Special key names for cheats, debugs, etc (completes doomdef.h).
 #define SKEY_CHEAT       0x10001

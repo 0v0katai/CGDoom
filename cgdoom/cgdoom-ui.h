@@ -68,7 +68,8 @@ int UI_Main(WADFileInfo *wads, int wad_count,
     int *startmap,        /* Warp to this map */
     int *startepisode,    /* Warp to this episode */
     int *trustunaligned,  /* Trust unaligned lumps */
-    int *autostart        /* Skip main menu, straight to gameplay */
+    int *autostart,       /* Skip title screen, straight to gameplay */
+    int *enabledemos      /* Enable demos on the title screen */
 );
 
 #endif /* CGDOOM_UI_H */

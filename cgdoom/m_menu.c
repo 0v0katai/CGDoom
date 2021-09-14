@@ -24,6 +24,7 @@
 
 
 #include "os.h"
+#include "cgdoom.h"
 
 
 #include "doomdef.h"
@@ -1289,5 +1290,10 @@ void M_Init (void)
 			break;
     }
     
+    /* CGDoom: Change options when playing single-episode Ultimate Doom WADs */
+    if (CGD_SingleEpisodeUltimate) {
+        EpiDef.numitems -= 3;
+        EpisodeMenu[0] = EpisodeMenu[CGD_SingleEpisodeUltimate - 1];
+    }
 }
 

@@ -355,7 +355,7 @@ int Layout_Event(Layout *l, int key)
 
 int UI_Main(WADFileInfo *wads, int wad_count, int *dev_info, int *use_mmap,
 	int *startmap, int *startepisode, int *trustunaligned,
-	int *autostart)
+	int *autostart, int *enabledemos)
 {
 	Layout l;
 	Layout_Init(&l);
@@ -391,7 +391,9 @@ int UI_Main(WADFileInfo *wads, int wad_count, int *dev_info, int *use_mmap,
 		Layout_Spacing(&l, 12);
 		Layout_Integer(&l, "Start at episode:", startepisode);
 		Layout_Integer(&l, "Start at map:", startmap);
-		Layout_Checkbox(&l, "Skip title screen:", autostart);
+		Layout_Text(&l, "Title screen:",
+			*autostart ? "Skip" :
+			!*enabledemos ? "No demos" : "Full");
 
 		Layout_Spacing(&l, 12);
 		Layout_Checkbox(&l, "Developer info:", dev_info);
@@ -403,10 +405,19 @@ int UI_Main(WADFileInfo *wads, int wad_count, int *dev_info, int *use_mmap,
 		int key;
 		GetKey(&key);
 
-		if(Layout_Event(&l, key))
-			{}
-		else if(key == KEY_CTRL_EXE && l.focus < wad_count)
+		if(Layout_Event(&l, key)) {
+		}
+		else if(key == KEY_CTRL_EXE && l.focus == wad_count + 2) {
+			if (!*autostart && *enabledemos)
+				*autostart = 1;
+			else if (!*autostart)
+				*enabledemos = 1;
+			else
+				*autostart = 0, *enabledemos = 0;
+		}
+		else if(key == KEY_CTRL_EXE && l.focus < wad_count) {
 			return l.focus;
+		}
 
 		if(*startmap < 1)
 			*startmap = 1;

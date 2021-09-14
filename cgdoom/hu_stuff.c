@@ -23,6 +23,8 @@
 //static const char 
 
 #include "os.h"
+#include "cgdoom.h"
+
 #include "doomdef.h"
 #include "z_zone.h"
 #include "m_swap.h"
@@ -239,7 +241,10 @@ void HU_Start(void)
   case shareware:
   case registered:
   case retail:
+    /* CGDoom: Use proper episode names in single-episode Ultimate Doom WADs */
     a = 9*(gameepisode-1) + gamemap - 1;
+    if (CGD_SingleEpisodeUltimate)
+      a = 9*(CGD_SingleEpisodeUltimate-1) + gamemap - 1;
     s = mapnames[a];
     break;
     /* FIXME
