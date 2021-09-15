@@ -29,7 +29,7 @@
 #endif
 #include "m_swap.h"
 
-#ifndef CG_EMULATOR
+#if !defined(CG_EMULATOR) && !defined(__BIG_ENDIAN__)
 #define __BIG_ENDIAN__
 #endif 
 

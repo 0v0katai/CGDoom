@@ -530,10 +530,14 @@ int CreateFileMapping(int fd, FileMapping *pMap)
 			pFileData = ReadNextSector(&fc, &iLength);
 			if(iLength <= 0)
 				break;
+
+			#pragma GCC diagnostic push
+			#pragma GCC diagnostic ignored "-Wstringop-overread"
 			if((iLength == FLASH_PAGE_SIZE)
 				? CGD_sector_memcmp(pFileData, pFragment, iLength)
 				: memcmp(pFileData, pFragment, iLength))
 					break;
+			#pragma GCC diagnostic pop
 		}
 	}
 	if(iLength < 0)
