@@ -124,7 +124,8 @@ static int W_AddFile ()
   }
 
   if (!lumpinfo)
-    I_ErrorI ("CGDrealloc lumpinfo", (int)lumpinfo, numlumps, numlumps*sizeof(lumpinfo_t), 0);
+    I_Error ("CGDrealloc(lumpinfo) failed (%d lumps, %d bytes)", numlumps,
+      numlumps * sizeof(lumpinfo_t));
 
   lump_p = &lumpinfo[startlump];
 
@@ -293,7 +294,7 @@ void W_ReadLump(int lump, void* dest )
 
   if (c < l->size)
   {
-    I_ErrorI ("W_ReadLump: only read %i of %i on lump %i", c,l->size,lump,0);//CGD HACK
+    I_Error ("W_ReadLump: only read %i of %i on lump %i", c,l->size,lump);
   }
 }
 
@@ -373,7 +374,8 @@ static void* W_CacheLumpNumCommon( int lump, int tag,int iEnableFlash)
   }
 
   if(lumpcache[lump] == NULL)
-    I_ErrorI("W_CacheLumpNumCommon", (int)lumpcache[lump], lump, 0, 0);
+    I_Error ("W_CacheLumpNumCommon: Loading lump %d failed (%p)", lump,
+      lumpcache[lump]);
 
   return lumpcache[lump];
 }

@@ -215,6 +215,10 @@ void I_ReinitAfterError(void)
     /* Redraw status bar over help message */
     extern boolean st_firsttime;
     st_firsttime = true;
+
+    /* Restore full black screen */
+    memset(GetVRAMAddress(), 0, 384*216*2);
+    Bdisp_PutDisp_DD();
 }
 
 #endif

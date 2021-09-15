@@ -594,7 +594,8 @@ int Flash_ReadFile(void *buf, int size, int readpos)
 	{
 		int i = FindInFlash(&pSrc,size, readpos);
 		if(i<0) {
-			I_ErrorI ("Flash_ReadFile", size, readpos, 0, i);
+			I_Error ("Flash_ReadFile: cannot find position %d (size %d)", readpos,
+				size);
 			return i;
 		}
 		memcpy(buf,pSrc,i);

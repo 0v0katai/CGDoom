@@ -142,7 +142,7 @@ void Z_Free (const void* ptr)
   memblock_t* block;
   memblock_t* other;
 
-  if (PTR_TO_FLASH(ptr))
+  if (PTR_TO_FLASH(ptr) || ptr == NULL)
     return;
 
   memzone_t* zone = NULL;
@@ -156,7 +156,7 @@ void Z_Free (const void* ptr)
   }
   if (zone == NULL)
   {
-    I_ErrorI ("Z_Free: Out of zone", (int)ptr, 0, 0, 0);
+    I_Error ("Z_Free: %p is out of zone", ptr);
     return;
   }
 
@@ -314,7 +314,7 @@ void* Z_Malloc( int size,  int  tag,  void* user )
     {
       if (zone_no == zone_count - 1)
       {
-        I_ErrorI ("Z_Malloc failure", size, 0, 0, 0);
+        I_Error ("Z_Malloc(%d) failure", size);
         prof_leave(CGD_Perf.DynamicAllocation);
         return NULL;
       }
@@ -461,16 +461,15 @@ void Z_CheckHeap (void)
 void Z_ChangeTag2(const void* ptr,int tag )
 {
   memblock_t* block;
-  if(PTR_TO_FLASH(ptr))
-  {
+
+  if(PTR_TO_FLASH(ptr) || ptr == NULL)
     return;
-  }
 
   block = (memblock_t *) ( (byte *)ptr - sizeof(memblock_t));
 
   if (block->id != ZONEID)
   {
-    I_ErrorI ("Z_ChangeTag: freed a pointer without ZONEID", (int)ptr, 0, 0, 0);
+    I_Error ("Z_ChangeTag: freed a pointer without ZONEID: %p", ptr);
   }
 
   if (tag >= PU_PURGELEVEL && (unsigned)block->user < 0x100)

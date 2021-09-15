@@ -25,6 +25,7 @@
 #include "platform.h"
 #include "cgdoom.h"
 #include "cgdoom-alloc.h"
+#include "cgdoom-ui.h"
 #include <stdlib.h>
 
 #include "doomdef.h"
@@ -195,52 +196,21 @@ int toupper_int(int i)
 //
 // I_Error
 //
-static int key = 31;
-void I_ErrorI (const char *error, int i1,int i2,int i3,int i4)
-{
-  #ifndef CG_EMULATOR
-
-    char buf[21];
-    Bdisp_AllClr_VRAM();
-    locate_OS( 1, 1 );
-    PrintLine( "ERROR:", 21 );
-    locate_OS( 1, 2 );
-    PrintLine( error, 21 );
-    locate_OS( 1, 3 );CGDAppendHex32("i1:",i1,8,buf);PrintLine( buf, 21 );
-    locate_OS( 1, 4 );CGDAppendHex32("i2:",i2,8,buf);PrintLine( buf, 21 );
-    locate_OS( 1, 5 );CGDAppendHex32("i3:",i3,8,buf);PrintLine( buf, 21 );
-    locate_OS( 1, 6 );CGDAppendHex32("i4:",i4,8,buf);PrintLine( buf, 21 );
-    GetKey( &key );
-    I_ReinitAfterError();
-#else
-      I_Error (error,i1,i2,i3,i4);
-#endif
-}
-
 void I_Error (const char *error, ...)
 {
+    va_list args;
+    va_start(args, error);
+
 #ifdef CG_EMULATOR
-    /*// Message first.
-    va_start (argptr,error);
-    printf ("Error: ");
-    printf (error,argptr);
-    printf ("\n");
-    sprintf(ferror,error,argptr);
-    va_end (argptr);
-    */
-    printf ("Error: %s",error);
-    //Inform the user something bad had occured
-    //Exit function here
+    printf("Error: ");
+    vprintf(error, args);
 #else
-  I_ShutdownGraphics();
-    Bdisp_AllClr_VRAM();
-    locate_OS( 1, 1 );
-    PrintLine( "ERROR:", 21 );
-    locate_OS( 1, 2 );
-    PrintLine( error, 21 );
-    GetKey( &key );
+    I_ShutdownGraphics();
+    UI_Error(error, args);
     I_ReinitAfterError();
-#endif //#ifdef CG_EMULATOR
+#endif
+
+    va_end(args);
     //I_Quit();
 }
 

@@ -18,7 +18,7 @@ enum {
 void UI_FileMappingProgressBar(int size_mapped, int size_total);
 
 /* Print text with a cleaner font. */
-void UI_Print(int x, int y, int fg, int halign, char const *text);
+void UI_Print(int x, int y, int fg, int halign, char const *text, int length);
 /* Like UI_Print, but applies printf() formatting. */
 void UI_Printf(int x, int y, int fg, int halign, char const *fmt, ...);
 void UI_Vprintf(int x, int y, int fg, int halign, char const *fmt, va_list args);
@@ -71,5 +71,8 @@ int UI_Main(WADFileInfo *wads, int wad_count,
     int *autostart,       /* Skip title screen, straight to gameplay */
     int *enabledemos      /* Enable demos on the title screen */
 );
+
+/* Show an error with custom formatting. */
+void UI_Error(const char *fmt, va_list args);
 
 #endif /* CGDOOM_UI_H */

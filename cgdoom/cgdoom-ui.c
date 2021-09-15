@@ -54,7 +54,8 @@ static uint32_t const font_glyphs[263] = {
 
 static inline void SetPixel(int x, int y, int color)
 {
-	VRAM[WIDTH * y + x] = color;
+	if ((unsigned)x < 384 && (unsigned)y < 216)
+		VRAM[WIDTH * y + x] = color;
 }
 
 static void Font_RenderChar(int *x, int y, int c, int fg)
@@ -96,22 +97,41 @@ static int Font_StringLength(char const *text)
 	return w - 1;
 }
 
-void UI_Print(int x, int y, int fg, int align, char const *text)
+static int Font_ReverseStringLength(char const *text, int width)
+{
+	int i = 0;
+	for(; text[i]; i++) {
+		if(text[i] < 32)
+			continue;
+
+		int cw = font_width[text[i]-32] + 1;
+		if(cw > width)
+			break;
+
+		width -= cw;
+	}
+	return i;
+}
+
+void UI_Print(int x, int y, int fg, int align, char const *text, int length)
 {
 	if(align == UI_CENTER)
 		x -= (Font_StringLength(text) + 1) / 2;
 	if(align == UI_RIGHT)
 		x -= Font_StringLength(text);
 
-	for(int i = 0; text[i]; i++)
+	for(int i = 0; text[i]; i++) {
+		if (length >= 0 && i >= length)
+			break;
 		Font_RenderChar(&x, y, text[i], fg);
+	}
 }
 
 void UI_Vprintf(int x, int y, int fg, int align, char const *fmt, va_list args)
 {
 	char str[256];
-	vsprintf(str, fmt, args);
-	UI_Print(x, y, fg, align, str);
+	vsnprintf(str, 256, fmt, args);
+	UI_Print(x, y, fg, align, str, -1);
 }
 
 void UI_Printf(int x, int y, int fg, int align, char const *fmt, ...)
@@ -237,7 +257,7 @@ static void Layout_EndInput(Layout *l)
 
 void Layout_CenteredText(Layout *l, const char *text)
 {
-	UI_Print(WIDTH / 2, l->y, 0x0000, UI_CENTER, text);
+	UI_Print(WIDTH / 2, l->y, 0x0000, UI_CENTER, text, -1);
 	l->y += 14;
 }
 
@@ -246,7 +266,7 @@ void Layout_Text(Layout *l, const char *label, const char *fmt, ...)
 	va_list args;
 	va_start(args, fmt);
 	Layout_AddFocus(l, FOCUS_NOTHING, NULL);
-	UI_Print(LAYOUT_LEFT, l->y, 0x0000, UI_LEFT, label);
+	UI_Print(LAYOUT_LEFT, l->y, 0x0000, UI_LEFT, label, -1);
 	UI_Vprintf(LAYOUT_RIGHT, l->y, 0x0000, UI_RIGHT, fmt, args);
 	l->y += 14;
 	va_end(args);
@@ -255,7 +275,7 @@ void Layout_Text(Layout *l, const char *label, const char *fmt, ...)
 void Layout_Checkbox(Layout *l, const char *label, int *checked)
 {
 	Layout_AddFocus(l, FOCUS_CHECKBOX, checked);
-	UI_Print(LAYOUT_LEFT, l->y, 0x0000, UI_LEFT, label);
+	UI_Print(LAYOUT_LEFT, l->y, 0x0000, UI_LEFT, label, -1);
 	UI_Checkbox(LAYOUT_RIGHT-7, l->y+1, *checked);
 	l->y += 14;
 }
@@ -263,9 +283,9 @@ void Layout_Checkbox(Layout *l, const char *label, int *checked)
 void Layout_Integer(Layout *l, const char *label, int *value)
 {
 	Layout_AddFocus(l, FOCUS_INTEGER, value);
-	UI_Print(LAYOUT_LEFT, l->y, 0x0000, UI_LEFT, label);
+	UI_Print(LAYOUT_LEFT, l->y, 0x0000, UI_LEFT, label, -1);
 	if(l->active && l->focus == l->focus_count - 1)
-		UI_Print(LAYOUT_RIGHT, l->y, 0x0000, UI_RIGHT, l->text);
+		UI_Print(LAYOUT_RIGHT, l->y, 0x0000, UI_RIGHT, l->text, -1);
 	else
 		UI_Printf(LAYOUT_RIGHT, l->y, 0x0000, UI_RIGHT, "%d", *value);
 	l->y += 14;
@@ -426,4 +446,43 @@ int UI_Main(WADFileInfo *wads, int wad_count, int *dev_info, int *use_mmap,
 	}
 
 	return -1;
+}
+
+static int isspace_(int c)
+{
+	return (c == ' ' || c == '\t' || c == '\n');
+}
+
+void UI_Error(const char *fmt, va_list args)
+{
+	char message[256], *str=message;
+	vsnprintf(message, 256, fmt, args);
+
+	int y = 12;
+	Bdisp_AllClr_VRAM();
+	UI_Print(192, y, 0x0000, UI_CENTER, "Error!", -1);
+	y += 14 + 12;
+
+	while(*str) {
+		int len = Font_ReverseStringLength(str, LAYOUT_RIGHT - LAYOUT_LEFT);
+
+		/* Try to stop at previous word boundary */
+		int wordb = len;
+		while(wordb > 0 && str[wordb] && !isspace_(str[wordb])) wordb--;
+		if(wordb > 0) len = wordb;
+
+		UI_Print(LAYOUT_LEFT, y, 0x0000, UI_LEFT, str, len);
+		y += 14;
+
+		/* Skip spacing */
+		str += len;
+		while(*str && isspace_(*str)) str++;
+	}
+
+	Bdisp_FrameAndColor(3, 16);
+	Bdisp_FrameAndColor(1, 0);
+	Bdisp_PutDisp_DD();
+
+	int key;
+	GetKey(&key);
 }

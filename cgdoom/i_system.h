@@ -94,9 +94,6 @@ int  	toupper_int(int i);
 //void	I_GetMainDir(char* dir);
 void 	I_Error (const char *error, ...);
 
-//CGD bastl/hack
-void I_ErrorI (const char *error, int i1,int i2,int i3,int i4);
-
 //Set by I_Error()
 extern boolean fuck;
 
