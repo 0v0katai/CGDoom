@@ -1146,8 +1146,8 @@ void G_DoPlayDemo (void)
   gameaction = ga_nothing;
   demobuffer = demo_p = (byte *)W_CacheLumpNameConst (defdemoname, PU_STATIC);
 
-  /* CGDoom: We have old WADs with demos at versions 108 and 109. They don't
-     really work whell though */
+  /* CGDoom: We have old WADs with demos at versions 108 and 109. The decoding
+     work similarly, it's probably enemy position/AI that mess up */
   byte version = *demo_p++;
   if (version != VERSION && version != 109 && version != 108)
   {
@@ -1217,6 +1217,22 @@ boolean G_CheckDemoStatus (void)
     I_Error ("timed %i gametics in %i realtics",gametic 
       , endtime-starttime); 
   } 
+
+  if (demoplayback)
+  {
+    Z_ChangeTag (demobuffer, PU_CACHE);
+    demoplayback = false;
+    netdemo = false;
+    netgame = false;
+    deathmatch = false;
+    playeringame[1] = playeringame[2] = playeringame[3] = 0;
+    respawnparm = false;
+    fastparm = false;
+    nomonsters = false;
+    consoleplayer = 0;
+    D_AdvanceDemo ();
+    return true;
+  }
 
   return false; 
 } 
