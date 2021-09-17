@@ -17,7 +17,7 @@
 // $Log:$
 //
 // DESCRIPTION:
-//	DOOM graphics stuff for Nspire
+//	DOOM graphics stuff for fx-CG 50
 //
 //-----------------------------------------------------------------------------
 

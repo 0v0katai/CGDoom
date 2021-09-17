@@ -74,7 +74,9 @@ extern int CGD_TrustUnalignedLumps;
    use the secondary VRAM as heap. We swap because using the VRAM as heap would
    cause problems with error screens (stepping through errors would crash). */
 #ifdef CGDOOM_DIRECT_R61524
-# define CGDOOM_SCREENS_BASE ((void *)GetVRAMAddress())
+# define CGDOOM_SCREENS_BASE ((void *)( \
+       ((uint32_t)GetVRAMAddress() & 0x1fffffff) | 0x80000000 \
+   ))
 #else
 # define CGDOOM_SCREENS_BASE SaveVRAMBuffer
 #endif
