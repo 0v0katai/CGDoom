@@ -484,5 +484,6 @@ void UI_Error(const char *fmt, va_list args)
 	Bdisp_PutDisp_DD();
 
 	int key;
+	while(PRGM_GetKey());
 	GetKey(&key);
 }
