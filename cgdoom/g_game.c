@@ -1059,7 +1059,7 @@ void G_InitNew ( skill_t skill, int episode, int map )
         skytexture = R_TextureNumForName ("SKY2");
   }
   else
-    switch (episode) 
+    switch (CGD_SingleEpisodeUltimate ? CGD_SingleEpisodeUltimate : episode)
   { 
     case 1: 
       skytexture = R_TextureNumForName ("SKY1"); 
