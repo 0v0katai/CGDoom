@@ -35,8 +35,6 @@ void I_Error (const char *error, ...);
 //force compiler error on use following:
 #define strcpy 12
 #define strnicmp 22
-#define strncmp 27
-#define strcmp 33
 
 //return ptr to flash
 int FindInFlash(const void **buf, int size, int readpos);

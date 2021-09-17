@@ -1,4 +1,6 @@
 #include "cgdoom-ui.h"
+#include "i_system.h"
+#include "z_zone.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -477,6 +479,25 @@ void UI_Error(const char *fmt, va_list args)
 		/* Skip spacing */
 		str += len;
 		while(*str && isspace_(*str)) str++;
+	}
+
+	/* Additional info for heap errors */
+	if(!strncmp(fmt, "Z_", 2)) {
+		y += 12;
+
+		UI_Print(LAYOUT_LEFT, y, 0x0000, UI_LEFT, "Free memory in heap:", -1);
+		y += 14;
+
+		for (int i = 0;; i++) {
+			int size;
+			byte *ptr = I_ZoneBase(&size, i);
+			if (!ptr) break;
+
+			UI_Printf(LAYOUT_LEFT, y, 0x0000, UI_LEFT,
+				"Zone #%d: %d/%d kB (largest block %d B)",
+				i, Z_FreeMemory(i) >> 10, size >> 10, Z_LargestFreeBlock(i));
+			y += 14;
+		}
 	}
 
 	Bdisp_FrameAndColor(3, 16);
