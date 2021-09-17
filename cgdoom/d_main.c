@@ -469,7 +469,23 @@ void D_DoomMain()
     maxepisode = 2;
 
   /* CGDoom: Override game mode for split WADs; we have single-episode WADs for
-     all episodes of Ultimate Doom, and they should identify as retail */
+     all episodes of Ultimate Doom, and they should identify as retail.Note
+     that CGD_SingleEpisodeUltimate might have been set before based on the WAD
+     file name. */
+  if (!CGD_SingleEpisodeUltimate && maxepisode == 1) {
+    /* Shareware Doom */
+    if (W_CheckNumForName("DEMO4") == -1)
+      {}
+    /* Each individual Ultimate Doom episode */
+    else if (W_CheckNumForName("WIMAP0") != -1)
+      CGD_SingleEpisodeUltimate = 1;
+    else if (W_CheckNumForName("WIMAP1") != -1)
+      CGD_SingleEpisodeUltimate = 2;
+    else if (W_CheckNumForName("WIMAP2") != -1)
+      CGD_SingleEpisodeUltimate = 3;
+    else if (W_CheckNumForName("INTERPIC") != -1)
+      CGD_SingleEpisodeUltimate = 4;
+  }
   if (CGD_SingleEpisodeUltimate > 0) {
     gamemode=retail;
     maxepisode = CGD_SingleEpisodeUltimate;
