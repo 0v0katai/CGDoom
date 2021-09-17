@@ -654,18 +654,22 @@ void F_Drawer (void)
     {
     case 1:
       if ( gamemode == retail )
-        V_DrawPatch (0,0,0,(const patch_t*)W_CacheLumpNameConst("CREDIT",PU_CACHE));
+        // V_DrawPatch (0,0,0,(const patch_t*)W_CacheLumpNameConst("CREDIT",PU_CACHE));
+        V_DrawFullscreenPatchFragmented(0, "CREDIT");
       else
-        V_DrawPatch (0,0,0,(const patch_t*)W_CacheLumpNameConst("HELP2",PU_CACHE));
+        // V_DrawPatch (0,0,0,(const patch_t*)W_CacheLumpNameConst("HELP2",PU_CACHE));
+        V_DrawFullscreenPatchFragmented(0, "HELP2");
       break;
     case 2:
-      V_DrawPatch(0,0,0,(const patch_t*)W_CacheLumpNameConst("VICTORY2",PU_CACHE));
+      // V_DrawPatch(0,0,0,(const patch_t*)W_CacheLumpNameConst("VICTORY2",PU_CACHE));
+      V_DrawFullscreenPatchFragmented(0, "VICTORY2");
       break;
     case 3:
       F_BunnyScroll ();
       break;
     case 4:
-      V_DrawPatch (0,0,0,(const patch_t*)W_CacheLumpNameConst("ENDPIC",PU_CACHE));
+      // V_DrawPatch (0,0,0,(const patch_t*)W_CacheLumpNameConst("ENDPIC",PU_CACHE));
+      V_DrawFullscreenPatchFragmented(0, "ENDPIC");
       break;
     }
   }

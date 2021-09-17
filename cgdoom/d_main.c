@@ -314,7 +314,8 @@ void D_PageTicker (void)
 //
 void D_PageDrawer (void)
 {
-  V_DrawPatch (0,0, 0, (const patch_t *)W_CacheLumpNameConst(pagename, PU_CACHE));
+//  V_DrawPatch (0,0, 0, (const patch_t *)W_CacheLumpNameConst(pagename, PU_CACHE));
+  V_DrawFullscreenPatchFragmented(0, pagename);
 }
 
 

@@ -548,12 +548,14 @@ void M_DrawReadThis1(void)
   switch ( gamemode )
   {
   case commercial:
-    V_DrawPatchDirect (0,0,0,W_CacheLumpNamePatch("HELP",PU_CACHE));
+    // V_DrawPatchDirect (0,0,0,W_CacheLumpNamePatch("HELP",PU_CACHE));
+    V_DrawFullscreenPatchFragmented(0, "HELP");
     break;
   case shareware:
   case registered:
   case retail:
-    V_DrawPatchDirect (0,0,0,W_CacheLumpNamePatch("HELP1",PU_CACHE));
+    // V_DrawPatchDirect (0,0,0,W_CacheLumpNamePatch("HELP1",PU_CACHE));
+    V_DrawFullscreenPatchFragmented(0, "HELP1");
     break;
   default:
     break;
@@ -575,11 +577,13 @@ void M_DrawReadThis2(void)
   case retail:
   case commercial:
     // This hack keeps us from having to change menus.
-    V_DrawPatchDirect (0,0,0,W_CacheLumpNamePatch("CREDIT",PU_CACHE));
+    // V_DrawPatchDirect (0,0,0,W_CacheLumpNamePatch("CREDIT",PU_CACHE));
+    V_DrawFullscreenPatchFragmented(0, "CREDIT");
     break;
   case shareware:
   case registered:
-    V_DrawPatchDirect (0,0,0,W_CacheLumpNamePatch("HELP2",PU_CACHE));
+    // V_DrawPatchDirect (0,0,0,W_CacheLumpNamePatch("HELP2",PU_CACHE));
+    V_DrawFullscreenPatchFragmented(0, "HELP2");
     break;
   default:
     break;

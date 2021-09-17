@@ -338,7 +338,7 @@ static int  NUMCMAPS;
 //
 
 // background (map of levels).
-static const patch_t*  bg;
+// static const patch_t*  bg;
 
 // You Are Here graphic
 static const patch_t*  yah[2]; 
@@ -986,8 +986,9 @@ static void WI_loadData(void)
   }
 
   // background
-  bg = W_CacheLumpNamePatch(name, PU_CACHE);
-  V_DrawPatch(0, 0, 1, bg);
+//  bg = W_CacheLumpNamePatch(name, PU_CACHE);
+//  V_DrawPatch(0, 0, 1, bg);
+  V_DrawFullscreenPatchFragmented(1, name);
 
   // UNUSED unsigned char *pic = screens[1];
   // if (gamemode == commercial)

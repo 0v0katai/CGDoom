@@ -74,6 +74,8 @@ V_CopyRect
 void V_DrawPatch(int x,int y, int scrn,const patch_t*	patch);
 #define V_DrawPatchDirect(x,y,scrn,patch ) V_DrawPatch(x,y,scrn,patch)
 
+/* CGDoom: render opaque full-screen path without loading it */
+void V_DrawFullscreenPatchFragmented(int scrn, const char *lumpname);
 
 // Draw a linear block of pixels into the view buffer.
 void V_DrawBlock( int x, int y,int scrn,int width,int height,const byte* src );

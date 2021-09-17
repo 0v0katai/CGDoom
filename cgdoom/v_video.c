@@ -26,7 +26,7 @@
 
 //static const char 
 
-
+#include "cgdoom-frag.h"
 
 #include "i_system.h"
 #include "r_local.h"
@@ -38,6 +38,9 @@
 #include "m_swap.h"
 
 #include "v_video.h"
+
+#include "z_zone.h"
+#include "w_wad.h"
 
 
 // Each screen is [SCREENWIDTH*SCREENHEIGHT]; 
@@ -238,6 +241,38 @@ void V_DrawPatch(int x,int y,int scrn,const patch_t* patch)
     } 
   }    
 } 
+
+//
+// V_DrawFullscreenPatchFragmented
+// Draws a full-screen opaque patch without loading it to RAM, even if it's
+// fragmented. This function is useful in avoiding loading ~66 kB as a single
+// lump when full-screen images are used, which occasionally fails due to
+// fragmentation.
+//
+void V_DrawFullscreenPatchFragmented(int scrn, const char *lumpname)
+{
+  CGD_Frag patch;
+  if (CGD_Frag_Map(lumpname, &patch)) {
+    V_DrawPatch(0, 0, scrn, W_CacheLumpNamePatch(lumpname, PU_CACHE));
+    return;
+  }
+
+  byte *dest = screens[scrn];
+  short w = CGD_Frag_i16LE(&patch, offsetof(patch_t, widthLE));
+  short h = CGD_Frag_i16LE(&patch, offsetof(patch_t, heightLE));
+
+  if (!scrn)
+    V_MarkRect (0, 0, SCREENWIDTH, SCREENHEIGHT);
+
+  for (int x = 0; x < w; x++) {
+    int offset = CGD_Frag_i32LE(&patch, offsetof(patch_t, columnofsLE) + 4*x);
+    int h0 = CGD_Frag_u8(&patch, offset+1);
+
+    for (int y = 0; y < h; y++) {
+      dest[SCREENWIDTH * y + x] = CGD_Frag_u8(&patch, offset + y+3+3*(y>=h0));
+    }
+  }
+}
 
 //
 // V_DrawPatchFlipped 
