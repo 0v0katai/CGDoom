@@ -753,6 +753,9 @@ int main(void)
 			Layout_Spacing(&l, 12);
 			Layout_Text(&l, "Index build time:", "%d ms", ms_index);
 			Layout_Text(&l, "File mapping time:", "%d ms", ms_mmap);
+			Layout_Spacing(&l, 12);
+			Layout_Text(&l, "Memory beyond the 2MB line:", "%d kB",
+				CGD_2MBLineMemory >> 10);
 			Bdisp_PutDisp_DD();
 			int key;
 			GetKey(&key);
