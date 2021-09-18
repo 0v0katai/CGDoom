@@ -276,25 +276,31 @@ void I_StartTic (void)
     // Special keys
     //---
 
+    /* This variable is set in m_menu.c while typing save file names */
+    extern int saveStringEnter;
+
     UpdateKeyboardState();
 
-    /* Capture events for special keys */
-    if (KeyWasJustPressed(SKEY_CHEAT))
-        CGCheat();
-    if (KeyWasJustPressed(SKEY_DECVP))
-        R_SetViewSizeChange(-1);
-    if (KeyWasJustPressed(SKEY_INCVP))
-        R_SetViewSizeChange(1);
-    if (KeyWasJustPressed(SKEY_NOCLIP))
-        CGSwitchClip();
-    if (KeyWasJustPressed(SKEY_GAMMA))
-        CGCycleGamma();
-    if (KeyWasJustPressed(SKEY_FREEMEM))
-        CGFreeMem();
-    if (KeyWasJustPressed(SKEY_FPSCOUNTER))
-        fpscounteractive = !fpscounteractive;
-    if (KeyWasJustPressed(SKEY_FRAMESKIP))
-        CGRefreshSwitch();
+    if(!saveStringEnter)
+    {
+        /* Capture events for special keys */
+        if(KeyWasJustPressed(SKEY_CHEAT))
+            CGCheat();
+        if(KeyWasJustPressed(SKEY_DECVP))
+            R_SetViewSizeChange(-1);
+        if(KeyWasJustPressed(SKEY_INCVP))
+            R_SetViewSizeChange(1);
+        if(KeyWasJustPressed(SKEY_NOCLIP))
+            CGSwitchClip();
+        if(KeyWasJustPressed(SKEY_GAMMA))
+            CGCycleGamma();
+        if(KeyWasJustPressed(SKEY_FREEMEM))
+            CGFreeMem();
+        if(KeyWasJustPressed(SKEY_FPSCOUNTER))
+            fpscounteractive = !fpscounteractive;
+        if(KeyWasJustPressed(SKEY_FRAMESKIP))
+            CGRefreshSwitch();
+    }
 
     //---
     // Profiler
@@ -303,7 +309,7 @@ void I_StartTic (void)
     /* Number of ticks left before reporting results */
     static int profiler_ticks = -1;
 
-    if (KeyWasJustPressed(SKEY_PROFILER)) {
+    if (!saveStringEnter && KeyWasJustPressed(SKEY_PROFILER)) {
         prof_t *counters = (prof_t *)&CGD_Perf;
         for(int i = 0; i < sizeof CGD_Perf / sizeof (prof_t); i++) {
             counters[i] = prof_make();
@@ -322,13 +328,25 @@ void I_StartTic (void)
     // Normal keys
     //---
 
-    static int keys[] = {
+    /* Sets of keys depending on input mode. Each set must only consist of keys
+       that don't overlap */
+    static const int base_keys[] = {
         KEY_LEFTARROW, KEY_RIGHTARROW, KEY_UPARROW, KEY_DOWNARROW,
         KEY_RCTRL, KEY_TAB, KEY_PAUSE, KEY_SLEFTARROW, KEY_SRIGHTARROW,
         KEY_ESCAPE, KEY_ENTER,
         ' ', '1', '2', '3', '4', '5', '6', '7',
         0
     };
+    static const int input_keys[] = {
+        'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N',
+        'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+        KEY_BACKSPACE, KEY_ESCAPE, KEY_ENTER,
+        0
+    };
+
+    const int *keys = base_keys;
+    if(saveStringEnter)
+        keys = input_keys;
 
     /* Emit events for all changes */
     for(int i = 0; keys[i]; i++)

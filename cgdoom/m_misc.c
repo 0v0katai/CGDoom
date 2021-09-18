@@ -90,6 +90,37 @@ int M_DrawText ( int x, int y, boolean direct, char* string )
 //
 // M_WriteFile
 //
+boolean M_WriteFile(char const *name, void *source, int length)
+{
+    uint16_t fc_path[100] = u"\\\\fls0\\";
+    size_t size = length;
+    int j = 7;
+    int rc, fd;
+
+    for (int i = 0; name[i]; i++)
+        fc_path[j++] = name[i];
+    fc_path[j++] = 0x0000;
+
+    Bfile_DeleteEntry(fc_path);
+
+    rc = Bfile_CreateEntry_OS(fc_path, CREATEMODE_FILE, &size);
+    if (rc < 0) {
+        /* Displaying the error message destroys the save data, so quit */
+        I_Error("Bfile_CreateEntry_OS(%s, %d bytes): %d", name, length, rc);
+        return false;
+    }
+
+    fd = Bfile_OpenFile_OS(fc_path, WRITE, 0);
+    if (fd < 0) {
+        I_Error("Bfile_OpenFile_OS(%s): %d", name, fd);
+        return false;
+    }
+
+    Bfile_WriteFile_OS(fd, source, length);
+    Bfile_CloseFile_OS(fd);
+    return true;
+}
+
 //
 // DEFAULTS
 //

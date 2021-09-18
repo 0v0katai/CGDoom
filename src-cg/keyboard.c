@@ -120,6 +120,35 @@ static int DoomKeyToKeycode(int key)
     case SKEY_FRAMESKIP:    return KEYCODE_VARS;
     case SKEY_PROFILER:     return KEYCODE_RIGHTP;
 
+    /* Alphabetic keys */
+    case 'A':               return KEYCODE_XOT;
+    case 'B':               return KEYCODE_LOG;
+    case 'C':               return KEYCODE_LN;
+    case 'D':               return KEYCODE_SIN;
+    case 'E':               return KEYCODE_COS;
+    case 'F':               return KEYCODE_TAN;
+    case 'G':               return KEYCODE_FRAC;
+    case 'H':               return KEYCODE_FD;
+    case 'I':               return KEYCODE_LEFTP;
+    case 'J':               return KEYCODE_RIGHTP;
+    case 'K':               return KEYCODE_COMMA;
+    case 'L':               return KEYCODE_ARROW;
+    case 'M':               return KEYCODE_7;
+    case 'N':               return KEYCODE_8;
+    case 'O':               return KEYCODE_9;
+    case 'P':               return KEYCODE_4;
+    case 'Q':               return KEYCODE_5;
+    case 'R':               return KEYCODE_6;
+    case 'S':               return KEYCODE_MUL;
+    case 'T':               return KEYCODE_DIV;
+    case 'U':               return KEYCODE_1;
+    case 'V':               return KEYCODE_2;
+    case 'W':               return KEYCODE_3;
+    case 'X':               return KEYCODE_PLUS;
+    case 'Y':               return KEYCODE_MINUS;
+    case 'Z':               return KEYCODE_0;
+    case KEY_BACKSPACE:     return KEYCODE_DEL;
+
     default:                return -1;
     }
 }

@@ -270,6 +270,7 @@ void D_DoomLoop (void)
     M_Ticker (); //Menu ticker
 
     G_Ticker (); //Game ticker
+    if (fuck) break; //Quick exit after save game
 
     gametic++;
 

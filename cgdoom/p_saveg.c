@@ -71,6 +71,253 @@ void P_ArchivePlayers (void)
 }
 
 
+//
+// P_UnArchivePlayers
+//
+void P_UnArchivePlayers (void)
+{
+    int   i;
+    int   j;
+
+    for (i=0 ; i<MAXPLAYERS ; i++)
+    {
+        if (!playeringame[i])
+            continue;
+
+        PADSAVEP();
+
+        memcpy (&players[i],save_p, sizeof(player_t));
+        save_p += sizeof(player_t);
+
+        // will be set when unarc thinker
+        players[i].mo = NULL;
+        players[i].message = NULL;
+        players[i].attacker = NULL;
+
+        for (j=0 ; j<NUMPSPRITES ; j++)
+        {
+            if (players[i]. psprites[j].state)
+            {
+                players[i]. psprites[j].state
+                    = (state_t *)&states[ (int)players[i].psprites[j].state ];
+            }
+        }
+    }
+}
+
+//
+// P_ArchiveWorld
+//
+void P_ArchiveWorld (void)
+{
+    int     i;
+    int     j;
+    sector_t*   sec;
+    line_t*   li;
+    side_t*   si;
+    short*    put;
+
+    put = (short *)save_p;
+
+    // do sectors
+    for (i=0, sec = sectors ; i<numsectors ; i++,sec++)
+    {
+        *put++ = sec->floorheight >> FRACBITS;
+        *put++ = sec->ceilingheight >> FRACBITS;
+        *put++ = sec->floorpic;
+        *put++ = sec->ceilingpic;
+        *put++ = sec->lightlevel;
+        *put++ = sec->special;    // needed?
+        *put++ = sec->tag;    // needed?
+    }
+
+
+    // do lines
+    for (i=0, li = lines ; i<numlines ; i++,li++)
+    {
+        *put++ = li->flags;
+        *put++ = li->special;
+        *put++ = li->tag;
+        for (j=0 ; j<2 ; j++)
+        {
+            if (li->sidenum[j] == -1)
+                continue;
+
+            si = &sides[li->sidenum[j]];
+
+            *put++ = si->textureoffset >> FRACBITS;
+            *put++ = si->rowoffset >> FRACBITS;
+            *put++ = si->toptexture;
+            *put++ = si->bottomtexture;
+            *put++ = si->midtexture;
+        }
+    }
+
+    save_p = (byte *)put;
+}
+
+
+
+//
+// P_UnArchiveWorld
+//
+void P_UnArchiveWorld (void)
+{
+    int     i;
+    int     j;
+    sector_t*   sec;
+    line_t*   li;
+    side_t*   si;
+    short*    get;
+
+    get = (short *)save_p;
+
+    // do sectors
+    for (i=0, sec = sectors ; i<numsectors ; i++,sec++)
+    {
+        sec->floorheight = *get++ << FRACBITS;
+        sec->ceilingheight = *get++ << FRACBITS;
+        sec->floorpic = *get++;
+        sec->ceilingpic = *get++;
+        sec->lightlevel = *get++;
+        sec->special = *get++;    // needed?
+        sec->tag = *get++;    // needed?
+        sec->specialdata = 0;
+        sec->soundtarget = 0;
+    }
+
+    // do lines
+    for (i=0, li = lines ; i<numlines ; i++,li++)
+    {
+        li->flags = *get++;
+        li->special = *get++;
+        li->tag = *get++;
+        for (j=0 ; j<2 ; j++)
+        {
+            if (li->sidenum[j] == -1)
+              continue;
+            si = &sides[li->sidenum[j]];
+            si->textureoffset = *get++ << FRACBITS;
+            si->rowoffset = *get++ << FRACBITS;
+            si->toptexture = *get++;
+            si->bottomtexture = *get++;
+            si->midtexture = *get++;
+        }
+    }
+    save_p = (byte *)get;
+}
+
+
+
+//
+// Thinkers
+//
+typedef enum
+{
+    tc_end,
+    tc_mobj
+
+} thinkerclass_t;
+
+
+
+//
+// P_ArchiveThinkers
+//
+void P_ArchiveThinkers (void)
+{
+    thinker_t*    th;
+    mobj_t*   mobj;
+
+    // save off the current thinkers
+    for (th = thinkercap.next ; th != &thinkercap ; th=th->next)
+    {
+        if (th->function == TP_MobjThinker)
+        {
+            *save_p++ = tc_mobj;
+            PADSAVEP();
+            mobj = (mobj_t *)save_p;
+            memcpy (mobj, th, sizeof(*mobj));
+            save_p += sizeof(*mobj);
+            mobj->state = (state_t *)(mobj->state - states);
+
+            if (mobj->player)
+                mobj->player = (player_t *)((mobj->player-players) + 1);
+            continue;
+        }
+
+        // I_Error would overwrite VRAM, thus screens[0], thus the save buffer
+        // I_Error ("P_ArchiveThinkers: Unknown thinker function");
+    }
+
+    // add a terminating marker
+    *save_p++ = tc_end;
+}
+
+
+
+//
+// P_UnArchiveThinkers
+//
+void P_UnArchiveThinkers (void)
+{
+    byte    tclass;
+    thinker_t*    currentthinker;
+    thinker_t*    next;
+    mobj_t*   mobj;
+
+    // remove all the current thinkers
+    currentthinker = thinkercap.next;
+    while (currentthinker != &thinkercap)
+    {
+        next = currentthinker->next;
+
+        if (currentthinker->function == TP_MobjThinker)
+            P_RemoveMobj ((mobj_t *)currentthinker);
+        else
+            Z_Free (currentthinker);
+
+        currentthinker = next;
+    }
+
+    P_InitThinkers ();
+
+    // read in saved thinkers
+    while (1)
+    {
+        tclass = *save_p++;
+        switch (tclass)
+        {
+          case tc_end:
+            return;   // end of list
+
+          case tc_mobj:
+            PADSAVEP();
+            mobj = Z_Malloc (sizeof(*mobj), PU_LEVEL, NULL);
+            memcpy (mobj, save_p, sizeof(*mobj));
+            save_p += sizeof(*mobj);
+            mobj->state = (state_t *)&states[(int)mobj->state];
+            mobj->target = NULL;
+            if (mobj->player)
+            {
+                mobj->player = &players[(int)mobj->player-1];
+                mobj->player->mo = mobj;
+            }
+            P_SetThingPosition (mobj);
+            mobj->info = (mobjinfo_t *)&mobjinfo[mobj->type];
+            mobj->floorz = mobj->subsector->sector->floorheight;
+            mobj->ceilingz = mobj->subsector->sector->ceilingheight;
+            mobj->thinker.function = TP_MobjThinker;
+            P_AddThinker (&mobj->thinker, mobj);
+            break;
+
+          default:
+            // I_Error would overwrite VRAM, thus screens[0], thus the save buffer
+            // I_Error ("Unknown tclass %i in savegame",tclass);
+        }
+    }
+}
+
 
 //
 // P_ArchiveSpecials
@@ -325,7 +572,8 @@ void P_UnArchiveSpecials (void)
       break;
 
     default:
-      I_Error ("P_UnarchiveSpecials:Unknown tclass %i in savegame",tclass);
+      // I_Error would overwrite VRAM, thus screens[0], thus the save buffer
+      // I_Error ("P_UnarchiveSpecials:Unknown tclass %i in savegame",tclass);
     }
 
   }

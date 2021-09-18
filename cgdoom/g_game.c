@@ -460,7 +460,10 @@ void G_Ticker (void)
       break; 
     case ga_savegame: 
       G_DoSaveGame (); 
-      break; 
+      /* After saving the game, the storage memory is shuffled, we need to
+         leave and we need to do it quickly */
+      I_Quit();
+      return;
     case ga_playdemo:
       G_DoPlayDemo ();
       break;
@@ -933,14 +936,60 @@ void G_DoLoadGame (void)
 //
 void G_SaveGame( int slot, char* description ) 
 { 
-  (void)slot;
-  (void)description;
+    savegameslot = slot;
+    CGDstrcpy (savedescription, description);
+    sendsave = true;
 } 
 
 void G_DoSaveGame (void)
 { 
-} 
+    char  name[50];
+    char  name2[VERSIONSIZE];
+    char* description;
+    int   length;
+    int   i;
 
+    sprintf(name, SAVEGAMENAME "%d.dsg", savegameslot);
+    description = savedescription;
+
+    save_p = savebuffer = screens[1]+0x4000;
+
+    memcpy (save_p, description, SAVESTRINGSIZE);
+    save_p += SAVESTRINGSIZE;
+    memset (name2,0,sizeof(name2));
+    sprintf (name2,"version %i",VERSION);
+    memcpy (save_p, name2, VERSIONSIZE);
+    save_p += VERSIONSIZE;
+
+    *save_p++ = gameskill;
+    *save_p++ = gameepisode;
+    *save_p++ = gamemap;
+    for (i=0 ; i<MAXPLAYERS ; i++)
+        *save_p++ = playeringame[i];
+    *save_p++ = leveltime>>16;
+    *save_p++ = leveltime>>8;
+    *save_p++ = leveltime;
+
+    P_ArchivePlayers ();
+    P_ArchiveWorld ();
+    P_ArchiveThinkers ();
+    P_ArchiveSpecials ();
+
+    *save_p++ = 0x1d;   // consistancy marker
+
+    length = save_p - savebuffer;
+    if (length > SAVEGAMESIZE)
+      I_Error ("Savegame buffer overrun");
+
+    M_WriteFile (name, savebuffer, length);
+
+    gameaction = ga_nothing;
+    savedescription[0] = 0;
+
+    static char msg[32];
+    sprintf(msg, GGSAVED " (%d kB)", length >> 10);
+    players[consoleplayer].message = msg;
+}
 
 //
 // G_InitNew

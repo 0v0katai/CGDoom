@@ -111,7 +111,7 @@ int			saveStringEnter;
 int             	saveSlot;	// which slot to save in
 int			saveCharIndex;	// which char we're editing
 // old save description before edit
-//char			saveOldString[SAVESTRINGSIZE];  
+char			saveOldString[SAVESTRINGSIZE];
 
 boolean			inhelpscreens;
 boolean			menuactive;
@@ -120,7 +120,7 @@ boolean			menuactive;
 #define LINEHEIGHT		16
 
 extern boolean		sendpause;
-//char			savegamestrings[10][SAVESTRINGSIZE];
+char			savegamestrings[10][SAVESTRINGSIZE];
 
 char	endstring[160];
 
@@ -205,8 +205,8 @@ void M_DrawNewGame(void);
 void M_DrawEpisode(void);
 void M_DrawOptions(void);
 //void M_DrawSound(void);
-//void M_DrawLoad(void);
-//void M_DrawSave(void);
+void M_DrawLoad(void);
+void M_DrawSave(void);
 
 void M_DrawSaveLoadBorder(int x,int y);
 void M_SetupNextMenu(menu_t *menudef);
@@ -410,7 +410,7 @@ enum
     load6,
     load_end
 } load_e;
-/*
+
 menuitem_t LoadMenu[]=
 {
     {1,"", M_LoadSelect,'1'},
@@ -453,38 +453,40 @@ menu_t  SaveDef =
     80,54,
     0
 };
-*/
 
 //
 // M_ReadSaveStrings
 //  read the strings from the savegame files
 //
-/*
 void M_ReadSaveStrings(void)
 {
-    FILE*			handle;
-    int				count;
-    int				i;
-    char			name[256];
+    int             fd;
+    int				i, j;
+    char			name[64];
+    uint16_t        fc_path[64];
 	
     for (i = 0;i < load_end;i++)
     {
-		sprintf(name,SAVEGAMENAME"%d.dsg",i);
-		
-		handle = fopen (name, "r");
-		if (handle == NULL)
-		{
-			strcpy(&savegamestrings[i][0],EMPTYSTRING);
-			LoadMenu[i].status = 0;
-			continue;
-		}
-		//count = read (handle, &savegamestrings[i], SAVESTRINGSIZE);
-		//fread ( dest, size elements, count elements, FILE handle );
-		count= fread (&savegamestrings[i], SAVESTRINGSIZE, 1, handle);
-		
-		fclose (handle);
-		LoadMenu[i].status = 1;
+        sprintf(name, SAVEGAMENAME "%d.dsg", i);
+        memcpy(fc_path, u"\\\\fls0\\", 14);
+        for (j = 0; name[j]; j++)
+            fc_path[j+7] = name[j];
+        fc_path[j+7] = 0x0000;
+
+        fd = Bfile_OpenFile_OS(fc_path, READ, 0);
+
+        if(fd < 0) {
+            CGDstrcpy(savegamestrings[i], EMPTYSTRING);
+            LoadMenu[i].status = 0;
+        }
+        else {
+            Bfile_ReadFile_OS(fd, savegamestrings[i], SAVESTRINGSIZE, -1);
+            LoadMenu[i].status = 1;
+            Bfile_CloseFile_OS(fd);
+        }
     }
+
+    I_ReinitAfterError();
 }
 
 
@@ -503,19 +505,7 @@ void M_DrawLoad(void)
     }
 }
 
-*/
 
-void M_LoadGame(int choice)
-{
-    (void)choice;
-    M_StartMessage(NOTIMP, NULL, true);
-}
-
-void M_SaveGame(int choice)
-{
-    (void)choice;
-    M_StartMessage(NOTIMP, NULL, true);
-}
 
 //
 // Draw border for the savegame description
@@ -536,6 +526,106 @@ void M_DrawSaveLoadBorder(int x,int y)
 }
 
 
+//
+// User wants to load this game
+//
+void M_LoadSelect(int choice)
+{
+    (void)choice;
+/*    char    name[256];
+
+    if (M_CheckParm("-cdrom"))
+    sprintf(name,"c:\\doomdata\\"SAVEGAMENAME"%d.dsg",choice);
+    else
+    sprintf(name,SAVEGAMENAME"%d.dsg",choice);
+    G_LoadGame (name);
+    M_ClearMenus (); */
+}
+
+//
+// Selected from DOOM menu
+//
+void M_LoadGame(int choice)
+{
+    if (netgame)
+    {
+        M_StartMessage(LOADNET,NULL,false);
+        return;
+    }
+
+    M_SetupNextMenu(&LoadDef);
+    M_ReadSaveStrings();
+}
+
+
+//
+//  M_SaveGame & Cie.
+//
+void M_DrawSave(void)
+{
+    int             i;
+
+    V_DrawPatchDirect (72,28,0,W_CacheLumpNamePatch("M_SAVEG",PU_CACHE));
+    for (i = 0;i < load_end; i++)
+    {
+    M_DrawSaveLoadBorder(LoadDef.x,LoadDef.y+LINEHEIGHT*i);
+    M_WriteText(LoadDef.x,LoadDef.y+LINEHEIGHT*i,savegamestrings[i]);
+    }
+
+    if (saveStringEnter)
+    {
+    i = M_StringWidth(savegamestrings[saveSlot]);
+    M_WriteText(LoadDef.x + i,LoadDef.y+LINEHEIGHT*saveSlot,"_");
+    }
+}
+
+//
+// M_Responder calls this when user is finished
+//
+void M_DoSave(int slot)
+{
+    G_SaveGame (slot,savegamestrings[slot]);
+    M_ClearMenus ();
+
+    // PICK QUICKSAVE SLOT YET?
+    if (quickSaveSlot == -2)
+    quickSaveSlot = slot;
+}
+
+//
+// User wants to save. Start string input for M_Responder
+//
+void M_SaveSelect(int choice)
+{
+    // we are going to be intercepting all chars
+    saveStringEnter = 1;
+
+    saveSlot = choice;
+    CGDstrcpy(saveOldString,savegamestrings[choice]);
+    if (!strcmp(savegamestrings[choice],EMPTYSTRING))
+    savegamestrings[choice][0] = 0;
+    saveCharIndex = strlen(savegamestrings[choice]);
+}
+
+//
+// Selected from DOOM menu
+//
+void M_SaveGame(int choice)
+{
+    (void)choice;
+
+    if (!usergame)
+    {
+        M_StartMessage(SAVEDEAD,NULL,false);
+        return;
+    }
+
+    if (gamestate != GS_LEVEL)
+    return;
+
+    M_SetupNextMenu(&SaveDef);
+    M_ReadSaveStrings();
+}
 
 //
 // Read This Menus
@@ -994,6 +1084,48 @@ boolean M_Responder (event_t* ev)
     
     if (ch == -1)
 		return false;
+
+    // Save Game string input
+    if (saveStringEnter)
+    {
+        switch(ch)
+        {
+          case KEY_BACKSPACE:
+            if (saveCharIndex > 0)
+            {
+            saveCharIndex--;
+            savegamestrings[saveSlot][saveCharIndex] = 0;
+            }
+            break;
+
+          case KEY_ESCAPE:
+            saveStringEnter = 0;
+            CGDstrcpy(&savegamestrings[saveSlot][0],saveOldString);
+            break;
+
+          case KEY_ENTER:
+            saveStringEnter = 0;
+            if (savegamestrings[saveSlot][0])
+            M_DoSave(saveSlot);
+            break;
+
+          default:
+            ch = (ch >= 'a' && ch <= 'z') ? (ch & ~0x20) : ch;
+            if (ch != 32)
+            if (ch-HU_FONTSTART < 0 || ch-HU_FONTSTART >= HU_FONTSIZE)
+                break;
+            if (ch >= 32 && ch <= 127 &&
+            saveCharIndex < SAVESTRINGSIZE-1 &&
+            M_StringWidth(savegamestrings[saveSlot]) <
+            (SAVESTRINGSIZE-2)*8)
+            {
+            savegamestrings[saveSlot][saveCharIndex++] = ch;
+            savegamestrings[saveSlot][saveCharIndex] = 0;
+            }
+            break;
+        }
+        return true;
+    }
 
     // Take care of any messages that need input
     if (messageToPrint)
