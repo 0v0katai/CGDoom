@@ -232,7 +232,7 @@ void HU_Start(void)
 
   /* CGDoom: Create the FPS counter widget */
   HUlib_initSText(&w_fpscounter,
-    SCREENWIDTH-48, HU_MSGY, HU_MSGHEIGHT,
+    SCREENWIDTH-44, HU_MSGY, HU_MSGHEIGHT,
     hu_font,
     HU_FONTSTART, &fpscounter_on);
 

@@ -246,6 +246,28 @@ void I_StartTic (void)
     extern int giRefreshMask;
 
     //---
+    // Rate limiter
+    //---
+
+    static boolean ratelimit_started = false;
+    static prof_t ratelimit_ctx = prof_make();
+
+    /* Rate limit the game at 35 tics per second, but only extend tics where we
+       display frames, because that's when all the work is done */
+    if(!(gametic & giRefreshMask)) {
+        if(ratelimit_started) {
+            while(1) {
+                prof_t temp = ratelimit_ctx;
+                prof_leave(temp);
+                if(prof_time(temp) >= 28571 * (giRefreshMask + 1)) break;
+            }
+            ratelimit_ctx = prof_make();
+        }
+        prof_enter(ratelimit_ctx);
+        ratelimit_started = true;
+    }
+
+    //---
     // FPS counter
     //---
 
