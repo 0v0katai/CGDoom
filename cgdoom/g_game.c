@@ -921,12 +921,69 @@ void G_DoWorldDone (void)
 extern boolean setsizeneeded;
 void R_ExecuteSetViewSize (void);
 
-#define VERSIONSIZE  16 
+char  savename[256];
 
+void G_LoadGame (char* name)
+{
+    CGDstrcpy (savename, name);
+    gameaction = ga_loadgame;
+}
+
+#define VERSIONSIZE  16
 
 void G_DoLoadGame (void) 
 {
-} 
+    int   length;
+    int   i;
+    int   a,b,c;
+    char  vcheck[VERSIONSIZE];
+
+    gameaction = ga_nothing;
+
+    length = M_ReadFile (savename, &savebuffer);
+    I_ReinitAfterError();
+    save_p = savebuffer + SAVESTRINGSIZE;
+
+    if (length < 0)
+      return;
+
+    // skip the description field
+    memset (vcheck,0,sizeof(vcheck));
+    sprintf (vcheck,"version %i",VERSION);
+    if (strcmp ((const char *)save_p, vcheck))
+        return;       // bad version
+    save_p += VERSIONSIZE;
+
+    gameskill = *save_p++;
+    gameepisode = *save_p++;
+    gamemap = *save_p++;
+    for (i=0 ; i<MAXPLAYERS ; i++)
+        playeringame[i] = *save_p++;
+
+    // load a base level
+    G_InitNew (gameskill, gameepisode, gamemap);
+
+    // get the times
+    a = *save_p++;
+    b = *save_p++;
+    c = *save_p++;
+    leveltime = (a<<16) + (b<<8) + c;
+
+    // dearchive all the modifications
+    P_UnArchivePlayers ();
+    P_UnArchiveWorld ();
+    P_UnArchiveThinkers ();
+    P_UnArchiveSpecials ();
+
+    if (*save_p != 0x1d)
+        I_Error ("Bad savegame");
+
+    // done
+    Z_Free (savebuffer);
+
+    if (setsizeneeded)
+        R_ExecuteSetViewSize ();
+}
 
 
 //

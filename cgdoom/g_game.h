@@ -49,6 +49,7 @@ void G_DeferedPlayDemo (char* demo);
 void G_DoLoadGame (void);
 
 // Called by M_Responder.
+void G_LoadGame (char* name);
 void G_SaveGame (int slot, char* description);
 
 void G_TimeDemo (char* name);

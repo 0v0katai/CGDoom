@@ -122,6 +122,45 @@ boolean M_WriteFile(char const *name, void *source, int length)
 }
 
 //
+// M_ReadFile
+//
+int M_ReadFile(const char *name, byte **buffer)
+{
+    uint16_t fc_path[100] = u"\\\\fls0\\";
+    int j = 7;
+    int fd;
+
+    for (int i = 0; name[i]; i++)
+        fc_path[j++] = name[i];
+    fc_path[j++] = 0x0000;
+
+    fd = Bfile_OpenFile_OS(fc_path, READ, 0);
+    if (fd < 0) {
+        I_Error("Bfile_OpenFile_OS(%s): %d", name, fd);
+        return -1;
+    }
+
+    int size = Bfile_GetFileSize_OS(fd);
+    if (size <= 0) {
+        I_Error("Bfile_GetFileSize_OS(%s): %d", name, size);
+        Bfile_CloseFile_OS(fd);
+        return -1;
+    }
+
+    void *buf = Z_Malloc(size, PU_STATIC, NULL);
+    if (!buf) {
+        Bfile_CloseFile_OS(fd);
+        return -1;
+    }
+
+    Bfile_ReadFile_OS(fd, buf, size, -1);
+    Bfile_CloseFile_OS(fd);
+
+    *buffer = buf;
+    return size;
+}
+
+//
 // DEFAULTS
 //
 extern int	key_right;

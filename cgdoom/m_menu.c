@@ -531,15 +531,10 @@ void M_DrawSaveLoadBorder(int x,int y)
 //
 void M_LoadSelect(int choice)
 {
-    (void)choice;
-/*    char    name[256];
-
-    if (M_CheckParm("-cdrom"))
-    sprintf(name,"c:\\doomdata\\"SAVEGAMENAME"%d.dsg",choice);
-    else
-    sprintf(name,SAVEGAMENAME"%d.dsg",choice);
+    char name[64];
+    sprintf(name, SAVEGAMENAME "%d.dsg", choice);
     G_LoadGame (name);
-    M_ClearMenus (); */
+    M_ClearMenus ();
 }
 
 //
@@ -547,6 +542,8 @@ void M_LoadSelect(int choice)
 //
 void M_LoadGame(int choice)
 {
+    (void)choice;
+
     if (netgame)
     {
         M_StartMessage(LOADNET,NULL,false);
