@@ -172,7 +172,7 @@ void UI_Checkbox(int x, int y, int checked)
 void UI_FileMappingProgressBar(int size_mapped, int size_total)
 {
 	const int w=192, h=5;
-	const int x0=(WIDTH-w)/2, y0=HEIGHT-20;
+	const int x0=(WIDTH-w)/2, y0=HEIGHT-10;
 	const int pos = x0 + (w * size_mapped) / size_total;
 
 	for(int x = x0; x < x0+w; x++)
@@ -206,7 +206,7 @@ void Layout_Init(Layout *l)
 void Layout_StartFrame(Layout *l)
 {
 	l->focus_count = 0;
-	l->y = 12;
+	l->y = 10;
 }
 
 void Layout_EndFrame(Layout *l)
@@ -377,7 +377,7 @@ int Layout_Event(Layout *l, int key)
 
 int UI_Main(WADFileInfo *wads, int wad_count, int *dev_info, int *use_mmap,
 	int *startmap, int *startepisode, int *trustunaligned,
-	int *autostart, int *enabledemos)
+	int *autostart, int *enabledemos, int *enable2MBline)
 {
 	Layout l;
 	Layout_Init(&l);
@@ -387,7 +387,7 @@ int UI_Main(WADFileInfo *wads, int wad_count, int *dev_info, int *use_mmap,
 		Bdisp_AllClr_VRAM();
 		Layout_StartFrame(&l);
 		Layout_CenteredText(&l, "CGDoom for fx-CG 50 and Graph 90+E");
-		Layout_Spacing(&l, 12);
+		Layout_Spacing(&l, 10);
 
 		for(int i = 0; i < wad_count; i++)
 		{
@@ -410,17 +410,19 @@ int UI_Main(WADFileInfo *wads, int wad_count, int *dev_info, int *use_mmap,
 				(wads[i].size % 1000000) / 100000);
 		}
 
-		Layout_Spacing(&l, 12);
+		Layout_Spacing(&l, 10);
 		Layout_Integer(&l, "Start at episode:", startepisode);
 		Layout_Integer(&l, "Start at map:", startmap);
 		Layout_Text(&l, "Title screen:",
 			*autostart ? "Skip" :
 			!*enabledemos ? "No demos" : "Full");
 
-		Layout_Spacing(&l, 12);
+		Layout_Spacing(&l, 10);
 		Layout_Checkbox(&l, "Developer info:", dev_info);
 		Layout_Checkbox(&l, "Map file to memory:", use_mmap);
 		Layout_Checkbox(&l, "Trust unaligned lumps:", trustunaligned);
+		if(enable2MBline)
+			Layout_Checkbox(&l, "Use memory beyond 2MB:", enable2MBline);
 		Layout_EndFrame(&l);
 		Bdisp_PutDisp_DD();
 

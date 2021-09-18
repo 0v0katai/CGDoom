@@ -92,7 +92,7 @@ byte *I_ScreenBase(int screen)
 /* On the calculator, scrap every possible bit of RAM */
 byte* I_ZoneBase (int*  size, int i)
 {
-    if (i == 0)
+    if (i-- == 0)
     {
         /* System stack (~500 kiB) */
         *size = RAM_I_Zone_SIZE;
@@ -100,15 +100,21 @@ byte* I_ZoneBase (int*  size, int i)
         ASSERT(RAM_I_Zone_SIZE <= SYSTEM_STACK_SIZE);
         return mb_mainzone;
     }
-    if (i == 1)
+    if (i-- == 0)
     {
         /* Unused part of user stack (~200 kiB); provided by linker script */
         extern byte sextra, eextra;
         *size = &eextra - &sextra;
         return &sextra;
     }
+    if (CGD_2MBLineMemory && i-- == 0)
+    {
+        /* Memory beyond the 2MB line */
+        *size = CGD_2MBLineMemory;
+        return (void *)0x8c200000;
+    }
     #ifdef CGDOOM_DIRECT_R61524
-    if (i == 2)
+    if (i-- == 0)
     {
         /* Secondary VRAM (screen buffers being in the main VRAM because we're
            doing direct access so we don't need Bdisp_PutDisp_DD() */

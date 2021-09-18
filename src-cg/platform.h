@@ -81,6 +81,12 @@ extern int CGD_TrustUnalignedLumps;
 # define CGDOOM_SCREENS_BASE SaveVRAMBuffer
 #endif
 
+/* Amount of extra memory past the 2 MB line that we deem safe to access. */
+extern int CGD_2MBLineMemory;
+
+/* Maximum amount of memory beyond the 2 MB line */
+#define CGDOOM_2MBLINEMEMORY_MAX (6 << 20)
+
 //---
 
 #include "keyboard.hpp"

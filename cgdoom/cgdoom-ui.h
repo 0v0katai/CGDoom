@@ -69,7 +69,8 @@ int UI_Main(WADFileInfo *wads, int wad_count,
     int *startepisode,    /* Warp to this episode */
     int *trustunaligned,  /* Trust unaligned lumps */
     int *autostart,       /* Skip title screen, straight to gameplay */
-    int *enabledemos      /* Enable demos on the title screen */
+    int *enabledemos,     /* Enable demos on the title screen */
+    int *enable2MBline    /* Enable memory past the 2MB line */
 );
 
 /* Show an error with custom formatting. */

@@ -383,6 +383,7 @@ static SectorIndexInfo *gIndex = NULL;
 int CGD_TrustUnalignedLumps = 1;
 int CGD_EnableDemos = 0;
 int CGD_SingleEpisodeUltimate = 0;
+int CGD_2MBLineMemory = 0;
 
 /* Performance counters */
 struct CGD_Perf CGD_Perf;
@@ -621,6 +622,20 @@ void abort(void){
 
 #endif /* CG_EMULATOR */
 
+static int FindZeroedMemory(void *start)
+{
+	/* Look for zero-longwords every 16 bytes */
+	int size = 0;
+
+	/* Limit to 6 MB since the fx-CG 50 doesn't have any more memory and
+	   anything after the RAM is likely to be zero non-writable */
+	while(size < CGDOOM_2MBLINEMEMORY_MAX && !*(uint32_t *)(start + size))
+		size += 16;
+
+	/* Round down to a multiple of 4096 */
+	return size & ~0xfff;
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 int main(void)
 {
@@ -644,9 +659,16 @@ int main(void)
 	int wad_count = FindWADs(wads, 16);
 
 	int dev_info = 0;
+
+	/* Allow the user to use memory past the 2 MB line on known OS versions */
+	int *enable_2MBline=NULL;
+	char const *osv = (void *)0x80020020;
+	if(!strncmp(osv, "03.", 3) && osv[3] <= '5') // 3.50 or earlier
+		enable_2MBline = &CGD_2MBLineMemory;
+
 	int choice = UI_Main(wads, wad_count, &dev_info, &gWADmethod,
 		&startmap, &startepisode, &CGD_TrustUnalignedLumps, &autostart_,
-		&CGD_EnableDemos);
+		&CGD_EnableDemos, enable_2MBline);
 	if(choice < 0)
 		return 1;
 
@@ -664,8 +686,12 @@ int main(void)
 
 	unsigned tmp=((unsigned)getSecondaryVramAddress()+3)&(~3);
 	SaveVRAMBuffer = (unsigned char*)tmp;
-	/* Graph 90+E: RAM starts at 0x0c000000 in physical memory */
+	/* fx-CG 50 / Graph 90+E: RAM starts at 0x0c000000 in physical memory */
 	SystemStack = (void *)0xac0f0000;
+
+	/* Determine how much RAM is zeroed out at 2 MB */
+	if(CGD_2MBLineMemory)
+		CGD_2MBLineMemory = FindZeroedMemory((void *)0xac200000);
 
 	/* Setup access to WAD file */
 	#ifdef CG_EMULATOR

@@ -486,7 +486,7 @@ void CGFreeMem()
     if (!ptr)
       break;
 
-    sprintf(message+strlen(message), "%s%d/%d kB", (i ? ", " : ""),
+    sprintf(message+strlen(message), "%s%d/%dk", (i ? ", " : ""),
       Z_FreeMemory(i) >> 10, size >> 10);
   }
 
