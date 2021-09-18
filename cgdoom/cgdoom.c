@@ -663,7 +663,7 @@ int main(void)
 	/* Allow the user to use memory past the 2 MB line on known OS versions */
 	int *enable_2MBline=NULL;
 	char const *osv = (void *)0x80020020;
-	if(!strncmp(osv, "03.", 3) && osv[3] <= '5') // 3.50 or earlier
+	if(!strncmp(osv, "03.", 3) && osv[3] <= '6') // 3.60 or earlier
 		enable_2MBline = &CGD_2MBLineMemory;
 
 	int choice = UI_Main(wads, wad_count, &dev_info, &gWADmethod,
