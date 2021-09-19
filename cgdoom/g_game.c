@@ -67,7 +67,8 @@
 #include "g_game.h"
 
 
-#define SAVEGAMESIZE 0x2c000
+/* CGDoom: Amount of data available at screens[0], here full VRAM */
+#define SAVEGAMESIZE (384*216*2)
 #define SAVESTRINGSIZE 24
 
 
@@ -1009,7 +1010,7 @@ void G_DoSaveGame (void)
     sprintf(name, SAVEGAMENAME "%d.dsg", savegameslot);
     description = savedescription;
 
-    save_p = savebuffer = screens[1]+0x4000;
+    save_p = savebuffer = screens[0];
 
     memcpy (save_p, description, SAVESTRINGSIZE);
     save_p += SAVESTRINGSIZE;

@@ -131,7 +131,10 @@ byte *I_ScreenBase(int screen)
        -> Give 320*200 = 64 kB to screens[0] (main display)
        -> Give 320*200 = 64 kB to screens[1] (intermissions)
        -> Give 320*32  = 10 kiB to screens[4] (status bar)
-       -> 27 kiB are left */
+       -> 27 kiB are left
+       Note that the screen buffers are used as temporary storage to write game
+       data during saves, so if continuity is broken g_game.c must be updated
+       to point savebuffer elsewhere and/or update SAVEGAMESIZE. */
     if (screen == 0)
         return CGDOOM_SCREENS_BASE;
     if (screen == 1)
