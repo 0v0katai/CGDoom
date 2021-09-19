@@ -1,7 +1,7 @@
 #ifndef CGDOOM_FRAG_H
 #define CGDOOM_FRAG_H
 
-#include "doomtype.h"
+#include <stdint.h>
 
 /* CGDoom's abstracted access to fragmented lumps
 
@@ -37,7 +37,7 @@ typedef struct {
 int CGD_Frag_Map(const char *lumpname, CGD_Frag *frag);
 
 /* Read different types within the lump */
-byte CGD_Frag_u8(CGD_Frag const *frag, int offset);
+uint8_t CGD_Frag_u8(CGD_Frag const *frag, int offset);
 short CGD_Frag_i16LE(CGD_Frag const *frag, int offset);
 int CGD_Frag_i32LE(CGD_Frag const *frag, int offset);
 

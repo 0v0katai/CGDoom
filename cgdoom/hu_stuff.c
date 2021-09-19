@@ -193,7 +193,7 @@ void HU_Init(void)
   j = HU_FONTSTART;
   for (i=0;i<HU_FONTSIZE;i++)
   {
-    CGDAppendNum0_999("STCFN0",j++,2,buffer);
+    sprintf(buffer, "STCFN0%d", j++);
     hu_font[i] = (const patch_t *) W_CacheLumpNameConst(buffer, PU_STATIC);
   }
 

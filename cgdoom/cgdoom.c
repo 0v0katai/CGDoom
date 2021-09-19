@@ -6,126 +6,38 @@
 
 #include "doomtype.h"
 #include "m_misc.h"
+#include "d_main.h"
 
-#ifndef CG_EMULATOR
-# include "cgdoom-alloc.h"
-# include "cgdoom-ui.h"
-#endif
+#include "cgdoom-alloc.h"
+#include "cgdoom-ui.h"
 
-void * CGDMalloc(int iSize)
+void *CGD_malloc(int size)
 {
-	void *p = malloc(iSize);
+	void *p = malloc(size);
 	if (!p)
-		I_Error ("CGDMalloc failure");
+		I_Error ("CGD_malloc(%d) failure", size);
 	return p;
 }
 
-void * CGDCalloc(int iSize)
+void *CGD_calloc(int size)
 {
-	void *p = CGDMalloc(iSize);
-	if(p != NULL)
-	{
-		memset(p,0,iSize);
-	}
+	void *p = CGD_malloc(size);
+	if(p)
+		memset(p, 0, size);
 	return p;
 }
 
-
-void * CGDRealloc (void *p, int iSize)
+void *CGD_realloc(void *p, int size)
 {
 	if(p == NULL)
-		return malloc(iSize);
+		return malloc(size);
 	else
-		return realloc(p,iSize);
+		return realloc(p, size);
 }
 
 unsigned short *VRAM;
 unsigned char *SaveVRAMBuffer;
 unsigned char *SystemStack;
-
-void CGDAppendNum09(const char *pszText,int iNum,char *pszBuf)
-{
-	int i = 0;
-	while(pszText[i])
-	{
-		pszBuf[i] = pszText[i];
-		i++;
-	}
-	ASSERT(iNum < 10);
-	ASSERT(iNum >= 0);
-	pszBuf[i] = (char)('0'+iNum);
-	pszBuf[i+1] = 0;
-}
-
-void CGDAppendNum0_999(const char *pszText,int iNum,int iMinDigits,char *pszBuf)
-{
-	int i = 0;
-	int z = 0;
-	while(pszText[i])
-	{
-		pszBuf[i] = pszText[i];
-		i++;
-	}
-	ASSERT(iNum < 1000000);
-	ASSERT(iNum >= 0);
-	if((iNum > 999999) || (iMinDigits>6))
-	{
-		pszBuf[i] = (char)('0'+(iNum / 1000000));
-		iNum %= 1000000;
-		i++;
-		z = 1;
-	}
-	if(z || (iNum > 99990) || (iMinDigits>5))
-	{
-		pszBuf[i] = (char)('0'+(iNum / 100000));
-		iNum %= 100000;
-		i++;
-		z = 1;
-	}
-
-	if(z || (iNum > 9999) || (iMinDigits>4))
-	{
-		pszBuf[i] = (char)('0'+(iNum / 10000));
-		iNum %= 10000;
-		i++;
-		z = 1;
-	}
-	if(z || (iNum > 999) || (iMinDigits>3))
-	{
-		pszBuf[i] = (char)('0'+(iNum / 1000));
-		iNum %= 1000;
-		i++;
-		z = 1;
-	}
-	if(z || (iNum > 99) || (iMinDigits>2))
-	{
-		pszBuf[i] = (char)('0'+(iNum / 100));
-		iNum %= 100;
-		i++;
-		z = 1;
-	}
-	if(z || (iNum > 9) || (iMinDigits>1))
-	{
-		pszBuf[i] = (char)('0'+(iNum / 10));
-		iNum %= 10;
-		i++;
-	}
-	pszBuf[i] = (char)('0'+iNum);
-	pszBuf[i+1] = 0;
-}
-
-void CGDAppendHex32(const char *pszText,int iNum,int iDigits,char *pszBuf)
-{
-	strcpy(pszBuf, pszText);
-	pszBuf += strlen(pszText);
-	for(int i = 0; i < iDigits; i++)
-	{
-		int c = (iNum >> (i * 4)) & 0xf;
-		c = c + '0' + 7 * (c > 9);
-		pszBuf[iDigits-i-1] = c;
-	}
-	pszBuf[iDigits] = 0;
-}
 
 int strnicmp(const char *s1,const char *s2,int count)
 {
@@ -275,7 +187,7 @@ const void *ReadNextSector(FileAccessCache *fc, int *size)
 		return NULL;
 	}
 
-	*size = min(fc->size, FLASH_PAGE_SIZE);
+	*size = (fc->size < FLASH_PAGE_SIZE) ? fc->size : FLASH_PAGE_SIZE;
 	fc->size -= *size;
 	const void *sector = fc->data + fc->offset;
 	fc->offset += *size;
@@ -454,7 +366,8 @@ int FindInFlash(const void **buf, int size, int readpos)
 	*buf = FLASH_CACHED_START + (gWADMap.mTable[iFragIndx].flash_address * FLASH_PAGE_SIZE) + iSubOffset;
 
 	/* Return how many bytes can be read off the fragment (up to size). */
-	int iAvailableLen = min(iFragEnd - readpos, size);
+	int iAvailableLen = (iFragEnd-readpos < size) ? iFragEnd-readpos : size;
+
 	ASSERT(iAvailableLen > 0);
 	return iAvailableLen;
 }
@@ -483,16 +396,6 @@ int Flash_ReadFile(void *buf, int size, int readpos)
 	return iRet;
 }
 
-void abort(void){
-	int x=0,y=160;
-	PrintMini(&x,&y,"Abort called",0,0xFFFFFFFF,0,0,0xFFFF,0,1,0);
-	int key;
-	for(;;)
-		GetKey(&key);
-}
-
-#endif /* CG_EMULATOR */
-
 static int FindZeroedMemory(void *start)
 {
 	/* Look for zero-longwords every 16 bytes */
@@ -506,6 +409,16 @@ static int FindZeroedMemory(void *start)
 	/* Round down to a multiple of 4096 */
 	return size & ~0xfff;
 }
+
+void abort(void){
+	int x=0,y=160;
+	PrintMini(&x,&y,"Abort called",0,0xFFFFFFFF,0,0,0xFFFF,0,1,0);
+	int key;
+	for(;;)
+		GetKey(&key);
+}
+
+#endif /* CG_EMULATOR */
 
 static void DelayedWriteFile(int i)
 {

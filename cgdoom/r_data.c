@@ -442,7 +442,7 @@ void R_InitTextures (void)
   names = (const char *)W_CacheLumpNameConst ("PNAMES", PU_STATIC);
   nummappatches = INTFromBytes((const byte*)names );
   name_p = names+4;
-  patchlookup = (int*)CGDMalloc(nummappatches*sizeof(*patchlookup));
+  patchlookup = (int*)CGD_malloc(nummappatches*sizeof(*patchlookup));
 
   for (i=0 ; i<nummappatches ; i++)
   {
@@ -776,7 +776,7 @@ void R_PrecacheLevel (void)
 
   // Precache flats.
   //flatpresent = alloca(numflats);
-  flatpresent = (char*)CGDMalloc(numflats);
+  flatpresent = (char*)CGD_malloc(numflats);
   memset (flatpresent,0,numflats);	
 
   for (i=0 ; i<numsectors ; i++)
@@ -799,7 +799,7 @@ void R_PrecacheLevel (void)
 
   // Precache textures.
   //texturepresent = alloca(numtextures);
-  texturepresent = (char*)CGDMalloc(numtextures);
+  texturepresent = (char*)CGD_malloc(numtextures);
   memset (texturepresent,0, numtextures);
 
   for (i=0 ; i<numsides ; i++)
@@ -835,7 +835,7 @@ void R_PrecacheLevel (void)
 
   // Precache sprites.
   //spritepresent = alloca(numsprites);
-  spritepresent = (char*)CGDMalloc (numsprites);
+  spritepresent = (char*)CGD_malloc (numsprites);
   memset (spritepresent,0, numsprites);
 
   for (th = thinkercap.next ; th != &thinkercap ; th=th->next)

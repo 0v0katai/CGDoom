@@ -499,7 +499,7 @@ void AM_loadPics(void)
   char sBuf[8];
   for (i=0;i<10;i++)
   {
-    CGDAppendNum09("AMMNUM",i,sBuf);
+    sprintf (sBuf, "AMMNUM%d", i);
     marknums[i] =W_CacheLumpNamePatch(sBuf, PU_STATIC);
   }
 }

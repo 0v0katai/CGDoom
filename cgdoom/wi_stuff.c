@@ -968,16 +968,13 @@ static void WI_loadData(void)
 {
   int  i;
   int  j;
-  char name[9];
+  char name[17];
   wi_stuff_anim_t* a;
 
   if (gamemode == commercial)
     strcpy(name, "INTERPIC");
   else 
-  {
-    //sprintf(name, "WIMAP%d", wbs->epsd);
-    CGDAppendNum09("WIMAP",wbs->epsd,name);
-  }
+    sprintf(name, "WIMAP%d", wbs->epsd);
 
   if ( gamemode == retail )
   {
@@ -1006,10 +1003,8 @@ static void WI_loadData(void)
     NUMCMAPS = 32;        
     lnames = (const patch_t **) Z_Malloc(sizeof(patch_t*) * NUMCMAPS,PU_STATIC, 0);
     for (i=0 ; i<NUMCMAPS ; i++)
-    {        
-      //   sprintf(name, "CWILV%2.2d", i);
-      //sprintf(name, "CWILV%02d", i); // CX port
-      CGDAppendNum0_999("CWILV",i,2,name);
+    {
+      sprintf(name, "CWILV%02d", i);
       lnames[i] = W_CacheLumpNamePatch(name, PU_STATIC);
     }
   }
@@ -1018,8 +1013,7 @@ static void WI_loadData(void)
     lnames = (const patch_t **) Z_Malloc(sizeof(patch_t*) * NUMMAPS, PU_STATIC, 0);
     for (i=0 ; i<NUMMAPS ; i++)
     {
-      //sprintf(name, "WILV%d%d", wbs->epsd, i);
-      CGDAppendNum0_999("WILV",wbs->epsd*10+i,2,name);
+      sprintf(name, "WILV%d%d", wbs->epsd, i);
       lnames[i] = W_CacheLumpNamePatch(name, PU_STATIC);
     }
 
@@ -1048,10 +1042,7 @@ static void WI_loadData(void)
           // MONDO HACK!
           if (wbs->epsd != 1 || j != 8) 
           {
-            CGDAppendNum0_999("WIA",wbs->epsd,1,name);
-            CGDAppendNum0_999(name,j,2,name);
-            CGDAppendNum09(name,0,name);
-            CGDAppendNum0_999(name,i,1,name);
+            sprintf(name, "WIA%d%02d%02d", wbs->epsd, j, i);
             a->p[i] = W_CacheLumpNamePatch(name, PU_STATIC);
           }
           else
@@ -1070,8 +1061,7 @@ static void WI_loadData(void)
   for (i=0;i<10;i++)
   {
     // numbers 0-9
-    //sprintf(name, "WINUM%d", i);     
-    CGDAppendNum09("WINUM",i,name);
+    sprintf(name, "WINUM%d", i);
     num[i] = W_CacheLumpNamePatch(name, PU_STATIC);
   }
 

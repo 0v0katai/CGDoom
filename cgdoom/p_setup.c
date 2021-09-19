@@ -711,7 +711,7 @@ void P_GroupLines (void)
 void P_SetupLevel ( int episode, int map, int playermask)
 {
   //int		i;
-  char	lumpname[9];
+  char	lumpname[16];
   int		lumpnum;
 
   totalkills = playermask = totalitems = totalsecret = wminfo.maxfrags = 0;
@@ -741,7 +741,10 @@ void P_SetupLevel ( int episode, int map, int playermask)
   // find map name
   if ( gamemode == commercial)
   {
-    CGDAppendNum0_999("map",map,2,lumpname);
+    if (map<10)
+        sprintf (lumpname,"map0%i", map);
+    else
+        sprintf (lumpname,"map%i", map);
   }
   else
   {

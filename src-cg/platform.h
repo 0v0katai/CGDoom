@@ -6,16 +6,6 @@
 // WAD file access in Flash
 //---
 
-/* File access method (numbering is used in checkbox; keep as is) */
-enum {
-    /* Use BFile (100% accurate but slows down the game quite a bit because of
-       reads happening all the time; mostly a good reference for testing) */
-    CGDOOM_WAD_BFILE = 0,
-    /* Search fragments in physical ROM when loading the game, and copy by hand
-       from ROM to RAM during accesses (much faster) */
-    CGDOOM_WAD_MMAP = 1,
-};
-
 /* Settings for file mappings: traverse the whole 32-MiB Flash */
 #define FLASH_START ((const void *)0xA0000000)
 #define FLASH_END   ((const void *)0xA2000000)

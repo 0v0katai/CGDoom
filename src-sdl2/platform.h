@@ -1,8 +1,14 @@
+/* <platform.h> file for Linux/SDL2 */
+#ifndef PLATFORM_H
+#define PLATFORM_H
+
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
 #include <stdint.h>
 #include "keyboard.hpp"
+
+#include "../../../include/fxcg/file.h"
 
 /* On the emulator all lumps are allocated with malloc(), so there are not
    pointers-to-flash to account for when freeing. */
@@ -46,13 +52,8 @@ void assert(int iLine,const char *pszFilename,const char *pszAassert);
 #define ASSERT(x) if(!(x)){assert(__LINE__,__FILE__,#x);}
 
 
-int Bfile_OpenFile_OS( const unsigned short*filename, int mode );
-int Bfile_SeekFile_OS( int HANDLE, int pos );
-int Bfile_ReadFile_OS( int HANDLE, void *buf, int size, int readpos );
-int Bfile_CloseFile_OS( int HANDLE );
-
-
 extern const unsigned char *gpcFlashBuffer;
 
 void InitFlashSimu(const char *filename);
 
+#endif /* PLATFORM_H */

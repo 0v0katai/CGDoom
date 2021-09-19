@@ -629,8 +629,7 @@ void F_BunnyScroll (void)
     laststage = stage;
   }
 
-  //sprintf (name,"END%i",stage);
-  CGDAppendNum09("END",stage,name);
+  sprintf (name,"END%d",stage);
   V_DrawPatch ((SCREENWIDTH-13*8)/2, (SCREENHEIGHT-8*8)/2,0, (const patch_t*)W_CacheLumpNameConst(name,PU_CACHE));
 }
 

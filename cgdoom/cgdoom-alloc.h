@@ -1,7 +1,6 @@
 #ifndef CGDOOM_ALLOC_H
 #define CGDOOM_ALLOC_H
 
-#include "platform.h"
 #include <stddef.h>
 
 /* The simple CGDoom allocator from SPU2 memory

@@ -940,12 +940,10 @@ void ST_loadGraphics(void)
   // Load the numbers, tall and short
   for (i=0;i<10;i++)
   {
-    //sprintf(namebuf, "STTNUM%d", i);
-    CGDAppendNum09("STTNUM",i,namebuf);
+    sprintf(namebuf, "STTNUM%d", i);
     tallnum[i] = W_CacheLumpNamePatch(namebuf, PU_STATIC);
 
-    //sprintf(namebuf, "STYSNUM%d", i);
-    CGDAppendNum09("STYSNUM",i,namebuf);
+    sprintf(namebuf, "STYSNUM%d", i);
     shortnum[i] = W_CacheLumpNamePatch(namebuf, PU_STATIC);
   }
 
@@ -977,8 +975,7 @@ void ST_loadGraphics(void)
   arms_5 = shortnum[7];
 
   // face backgrounds for different color players
-  //sprintf(namebuf, "STFB%d", consoleplayer);
-  CGDAppendNum09("STFB",consoleplayer,namebuf);
+  sprintf(namebuf, "STFB%d", consoleplayer);
   if (netgame)
   {
     faceback = W_CacheLumpNamePatch(namebuf, PU_STATIC);
@@ -993,26 +990,18 @@ void ST_loadGraphics(void)
   {
     for (j=0;j<ST_NUMSTRAIGHTFACES;j++)
     {
-      //sprintf(namebuf, "STFST%d%d", i, j);
-      //CGD: use big, really big hammer
-      CGDAppendNum0_999("STFST",i*10+j,2,namebuf);
+      sprintf(namebuf, "STFST%d%d", i, j);
       faces[facenum++] = W_CacheLumpNamePatch(namebuf, PU_STATIC);
     }
-    //CGD: now the previous, smaller one
-    //sprintf(namebuf, "STFTR%d0", i); // turn right
-    CGDAppendNum0_999("STFTR",i*10,2,namebuf);
+    sprintf(namebuf, "STFTR%d0", i); // turn right
     faces[facenum++] = W_CacheLumpNamePatch(namebuf, PU_STATIC);
-    //sprintf(namebuf, "STFTL%d0", i); // turn left
-    CGDAppendNum0_999("STFTL",i*10,2,namebuf);
+    sprintf(namebuf, "STFTL%d0", i); // turn left
     faces[facenum++] = W_CacheLumpNamePatch(namebuf, PU_STATIC);
-    //sprintf(namebuf, "STFOUCH%d", i); // ouch!
-    CGDAppendNum09("STFOUCH",i,namebuf);
+    sprintf(namebuf, "STFOUCH%d", i); // ouch!
     faces[facenum++] = W_CacheLumpNamePatch(namebuf, PU_STATIC);
-    //sprintf(namebuf, "STFEVL%d", i); // evil grin ;)
-    CGDAppendNum09("STFEVL",i,namebuf);
+    sprintf(namebuf, "STFEVL%d", i); // evil grin ;)
     faces[facenum++] = W_CacheLumpNamePatch(namebuf, PU_STATIC);
-    //sprintf(namebuf, "STFKILL%d", i); // pissed off
-    CGDAppendNum09("STFKILL",i,namebuf);
+    sprintf(namebuf, "STFKILL%d", i); // pissed off
     faces[facenum++] = W_CacheLumpNamePatch(namebuf, PU_STATIC);
   }
   faces[facenum++] = W_CacheLumpNamePatch("STFGOD0", PU_STATIC);

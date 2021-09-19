@@ -1,10 +1,10 @@
 #ifndef CGDOOM_H
 #define CGDOOM_H
 
-// CGDoom-specific definitions that cover both calculator and native builds.
-
-#include <stdint.h>
 #include "libprof.h"
+#include <stdint.h>
+
+// CGDoom-specific definitions that cover both calculator and native builds.
 
 /* VRAM pointer and size */
 extern uint16_t *VRAM;
@@ -26,6 +26,16 @@ typedef struct
    const void *data;
    int size;
 } CGD_DelayedFileWrite;
+
+/* File access method (numbering is used in checkbox; keep as is) */
+enum {
+    /* Use BFile (100% accurate but slows down the game quite a bit because of
+       reads happening all the time; mostly a good reference for testing) */
+    CGDOOM_WAD_BFILE = 0,
+    /* Search fragments in physical ROM when loading the game, and copy by hand
+       from ROM to RAM during accesses (much faster) */
+    CGDOOM_WAD_MMAP = 1,
+};
 
 /* Delay file saves until exit to avoid quitting immediately */
 #define CGDOOM_DELAY_SAVES

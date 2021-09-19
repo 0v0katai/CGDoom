@@ -107,25 +107,12 @@ static int W_AddFile ()
   header.numlumps = LONG(header.numlumps);
   header.infotableofs = LONG(header.infotableofs);
   length = header.numlumps * sizeof(filelump_t);
-  fileinfo = fileinfo_mem= (filelump_t *)CGDMalloc(length);
+  fileinfo = fileinfo_mem = CGD_malloc(length);
   Flash_ReadFile(fileinfo, length,header.infotableofs);
   numlumps += header.numlumps;
 
-  // Fill in lumpinfo
-  // TODO: Actual realloc
-  if (!lumpinfo)
-  {
-    lumpinfo = (lumpinfo_t *)Z_Malloc (numlumps*sizeof(lumpinfo_t), PU_STATIC, 0);
-  }
-  else
-  {
-    I_Error ("realloc lumpinfo!");
-    lumpinfo = (lumpinfo_t *)CGDRealloc (lumpinfo, numlumps*sizeof(lumpinfo_t));
-  }
-
-  if (!lumpinfo)
-    I_Error ("CGDrealloc(lumpinfo) failed (%d lumps, %d bytes)", numlumps,
-      numlumps * sizeof(lumpinfo_t));
+  // Fill in lumpinfo (when handling multiples files, should realloc)
+  lumpinfo = (lumpinfo_t *)Z_Malloc (numlumps*sizeof(lumpinfo_t), PU_STATIC, 0);
 
   lump_p = &lumpinfo[startlump];
 
@@ -138,7 +125,6 @@ static int W_AddFile ()
     strncpy (lump_p->name, fileinfo->name, 8);
   }
 
-  //Nspire has no alloca() function for temporary memory, so we have to use malloc() and free() to compensate
   free(fileinfo_mem);
   return 1; // CX port
 }
