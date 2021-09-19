@@ -1053,33 +1053,30 @@ boolean G_DoSaveGame (void)
       I_Error ("Savegame buffer overrun");
 
     boolean save_now = false;
-    void *delayed_copy = NULL;
 
 #ifndef CGDOOM_DELAY_SAVES
     save_now = true;
 #endif
 
+    CGD_DelayedFileWrite *dfw = &CGD_DelayedSaves[savegameslot];
+
     /* Allocate memory to hold the data while delaying */
     if (!save_now) {
-      delayed_copy = Z_Malloc(length, PU_STATIC, 0);
-      if (delayed_copy == NULL)
-        save_now = true;
-      else
-        memcpy(delayed_copy, savebuffer, length);
-    }
-
-    if (save_now) {
-      M_WriteFile (name, savebuffer, length);
-    }
-    else {
-      CGD_DelayedFileWrite *dfw = &CGD_DelayedSaves[savegameslot];
       if (dfw->data)
         Z_Free(dfw->data);
 
-      CGDstrcpy(dfw->filename, name);
-      dfw->data = delayed_copy;
-      dfw->size = length;
+      dfw->data = Z_Malloc(length, PU_STATIC, 0);
+      if (dfw->data == NULL)
+        save_now = true;
+      else
+        memcpy((void *)dfw->data, savebuffer, length);
     }
+    if (save_now) {
+      dfw->data = savebuffer;
+    }
+
+    CGDstrcpy(dfw->filename, name);
+    dfw->size = length;
 
     gameaction = ga_nothing;
     savedescription[0] = 0;
