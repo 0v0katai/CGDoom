@@ -135,7 +135,7 @@
 //
 //	G_game.C
 //
-#define GGSAVED	"Game will save on exit"
+#define GGSAVED	"Save file will be created on exit"
 
 //
 //	HU_stuff.C

@@ -165,7 +165,7 @@ void Z_Free (const void* ptr)
 
   if (block->id != ZONEID)
   {
-    I_Error ("Z_Free: freed a pointer without ZONEID");
+    I_Error ("Z_Free: freed a pointer without ZONEID: %p", ptr);
   }
 
   if (block->user > (void **)0x100)

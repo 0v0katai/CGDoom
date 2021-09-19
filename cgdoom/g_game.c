@@ -924,11 +924,11 @@ void G_DoWorldDone (void)
 extern boolean setsizeneeded;
 void R_ExecuteSetViewSize (void);
 
-char  savename[256];
+int   saveslotnumber;
 
-void G_LoadGame (char* name)
+void G_LoadGame (int slot)
 {
-    CGDstrcpy (savename, name);
+    saveslotnumber = slot;
     gameaction = ga_loadgame;
 }
 
@@ -940,11 +940,21 @@ void G_DoLoadGame (void)
     int   i;
     int   a,b,c;
     char  vcheck[VERSIONSIZE];
+    char  savename[64];
 
     gameaction = ga_nothing;
 
-    length = M_ReadFile (savename, &savebuffer);
-    I_ReinitAfterError();
+    /* Read data from yet-unsaved saves */
+    if (CGD_DelayedSaves[saveslotnumber].data != NULL) {
+      savebuffer = (void *)CGD_DelayedSaves[saveslotnumber].data;
+      length = CGD_DelayedSaves[saveslotnumber].size;
+    }
+    else {
+      sprintf(savename, "%s_%d.dsg", CGD_WADFileName, saveslotnumber);
+      length = M_ReadFile (savename, &savebuffer);
+      I_ReinitAfterError();
+    }
+
     save_p = savebuffer + SAVESTRINGSIZE;
 
     if (length < 0)
@@ -982,7 +992,8 @@ void G_DoLoadGame (void)
         I_Error ("Bad savegame");
 
     // done
-    Z_Free (savebuffer);
+    if (CGD_DelayedSaves[saveslotnumber].data == NULL)
+      Z_Free (savebuffer);
 
     if (setsizeneeded)
         R_ExecuteSetViewSize ();
@@ -1073,7 +1084,7 @@ boolean G_DoSaveGame (void)
     gameaction = ga_nothing;
     savedescription[0] = 0;
 
-    static char msg[40];
+    static char msg[64];
     sprintf(msg, GGSAVED " (%d kB)", length >> 10);
     players[consoleplayer].message = msg;
 

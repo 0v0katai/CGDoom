@@ -467,6 +467,14 @@ void M_ReadSaveStrings(void)
 	
     for (i = 0;i < load_end;i++)
     {
+        /* Use the pending file write as a bypass */
+        if (CGD_DelayedSaves[i].data != NULL) {
+            memcpy(savegamestrings[i], CGD_DelayedSaves[i].data,
+                SAVESTRINGSIZE);
+            LoadMenu[i].status = 1;
+            continue;
+        }
+
         sprintf(name, "%s_%d.dsg", CGD_WADFileName, i);
         memcpy(fc_path, u"\\\\fls0\\", 14);
         for (j = 0; name[j]; j++)
@@ -537,9 +545,7 @@ void M_DrawSaveLoadBorder(int x,int y,int height,int count)
 //
 void M_LoadSelect(int choice)
 {
-    char name[64];
-    sprintf(name, "%s_%d.dsg", CGD_WADFileName, choice);
-    G_LoadGame (name);
+    G_LoadGame (choice);
     M_ClearMenus ();
 }
 
