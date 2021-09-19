@@ -76,4 +76,8 @@ int UI_Main(WADFileInfo *wads, int wad_count,
 /* Show an error with custom formatting. */
 void UI_Error(const char *fmt, va_list args);
 
+/* Show a file save with a progress bar. */
+void UI_DelayedWrites(CGD_DelayedFileWrite const *dfw, int count,
+    int current_file, int current_amount);
+
 #endif /* CGDOOM_UI_H */

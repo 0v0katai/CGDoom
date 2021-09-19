@@ -510,3 +510,39 @@ void UI_Error(const char *fmt, va_list args)
 	while(PRGM_GetKey());
 	GetKey(&key);
 }
+
+void UI_DelayedWrites(CGD_DelayedFileWrite const *dfw, int count,
+	int current_file, int current_file_done)
+{
+	int total = 0;
+	int current = 0;
+
+	for(int i = 0; i < count; i++) {
+		if(dfw[i].data == NULL)
+			continue;
+
+		total += dfw[i].size;
+		if(i < current_file)
+			current += dfw[i].size;
+		else if(i == current_file)
+			current += current_file_done;
+	}
+
+	Bdisp_AllClr_VRAM();
+
+	UI_Printf(WIDTH / 2, 10, 0x0000, UI_CENTER,
+		"Game saves");
+	if(current_file_done == -1)
+		UI_Printf(WIDTH / 2, HEIGHT / 2 - 12, 0x0000, UI_CENTER,
+			"Creating %s... (%d kB)", dfw[current_file].filename,
+			dfw[current_file].size >> 10);
+	else
+		UI_Printf(WIDTH / 2, HEIGHT / 2 - 12, 0x0000, UI_CENTER,
+			"Saving %s... (%d/%d kB)", dfw[current_file].filename,
+			current_file_done >> 10, dfw[current_file].size >> 10);
+	UI_ProgressBar(HEIGHT / 2 + 7, current, total);
+
+	Bdisp_FrameAndColor(3, 16);
+	Bdisp_FrameAndColor(1, 0);
+	Bdisp_PutDisp_DD();
+}

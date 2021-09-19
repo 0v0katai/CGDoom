@@ -643,6 +643,50 @@ static int FindZeroedMemory(void *start)
 	return size & ~0xfff;
 }
 
+static void DelayedWriteFile(int i)
+{
+	CGD_DelayedFileWrite const *dfw = &CGD_DelayedSaves[i];
+
+    uint16_t fc_path[100] = u"\\\\fls0\\";
+    int j=7, rc, fd;
+
+    for (int i = 0; dfw->filename[i]; i++)
+        fc_path[j++] = dfw->filename[i];
+    fc_path[j++] = 0x0000;
+
+    UI_DelayedWrites(CGD_DelayedSaves, 6, i, -1);
+
+    Bfile_DeleteEntry(fc_path);
+
+    rc = Bfile_CreateEntry_OS(fc_path, CREATEMODE_FILE, (size_t *)&dfw->size);
+    if (rc < 0) {
+        I_Error("Bfile_CreateEntry_OS(%s, %d bytes): %d", dfw->filename,
+            dfw->size, rc);
+        return;
+    }
+
+    fd = Bfile_OpenFile_OS(fc_path, WRITE, 0);
+    if (fd < 0) {
+        I_Error("Bfile_OpenFile_OS(%s): %d", dfw->filename, fd);
+        return;
+    }
+
+    /* Write chunks of 4096 bytes and show progress in-between chunks */
+    int size = dfw->size;
+    const void *source = dfw->data;
+
+    while(size > 0) {
+        int chunk_size = (size >= 4096) ? 4096 : size;
+        Bfile_WriteFile_OS(fd, source, chunk_size);
+        source += chunk_size;
+        size -= chunk_size;
+
+        UI_DelayedWrites(CGD_DelayedSaves, 6, i, dfw->size - size);
+    }
+
+    Bfile_CloseFile_OS(fd);
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 int main(void)
 {
@@ -790,9 +834,8 @@ int main(void)
 	int delayed_writes = sizeof(CGD_DelayedSaves) / sizeof(CGD_DelayedSaves[0]);
 	for(int i = 0; i < delayed_writes; i++) {
 		CGD_DelayedFileWrite *dfw = &CGD_DelayedSaves[i];
-		if(dfw->data != NULL) {
-			M_WriteFile(dfw->filename, dfw->data, dfw->size);
-		}
+		if(dfw->data != NULL)
+			DelayedWriteFile(i);
 	}
 
 	if(dev_info) {
