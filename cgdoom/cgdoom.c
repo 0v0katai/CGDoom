@@ -12,16 +12,8 @@
 # include "cgdoom-ui.h"
 #endif
 
-#ifdef CG_EMULATOR
-static int iAllocSum = 0;
-#endif 
 void * CGDMalloc(int iSize)
 {
-#ifdef CG_EMULATOR
-
-	iAllocSum += iSize;
-	printf("malloc %i (%i)\n",iSize,iAllocSum);
-#endif 
 	void *p = malloc(iSize);
 	if (!p)
 		I_Error ("CGDMalloc failure");
@@ -41,29 +33,15 @@ void * CGDCalloc(int iSize)
 
 void * CGDRealloc (void *p, int iSize)
 {
-#ifdef CG_EMULATOR
-	iAllocSum += iSize;
-	printf("realloc %i (%i)\n",iSize,iAllocSum);
-#endif 
 	if(p == NULL)
-	{
 		return malloc(iSize);
-	}
 	else
-	{
 		return realloc(p,iSize);
-	}
 }
 
-
-#ifdef CG_EMULATOR
-unsigned char aSaveVRAMBuffer[SAVE_VRAM_SIZE]; //for screens[2] (2x64KB) + WAD file mapping
-unsigned char aSystemStack[SYSTEM_STACK_SIZE]; //for RAM_I_Zone
-#endif 
 unsigned short *VRAM;
-unsigned char *SaveVRAMBuffer; //for screens[2]
-unsigned char *SystemStack; //for RAM_I_Zone
-
+unsigned char *SaveVRAMBuffer;
+unsigned char *SystemStack;
 
 void CGDAppendNum09(const char *pszText,int iNum,char *pszBuf)
 {
