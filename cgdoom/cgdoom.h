@@ -32,6 +32,8 @@ extern int CGD_EnableDemos;
 extern int CGD_SingleEpisodeUltimate;
 /* Skip this amount of frames after every rendered frame (default 1) */
 extern int CGD_Frameskip;
+/* WAD file name (without .wad), used to avoid save file conflicts */
+extern const char *CGD_WADFileName;
 
 // Global variables interfacing with Doom itself.
 

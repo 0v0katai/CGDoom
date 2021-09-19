@@ -467,7 +467,7 @@ void M_ReadSaveStrings(void)
 	
     for (i = 0;i < load_end;i++)
     {
-        sprintf(name, SAVEGAMENAME "%d.dsg", i);
+        sprintf(name, "%s_%d.dsg", CGD_WADFileName, i);
         memcpy(fc_path, u"\\\\fls0\\", 14);
         for (j = 0; name[j]; j++)
             fc_path[j+7] = name[j];
@@ -538,7 +538,7 @@ void M_DrawSaveLoadBorder(int x,int y,int height,int count)
 void M_LoadSelect(int choice)
 {
     char name[64];
-    sprintf(name, SAVEGAMENAME "%d.dsg", choice);
+    sprintf(name, "%s_%d.dsg", CGD_WADFileName, choice);
     G_LoadGame (name);
     M_ClearMenus ();
 }

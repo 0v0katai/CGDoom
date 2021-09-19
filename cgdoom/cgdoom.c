@@ -385,6 +385,7 @@ int CGD_EnableDemos = 0;
 int CGD_SingleEpisodeUltimate = 0;
 int CGD_2MBLineMemory = 0;
 int CGD_Frameskip = 1;
+const char *CGD_WADFileName = NULL;
 
 /* Performance counters */
 struct CGD_Perf CGD_Perf;
@@ -693,6 +694,12 @@ int main(void)
 	/* Determine how much RAM is zeroed out at 2 MB */
 	if(CGD_2MBLineMemory)
 		CGD_2MBLineMemory = FindZeroedMemory((void *)0xac200000);
+
+	/* Remember WAD file name for saves and loads */
+	static char wad_name[32] = { 0 };
+	for (int i = 0; wads[choice].name[i] != '.'; i++)
+		wad_name[i] = wads[choice].name[i];
+	CGD_WADFileName = wad_name;
 
 	/* Setup access to WAD file */
 	#ifdef CG_EMULATOR

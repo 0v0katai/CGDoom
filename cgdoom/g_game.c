@@ -1007,7 +1007,7 @@ void G_DoSaveGame (void)
     int   length;
     int   i;
 
-    sprintf(name, SAVEGAMENAME "%d.dsg", savegameslot);
+    sprintf(name, "%s_%d.dsg", CGD_WADFileName, savegameslot);
     description = savedescription;
 
     save_p = savebuffer = screens[0];
