@@ -147,19 +147,43 @@ static int DoomKeyToKeycode(int key)
     case 'X':               return KEYCODE_PLUS;
     case 'Y':               return KEYCODE_MINUS;
     case 'Z':               return KEYCODE_0;
+    case -' ':              return KEYCODE_DOT;
     case KEY_BACKSPACE:     return KEYCODE_DEL;
+
+    /* Numeric keys (handled differently, require a modifier) */
+    case -'0':              return KEYCODE_0;
+    case -'1':              return KEYCODE_1;
+    case -'2':              return KEYCODE_2;
+    case -'3':              return KEYCODE_3;
+    case -'4':              return KEYCODE_4;
+    case -'5':              return KEYCODE_5;
+    case -'6':              return KEYCODE_6;
+    case -'7':              return KEYCODE_7;
+    case -'8':              return KEYCODE_8;
+    case -'9':              return KEYCODE_9;
 
     default:                return -1;
     }
 }
 
-static int KeyDown(KeyboardState state, int key)
+static int KeycodeDown(KeyboardState state, int code)
 {
-    int code = DoomKeyToKeycode(key);
     if(code < 0) return 0;
     int row = (code >> 4) ^ 1;
     int col = 0x80 >> (code & 0x7);
     return (state[row] & col) != 0;
+}
+
+static int KeyDown(KeyboardState state, int key)
+{
+    int code = DoomKeyToKeycode(key);
+
+    if(key >= -'9' && key <= -'0')
+        return KeycodeDown(state, code) && KeycodeDown(state, KEYCODE_ALPHA);
+    else if(code == KEYCODE_ALPHA)
+        return KeycodeDown(state, code);
+    else
+        return KeycodeDown(state, code) && !KeycodeDown(state, KEYCODE_ALPHA);
 }
 
 void UpdateKeyboardState(void)
