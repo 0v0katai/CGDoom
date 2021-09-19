@@ -208,7 +208,7 @@ void M_DrawOptions(void);
 void M_DrawLoad(void);
 void M_DrawSave(void);
 
-void M_DrawSaveLoadBorder(int x,int y);
+void M_DrawSaveLoadBorder(int x,int y,int height,int count);
 void M_SetupNextMenu(menu_t *menudef);
 void M_DrawThermo(int x,int y,int thermWidth,int thermDot);
 void M_DrawEmptyCell(menu_t *menu,int item);
@@ -496,12 +496,12 @@ void M_ReadSaveStrings(void)
 void M_DrawLoad(void)
 {
     int             i;
-	
+
     V_DrawPatchDirect (72,28,0,W_CacheLumpNamePatch("M_LOADG",PU_CACHE));
+    M_DrawSaveLoadBorder(LoadDef.x,LoadDef.y,LINEHEIGHT,load_end);
     for (i = 0;i < load_end; i++)
     {
-		M_DrawSaveLoadBorder(LoadDef.x,LoadDef.y+LINEHEIGHT*i);
-		M_WriteText(LoadDef.x,LoadDef.y+LINEHEIGHT*i,savegamestrings[i]);
+        M_WriteText(LoadDef.x,LoadDef.y+LINEHEIGHT*i,savegamestrings[i]);
     }
 }
 
@@ -510,19 +510,25 @@ void M_DrawLoad(void)
 //
 // Draw border for the savegame description
 //
-void M_DrawSaveLoadBorder(int x,int y)
+void M_DrawSaveLoadBorder(int x,int y,int height,int count)
 {
   int             i;
 
-  V_DrawPatchDirect (x-8,y+7,0,W_CacheLumpNamePatch("M_LSLEFT",PU_CACHE));
+  const patch_t *left    = W_CacheLumpNamePatch("M_LSLEFT", PU_CACHE);
+  const patch_t *center  = W_CacheLumpNamePatch("M_LSCNTR", PU_CACHE);
+  const patch_t *right   = W_CacheLumpNamePatch("M_LSRGHT", PU_CACHE);
 
-  for (i = 0;i < 24;i++)
+  for(int j = 0; j < count; j++)
   {
-    V_DrawPatchDirect (x,y+7,0,W_CacheLumpNamePatch("M_LSCNTR",PU_CACHE));
-    x += 8;
-  }
+    V_DrawPatchDirect (x-8,y+7,0,left);
 
-  V_DrawPatchDirect (x,y+7,0,W_CacheLumpNamePatch("M_LSRGHT",PU_CACHE));
+    for (i = 0; i < 24; i++)
+      V_DrawPatchDirect (x+8*i,y+7,0,center);
+
+    V_DrawPatchDirect (x,y+7,0,right);
+
+    y += height;
+  }
 }
 
 
@@ -563,9 +569,9 @@ void M_DrawSave(void)
     int             i;
 
     V_DrawPatchDirect (72,28,0,W_CacheLumpNamePatch("M_SAVEG",PU_CACHE));
+    M_DrawSaveLoadBorder(LoadDef.x,LoadDef.y,LINEHEIGHT,load_end);
     for (i = 0;i < load_end; i++)
     {
-    M_DrawSaveLoadBorder(LoadDef.x,LoadDef.y+LINEHEIGHT*i);
     M_WriteText(LoadDef.x,LoadDef.y+LINEHEIGHT*i,savegamestrings[i]);
     }
 
