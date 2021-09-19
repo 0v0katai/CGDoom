@@ -178,12 +178,13 @@ static int KeyDown(KeyboardState state, int key)
 {
     int code = DoomKeyToKeycode(key);
 
+    /* For alphanumeric keys, watch the status of ALPHA */
     if(key >= -'9' && key <= -'0')
         return KeycodeDown(state, code) && KeycodeDown(state, KEYCODE_ALPHA);
-    else if(code == KEYCODE_ALPHA)
-        return KeycodeDown(state, code);
-    else
+    else if((key >= 'A' && key <= 'Z') || key == -' ')
         return KeycodeDown(state, code) && !KeycodeDown(state, KEYCODE_ALPHA);
+    else
+        return KeycodeDown(state, code);
 }
 
 void UpdateKeyboardState(void)
