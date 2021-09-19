@@ -25,13 +25,10 @@ Technical support TODO:
 -> Supply more VRAM memory to internal allocator
    => Merge internal heap into Z_Zone? (< 50 kB)
    => Remove multiply-avoiding lookup tables?
--> Rate-limit the game when overclocking
--> Load/Save game would be very cool
 -> Reenable LTO if possible
 -> Built-in overclocking?
 -> SDL2 debug version support?
 -> Darken background in menu (some code does that somewhere?)
--> Rate-limit
 
 CGDoom used to be compiled with the mini-SDK. However, it's become quite
 difficult to get a copy of that. Instead, this port is built with a modified

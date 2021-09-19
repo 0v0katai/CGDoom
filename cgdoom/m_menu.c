@@ -481,7 +481,7 @@ void M_ReadSaveStrings(void)
             fc_path[j+7] = name[j];
         fc_path[j+7] = 0x0000;
 
-        fd = Bfile_OpenFile_OS(fc_path, READ, 0);
+        fd = Bfile_OpenFile_OS(fc_path, BFILE_READ, 0);
 
         if(fd < 0) {
             strcpy(savegamestrings[i], EMPTYSTRING);

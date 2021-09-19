@@ -212,15 +212,6 @@ typedef struct {
 	int miTotalLength;
 } FileMapping;
 
-/* Bfile's file info structure returned by filesystem search functions. */
-typedef struct
-{
-	unsigned short id, type;
-	unsigned long fsize, dsize;
-	unsigned int property;
-	unsigned long address;
-} Bfile_FileInfo;
-
 /* Find WAD files in the filesystem. */
 int FindWADs(WADFileInfo *files, int max)
 {
@@ -531,14 +522,15 @@ static void DelayedWriteFile(int i)
 
     Bfile_DeleteEntry(fc_path);
 
-    rc = Bfile_CreateEntry_OS(fc_path, CREATEMODE_FILE, (size_t *)&dfw->size);
+    rc = Bfile_CreateEntry_OS(fc_path, BFILE_CREATEMODE_FILE,
+        (size_t *)&dfw->size);
     if (rc < 0) {
         I_Error("Bfile_CreateEntry_OS(%s, %d bytes): %d", dfw->filename,
             dfw->size, rc);
         return;
     }
 
-    fd = Bfile_OpenFile_OS(fc_path, WRITE, 0);
+    fd = Bfile_OpenFile_OS(fc_path, BFILE_WRITE, 0);
     if (fd < 0) {
         I_Error("Bfile_OpenFile_OS(%s): %d", dfw->filename, fd);
         return;
