@@ -492,7 +492,7 @@ boolean HU_Responder(event_t *ev)
 
       // leave chat mode and notify that it was sent
       chat_on = false;
-      CGDstrcpy(lastmessage, chat_macros[c]);
+      strcpy(lastmessage, chat_macros[c]);
       hu_stuff_plr->message = lastmessage;
       eatkey = true;
     }
@@ -514,7 +514,7 @@ boolean HU_Responder(event_t *ev)
         chat_on = false;
         if (w_chat.l.len)
         {
-          CGDstrcpy(lastmessage, w_chat.l.l);
+          strcpy(lastmessage, w_chat.l.l);
           hu_stuff_plr->message = lastmessage;
         }
       }

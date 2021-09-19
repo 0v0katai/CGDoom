@@ -484,7 +484,7 @@ void M_ReadSaveStrings(void)
         fd = Bfile_OpenFile_OS(fc_path, READ, 0);
 
         if(fd < 0) {
-            CGDstrcpy(savegamestrings[i], EMPTYSTRING);
+            strcpy(savegamestrings[i], EMPTYSTRING);
             LoadMenu[i].status = 0;
         }
         else {
@@ -533,7 +533,7 @@ void M_DrawSaveLoadBorder(int x,int y,int height,int count)
     for (i = 0; i < 24; i++)
       V_DrawPatchDirect (x+8*i,y+7,0,center);
 
-    V_DrawPatchDirect (x,y+7,0,right);
+    V_DrawPatchDirect (x+8*24,y+7,0,right);
 
     y += height;
   }
@@ -610,7 +610,7 @@ void M_SaveSelect(int choice)
     saveStringEnter = 1;
 
     saveSlot = choice;
-    CGDstrcpy(saveOldString,savegamestrings[choice]);
+    strcpy(saveOldString,savegamestrings[choice]);
     if (!strcmp(savegamestrings[choice],EMPTYSTRING))
     savegamestrings[choice][0] = 0;
     saveCharIndex = strlen(savegamestrings[choice]);
@@ -994,7 +994,7 @@ int M_StringWidth(char* string)
     int             w = 0;
     int             c;
 	
-    for (i = 0;i < CGDstrlen(string);i++)
+    for (i = 0;i < strlen(string);i++)
     {
 	c = toupper_int(string[i]) - HU_FONTSTART;
 	if (c < 0 || c >= HU_FONTSIZE)
@@ -1018,7 +1018,7 @@ int M_StringHeight(char* string)
     int             height = SHORT(hu_font[0]->height);
 	
     h = height;
-    for (i = 0;i < CGDstrlen(string);i++)
+    for (i = 0;i < strlen(string);i++)
 	if (string[i] == '\n')
 	    h += height;
 		
@@ -1109,7 +1109,7 @@ boolean M_Responder (event_t* ev)
 
           case KEY_ESCAPE:
             saveStringEnter = 0;
-            CGDstrcpy(&savegamestrings[saveSlot][0],saveOldString);
+            strcpy(&savegamestrings[saveSlot][0],saveOldString);
             break;
 
           case KEY_ENTER:
@@ -1308,18 +1308,18 @@ void M_Drawer (void)
     y = (short)(100 - M_StringHeight(messageString)/2);
     while(*(messageString+start))
     {
-      for (i = 0;i < CGDstrlen(messageString+start);i++)
+      for (i = 0;i < strlen(messageString+start);i++)
         if (*(messageString+start+i) == '\n')
         {
           memset(string,0,40);
-          CGDstrncpy(string,messageString+start,i);
+          strncpy(string,messageString+start,i);
           start += i+1;
           break;
         }
 
-      if (i == CGDstrlen(messageString+start))
+      if (i == strlen(messageString+start))
       {
-        CGDstrcpy(string,messageString+start);
+        strcpy(string,messageString+start);
         start += i;
       }
 

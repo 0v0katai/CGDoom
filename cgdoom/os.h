@@ -18,23 +18,13 @@ void * CGDRealloc (void *p, int iSize);
 void D_DoomMain();
 
 void CGDAppendNum09(const char *pszText,int iNum,char *pszBuf);
-int CGDstrlen(const char *pszText);
-void CGDstrcpy(char *pszBuf,const char *pszText);
-int CGDstrcmp (const char*s1,const char*s2);
-int CGDstrncmp (const char*s1,const char*s2,int iLen);
-int CGDstrnicmp (const char*s1,const char*s2,int iLen);
-void CGDstrncpy(char *pszBuf,const char *pszText,int iLen);
-
 void CGDAppendNum0_999(const char *pszText,int iNum,int iMinDigits,char *pszBuf);
 void CGDAppendHex32(const char *pszText,int iNum, int iDigits,char *pszBuf);
 
 int abs(int x);
+int strnicmp (const char*s1,const char*s2,int iLen);
 
 void I_Error (const char *error, ...);
-
-//force compiler error on use following:
-#define strcpy 12
-#define strnicmp 22
 
 //return ptr to flash
 int FindInFlash(const void **buf, int size, int readpos);

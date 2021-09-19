@@ -291,7 +291,7 @@ void P_LoadSectors (int lump)
     ss->floorheight = SHORT(ms->floorheight)<<FRACBITS;
     ss->ceilingheight = SHORT(ms->ceilingheight)<<FRACBITS;
     //printf("S%if%i|c%i\n",i,ss->floorheight>>16,ss->ceilingheight>>16);
-    CGDstrncpy(tmp,ms->floorpic,8);tmp[8]=0;
+    strncpy(tmp,ms->floorpic,8);tmp[8]=0;
     //printf ("tmp= %s \n",tmp);
     /*printf ("ms->floorpic= %s \n",ms->floorpic);
     printf ("tmp= %s \n",&tmp);
@@ -299,7 +299,7 @@ void P_LoadSectors (int lump)
     ss->floorpic = R_FlatNumForName(ms->floorpic);
     ss->ceilingpic = R_FlatNumForName(ms->ceilingpic);*/
     ss->floorpic = (short)R_FlatNumForName(tmp);
-    CGDstrncpy(tmp,ms->ceilingpic,8);tmp[8]=0;
+    strncpy(tmp,ms->ceilingpic,8);tmp[8]=0;
     //printf ("tmp= %s \n",tmp);
     ss->ceilingpic = (short)R_FlatNumForName(tmp);
     //printf("gotf: %i, gotc: %i \n",ss->floorpic,ss->ceilingpic);

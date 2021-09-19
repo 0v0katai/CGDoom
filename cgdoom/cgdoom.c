@@ -138,8 +138,8 @@ void CGDAppendNum0_999(const char *pszText,int iNum,int iMinDigits,char *pszBuf)
 
 void CGDAppendHex32(const char *pszText,int iNum,int iDigits,char *pszBuf)
 {
-	CGDstrcpy(pszBuf, pszText);
-	pszBuf += CGDstrlen(pszText);
+	strcpy(pszBuf, pszText);
+	pszBuf += strlen(pszText);
 	for(int i = 0; i < iDigits; i++)
 	{
 		int c = (iNum >> (i * 4)) & 0xf;
@@ -149,121 +149,16 @@ void CGDAppendHex32(const char *pszText,int iNum,int iDigits,char *pszBuf)
 	pszBuf[iDigits] = 0;
 }
 
-
-int CGDstrlen(const char *pszText)
+int strnicmp(const char *s1,const char *s2,int count)
 {
-	int i = 0;
-	while(pszText[i])
-	{
-		i++;
+	for(int i = 0; i < count; i++) {
+		int c1 = (s1[i] >= 'a' && s1[i] <= 'z') ? s1[i] & ~0x20 : s1[i];
+		int c2 = (s2[i] >= 'a' && s2[i] <= 'z') ? s2[i] & ~0x20 : s2[i];
+
+		if(c1 != c2 || !c1 || !c2)
+			return c1 - c2;
 	}
-	return i;
-}
-
-void CGDstrcpy(char *pszBuf,const char *pszText)
-{
-	int i = 0;
-	while(pszText[i])
-	{
-		pszBuf[i] = pszText[i];
-		i++;
-	}
-	pszBuf[i] = 0;
-}
-
-void CGDstrncpy(char *pszBuf,const char *pszText,int iLen)
-{
-	int i = 0;
-	while(pszText[i])
-	{
-		if(iLen == i)
-		{
-			return;
-		}
-		pszBuf[i] = pszText[i];
-		i++;
-	}
-	pszBuf[i] = 0;
-}
-
-int CGDstrcmp (const char*s1,const char*s2)
-{
-	while(s1[0])
-	{
-		unsigned char c1 = (unsigned char)s1[0];
-		unsigned char c2 = (unsigned char)s2[0];
-		if(c1 !=c2)
-		{
-			return 1;//who cares 1/-1, important is match/nonmatch
-		}
-		s1++;
-		s2++;
-	}
-	return (unsigned char)s2[0]>0;
-}
-
-int CGDstrncmp (const char*s1,const char*s2,int iLen)
-{
-	if(!iLen)
-	{
-		return 0;
-	}
-
-	while(s1[0])
-	{
-		unsigned char c1 = (unsigned char)s1[0];
-		unsigned char c2 = (unsigned char)s2[0];
-
-		if(c1 !=c2)
-		{
-			return 1;//who cares 1/-1, important is match/nonmatch
-		}
-		s1++;
-		s2++;
-
-		iLen--;
-		if(!iLen)
-		{
-			return 0;
-		}
-	}
-	return (unsigned char)s2[0]>0;
-}
-
-static unsigned char Upper(unsigned char c)
-{
-	if((c>='a')&&(c<='z'))
-	{
-		c -='a'-'A';
-	}
-	return c;
-}
-
-int CGDstrnicmp (const char*s1,const char*s2,int iLen)
-{
-	if(!iLen)
-	{
-		return 0;
-	}
-
-	while(s1[0])
-	{
-		unsigned char c1 = Upper((unsigned char)s1[0]);
-		unsigned char c2 = Upper((unsigned char)s2[0]);
-
-		if(c1 !=c2)
-		{
-			return 1;//who cares 1/-1, important is match/nonmatch
-		}
-		s1++;
-		s2++;
-		iLen--;
-		if(!iLen)
-		{
-			return 0;
-		}
-	}
-	return (unsigned char)s2[0]>0;
+	return 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -726,13 +621,13 @@ int main(void)
 	autostart = autostart_;
 
 	/* Override version detection for single-episode Ultimate Doom WADs */
-	if (!CGDstrcmp(wads[choice].name, "doomu1.wad"))
+	if (!strcmp(wads[choice].name, "doomu1.wad"))
 		CGD_SingleEpisodeUltimate = 1;
-	if (!CGDstrcmp(wads[choice].name, "doomu2.wad"))
+	if (!strcmp(wads[choice].name, "doomu2.wad"))
 		CGD_SingleEpisodeUltimate = 2;
-	if (!CGDstrcmp(wads[choice].name, "doomu3.wad"))
+	if (!strcmp(wads[choice].name, "doomu3.wad"))
 		CGD_SingleEpisodeUltimate = 3;
-	if (!CGDstrcmp(wads[choice].name, "doomu4.wad"))
+	if (!strcmp(wads[choice].name, "doomu4.wad"))
 		CGD_SingleEpisodeUltimate = 4;
 
 	unsigned tmp=((unsigned)getSecondaryVramAddress()+3)&(~3);

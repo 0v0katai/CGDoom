@@ -972,7 +972,7 @@ static void WI_loadData(void)
   wi_stuff_anim_t* a;
 
   if (gamemode == commercial)
-    CGDstrcpy(name, "INTERPIC");
+    strcpy(name, "INTERPIC");
   else 
   {
     //sprintf(name, "WIMAP%d", wbs->epsd);
@@ -982,7 +982,7 @@ static void WI_loadData(void)
   if ( gamemode == retail )
   {
     if (wbs->epsd == 3)
-      CGDstrcpy(name,"INTERPIC");
+      strcpy(name,"INTERPIC");
   }
 
   // background

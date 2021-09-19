@@ -507,7 +507,7 @@ void G_Ticker (void)
 
       case BTS_SAVEGAME: 
         if (!savedescription[0]) 
-          CGDstrcpy(savedescription, "NET GAME"); 
+          strcpy(savedescription, "NET GAME");
 
         savegameslot =  (players[0].cmd.buttons & BTS_SAVEMASK)>>BTS_SAVESHIFT; 
         gameaction = ga_savegame;
@@ -1008,7 +1008,7 @@ void G_DoLoadGame (void)
 void G_SaveGame( int slot, char* description ) 
 { 
     savegameslot = slot;
-    CGDstrcpy (savedescription, description);
+    strcpy (savedescription, description);
     sendsave = true;
 } 
 
@@ -1075,7 +1075,7 @@ boolean G_DoSaveGame (void)
       dfw->data = savebuffer;
     }
 
-    CGDstrcpy(dfw->filename, name);
+    strcpy(dfw->filename, name);
     dfw->size = length;
 
     gameaction = ga_nothing;

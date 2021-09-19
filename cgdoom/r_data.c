@@ -446,7 +446,7 @@ void R_InitTextures (void)
 
   for (i=0 ; i<nummappatches ; i++)
   {
-    //CGDstrncpy (name,name_p+i*8, 8);
+    //strncpy (name,name_p+i*8, 8);
     //printf ("%i \n",i);
     //printf ("%s \n",name);
     //printf ("%i \n",sizeof(name));
@@ -719,7 +719,7 @@ int	R_CheckTextureNumForName (const char *name)
 
   for(i=0 ; i<numtextures ; i++)
   {
-    if(!CGDstrnicmp(textures[i]->name,name,8))
+    if(!strnicmp(textures[i]->name,name,8))
     {
       return i;
     }

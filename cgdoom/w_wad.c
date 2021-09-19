@@ -97,10 +97,10 @@ static int W_AddFile ()
   startlump = numlumps;
 
   Flash_ReadFile(&header, sizeof(header),0);
-  if (CGDstrncmp(header.identification,"IWAD",4))
+  if (strncmp(header.identification,"IWAD",4))
   {
     // Homebrew levels?
-    if (CGDstrncmp(header.identification,"PWAD",4))
+    if (strncmp(header.identification,"PWAD",4))
       return 0; // CX port
     //I_Error ("Wad file %s doesn't have IWAD or PWAD id\n", filename);
   }
@@ -135,7 +135,7 @@ static int W_AddFile ()
     lump_p->position = LONG(fileinfo->filepos);
     lump_p->size = LONG(fileinfo->size);
     memset(lump_p->name,0,8);//hack
-    CGDstrncpy (lump_p->name, fileinfo->name, 8);
+    strncpy (lump_p->name, fileinfo->name, 8);
   }
 
   //Nspire has no alloca() function for temporary memory, so we have to use malloc() and free() to compensate
@@ -219,7 +219,7 @@ int W_CheckNumForName (const char* name)
 
   while(lump_p-- != lumpinfo)
   {
-    if(CGDstrnicmp(name,lump_p->name,8)==0 )
+    if(strnicmp(name,lump_p->name,8)==0 )
     {
       return lump_p - lumpinfo;
     }
