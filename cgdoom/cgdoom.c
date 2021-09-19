@@ -384,6 +384,7 @@ int CGD_TrustUnalignedLumps = 1;
 int CGD_EnableDemos = 0;
 int CGD_SingleEpisodeUltimate = 0;
 int CGD_2MBLineMemory = 0;
+int CGD_Frameskip = 1;
 
 /* Performance counters */
 struct CGD_Perf CGD_Perf;

@@ -255,7 +255,7 @@ void D_Display (void)
 //  D_DoomLoop
 //
 extern  boolean  demorecording;
-extern int giRefreshMask;
+
 void D_DoomLoop (void)
 {
   I_InitGraphics ();
@@ -275,11 +275,8 @@ void D_DoomLoop (void)
     gametic++;
 
     // Update display, next frame, with current state
-    if(!(gametic & giRefreshMask))
-    {
+    if(!(gametic % (CGD_Frameskip + 1)))
       D_Display ();
-    }
-
   }
  // I_ShutdownGraphics();
   free(lumpinfo);

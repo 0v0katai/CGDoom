@@ -431,7 +431,7 @@ void ST_refreshBackground(void)
 }
 
 
-void CGCheat()
+void CGD_Cheat()
 {
   int i;
   plyr->cheats ^= CF_GODMODE;
@@ -461,7 +461,7 @@ void CGCheat()
 
 }
 
-void CGSwitchClip()
+void CGD_SwitchClip()
 {
   plyr->cheats ^= CF_NOCLIP;
   if(plyr->cheats & CF_NOCLIP)
@@ -474,7 +474,7 @@ void CGSwitchClip()
   }
 }
 
-void CGFreeMem()
+void CGD_FreeMem()
 {
   static char message[64];
   sprintf(message, "Free: ");
@@ -493,21 +493,16 @@ void CGFreeMem()
   plyr->message = message;
 }
 
-int giRefreshMask = 1;
-void CGRefreshSwitch()
+void CGD_CycleFrameskip()
 {
-  giRefreshMask ^= 2;
-  if(giRefreshMask & 2)
-  {
-    plyr->message = "Fast";
-  }
-  else
-  {
-    plyr->message = "Smooth";
-  }
+  CGD_Frameskip = (CGD_Frameskip + 1) % 4;
+
+  static char message[16];
+  sprintf(message, "Frameskip: %d", CGD_Frameskip);
+  plyr->message = message;
 }
 
-void CGCycleGamma()
+void CGD_CycleGamma()
 {
   extern int usegamma;
   usegamma = (usegamma + 1) % 5;
@@ -517,7 +512,7 @@ void CGCycleGamma()
   plyr->message = gammamsg[usegamma];
 }
 
-void CGProfilerResults()
+void CGD_ProfilerResults()
 {
   static char message[72];
   sprintf(message, "DA:%ums GR:%ums DI:%ums LL:%ums ULL:%ums",

@@ -304,14 +304,6 @@ typedef enum
 // The utility was written by Dave Taylor.
 //#include "sounds.h"
 
-///
-void CGCheat();
-void CGSwitchClip();
-void CGFreeMem();
-void CGRefreshSwitch();
-void CGCycleGamma();
-void CGProfilerResults();
-
 
 #endif          // __DOOMDEF__
 //-----------------------------------------------------------------------------

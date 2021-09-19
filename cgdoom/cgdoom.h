@@ -30,6 +30,8 @@ extern int CGD_EnableDemos;
 /* The selected WAD is a split Ultimate Doom WAD with a single episode (this
    exists on the fx-CG 50 and is incorrectly detected by normal logic) */
 extern int CGD_SingleEpisodeUltimate;
+/* Skip this amount of frames after every rendered frame (default 1) */
+extern int CGD_Frameskip;
 
 // Global variables interfacing with Doom itself.
 
@@ -55,6 +57,17 @@ void UpdateKeyboardState(void);
 // Check if a Doom key has just been pressed, or released.
 int KeyWasJustPressed(int key);
 int KeyWasJustReleased(int key);
+
+//---
+// Control systems
+//---
+
+void CGD_Cheat();
+void CGD_SwitchClip();
+void CGD_FreeMem();
+void CGD_CycleFrameskip();
+void CGD_CycleGamma();
+void CGD_ProfilerResults();
 
 //---
 // Performance metrics

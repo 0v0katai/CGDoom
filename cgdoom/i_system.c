@@ -243,8 +243,6 @@ static void R_SetViewSizeChange(int iDiff)
 
 void I_StartTic (void)
 {
-    extern int giRefreshMask;
-
     //---
     // Rate limiter
     //---
@@ -254,12 +252,12 @@ void I_StartTic (void)
 
     /* Rate limit the game at 35 tics per second, but only extend tics where we
        display frames, because that's when all the work is done */
-    if(!(gametic & giRefreshMask)) {
+    if(!(gametic % (CGD_Frameskip + 1))) {
         if(ratelimit_started) {
             while(1) {
                 prof_t temp = ratelimit_ctx;
                 prof_leave(temp);
-                if(prof_time(temp) >= 28571 * (giRefreshMask + 1)) break;
+                if(prof_time(temp) >= 28571 * (CGD_Frameskip + 1)) break;
             }
             ratelimit_ctx = prof_make();
         }
@@ -288,7 +286,7 @@ void I_StartTic (void)
         if (now == fps_ticks)
             fpscounter_data = -1;
         else
-            fpscounter_data = 128 * fps_frames / ((now - fps_ticks) * (giRefreshMask + 1));
+            fpscounter_data = 128 * fps_frames / ((now - fps_ticks) * (CGD_Frameskip + 1));
 
         fps_ticks = now;
         fps_frames = 0;
@@ -307,21 +305,21 @@ void I_StartTic (void)
     {
         /* Capture events for special keys */
         if(KeyWasJustPressed(SKEY_CHEAT))
-            CGCheat();
+            CGD_Cheat();
         if(KeyWasJustPressed(SKEY_DECVP))
             R_SetViewSizeChange(-1);
         if(KeyWasJustPressed(SKEY_INCVP))
             R_SetViewSizeChange(1);
         if(KeyWasJustPressed(SKEY_NOCLIP))
-            CGSwitchClip();
+            CGD_SwitchClip();
         if(KeyWasJustPressed(SKEY_GAMMA))
-            CGCycleGamma();
+            CGD_CycleGamma();
         if(KeyWasJustPressed(SKEY_FREEMEM))
-            CGFreeMem();
+            CGD_FreeMem();
         if(KeyWasJustPressed(SKEY_FPSCOUNTER))
             fpscounteractive = !fpscounteractive;
         if(KeyWasJustPressed(SKEY_FRAMESKIP))
-            CGRefreshSwitch();
+            CGD_CycleFrameskip();
     }
 
     //---
@@ -341,7 +339,7 @@ void I_StartTic (void)
     else {
         profiler_ticks--;
         if(profiler_ticks == 0) {
-            CGProfilerResults();
+            CGD_ProfilerResults();
             profiler_ticks = -1;
         }
     }
