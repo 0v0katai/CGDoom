@@ -1085,6 +1085,10 @@ boolean G_DoSaveGame (void)
     sprintf(msg, GGSAVED " (%d kB)", length >> 10);
     players[consoleplayer].message = msg;
 
+    /* Redraw status bar next frame; large save files override it */
+    extern boolean st_firsttime;
+    st_firsttime = true;
+
     return save_now;
 }
 
