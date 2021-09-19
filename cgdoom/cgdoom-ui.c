@@ -169,11 +169,11 @@ void UI_Checkbox(int x, int y, int checked)
 	}
 }
 
-void UI_FileMappingProgressBar(int size_mapped, int size_total)
+void UI_ProgressBar(int y0, int current, int total)
 {
 	const int w=192, h=5;
-	const int x0=(WIDTH-w)/2, y0=HEIGHT-10;
-	const int pos = x0 + (w * size_mapped) / size_total;
+	const int x0=(WIDTH-w)/2;
+	const int pos = x0 + (w * current) / total;
 
 	for(int x = x0; x < x0+w; x++)
 	{

@@ -19,6 +19,17 @@ typedef struct
     int size;
 } WADFileInfo;
 
+/* Description of a file write that has been delated. */
+typedef struct
+{
+   char filename[32];
+   const void *data;
+   int size;
+} CGD_DelayedFileWrite;
+
+/* Delay file saves until exit to avoid quitting immediately */
+#define CGDOOM_DELAY_SAVES
+
 /* CGDoom statistics */
 extern struct CGD_Perf CGD_Perf;
 extern struct CGD_Stats CGD_Stats;
@@ -32,13 +43,16 @@ extern int CGD_EnableDemos;
 extern int CGD_SingleEpisodeUltimate;
 /* Skip this amount of frames after every rendered frame (default 1) */
 extern int CGD_Frameskip;
-/* WAD file name (without .wad), used to avoid save file conflicts */
-extern const char *CGD_WADFileName;
 
 // Global variables interfacing with Doom itself.
 
 /* Map and episode to start at when loading the game. */
 extern int startmap, startepisode;
+/* WAD file name (without .wad), used to avoid save file conflicts */
+extern const char *CGD_WADFileName;
+/* Save Game operations delayed until closing the add-in (one per save) */
+extern CGD_DelayedFileWrite CGD_DelayedSaves[6];
+
 
 // Keyboard interface.
 

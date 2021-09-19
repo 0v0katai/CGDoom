@@ -88,7 +88,7 @@ void     G_DoPlayDemo (void);
 void     G_DoCompleted (void); 
 void     G_DoVictory (void); 
 void     G_DoWorldDone (void); 
-void     G_DoSaveGame (void); 
+boolean  G_DoSaveGame (void);
 
 
 gameaction_t   gameaction; 
@@ -460,11 +460,13 @@ void G_Ticker (void)
       G_DoLoadGame (); 
       break; 
     case ga_savegame: 
-      G_DoSaveGame (); 
       /* After saving the game, the storage memory is shuffled, we need to
          leave and we need to do it quickly */
-      I_Quit();
-      return;
+      if (G_DoSaveGame ()) {
+        I_Quit();
+        return;
+      }
+      break;
     case ga_playdemo:
       G_DoPlayDemo ();
       break;
@@ -999,7 +1001,7 @@ void G_SaveGame( int slot, char* description )
     sendsave = true;
 } 
 
-void G_DoSaveGame (void)
+boolean G_DoSaveGame (void)
 { 
     char  name[50];
     char  name2[VERSIONSIZE];
@@ -1039,14 +1041,43 @@ void G_DoSaveGame (void)
     if (length > SAVEGAMESIZE)
       I_Error ("Savegame buffer overrun");
 
-    M_WriteFile (name, savebuffer, length);
+    boolean save_now = false;
+    void *delayed_copy = NULL;
+
+#ifndef CGDOOM_DELAY_SAVES
+    save_now = true;
+#endif
+
+    /* Allocate memory to hold the data while delaying */
+    if (!save_now) {
+      delayed_copy = Z_Malloc(length, PU_STATIC, 0);
+      if (delayed_copy == NULL)
+        save_now = true;
+      else
+        memcpy(delayed_copy, savebuffer, length);
+    }
+
+    if (save_now) {
+      M_WriteFile (name, savebuffer, length);
+    }
+    else {
+      CGD_DelayedFileWrite *dfw = &CGD_DelayedSaves[savegameslot];
+      if (dfw->data)
+        Z_Free(dfw->data);
+
+      CGDstrcpy(dfw->filename, name);
+      dfw->data = delayed_copy;
+      dfw->size = length;
+    }
 
     gameaction = ga_nothing;
     savedescription[0] = 0;
 
-    static char msg[32];
+    static char msg[40];
     sprintf(msg, GGSAVED " (%d kB)", length >> 10);
     players[consoleplayer].message = msg;
+
+    return save_now;
 }
 
 //

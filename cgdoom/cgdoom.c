@@ -3,7 +3,9 @@
 #include "cgdoom.h"
 #include <stdlib.h>
 #include "libprof.h"
+
 #include "doomtype.h"
+#include "m_misc.h"
 
 #ifndef CG_EMULATOR
 # include "cgdoom-alloc.h"
@@ -387,6 +389,9 @@ int CGD_2MBLineMemory = 0;
 int CGD_Frameskip = 1;
 const char *CGD_WADFileName = NULL;
 
+/* Delayed file accesses */
+CGD_DelayedFileWrite CGD_DelayedSaves[6] = { 0 };
+
 /* Performance counters */
 struct CGD_Perf CGD_Perf;
 /* Developer statistics */
@@ -499,7 +504,7 @@ int CreateFileMapping(int fd, FileMapping *pMap)
 	{
 		/* Don't show this too often, or it will eat several seconds */
 		if((pMap->miTotalLength - iLastProgress) * 20 > iFileSize) {
-			UI_FileMappingProgressBar(pMap->miTotalLength, iFileSize);
+			UI_ProgressBar(HEIGHT-10, pMap->miTotalLength, iFileSize);
 			iLastProgress = pMap->miTotalLength;
 		}
 
@@ -732,7 +737,7 @@ int main(void)
 		int fd = Bfile_OpenFile_OS(wads[choice].path, 0, 0);
 		int size = CreateFileMapping(fd, &gWADMap);
 		Bfile_CloseFile_OS(fd);
-		UI_FileMappingProgressBar(1, 1);
+		UI_ProgressBar(HEIGHT-10, 1, 1);
 		ms_mmap = (RTC_GetTicks() - time) * 8;
 
 		if(size == -1) {
@@ -781,6 +786,14 @@ int main(void)
 
 	if(gWADfd >= 0)
 		Bfile_CloseFile_OS(gWADfd);
+
+	int delayed_writes = sizeof(CGD_DelayedSaves) / sizeof(CGD_DelayedSaves[0]);
+	for(int i = 0; i < delayed_writes; i++) {
+		CGD_DelayedFileWrite *dfw = &CGD_DelayedSaves[i];
+		if(dfw->data != NULL) {
+			M_WriteFile(dfw->filename, dfw->data, dfw->size);
+		}
+	}
 
 	if(dev_info) {
 		Layout l;

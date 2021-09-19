@@ -14,8 +14,8 @@ enum {
     UI_RIGHT = 2,
 };
 
-/* Show a progress bar of file mapping at the bottom of the screen. */
-void UI_FileMappingProgressBar(int size_mapped, int size_total);
+/* Show a progress bar at the bottom of the screen. */
+void UI_ProgressBar(int y, int current, int total);
 
 /* Print text with a cleaner font. */
 void UI_Print(int x, int y, int fg, int halign, char const *text, int length);

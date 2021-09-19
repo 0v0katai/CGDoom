@@ -90,7 +90,7 @@ int M_DrawText ( int x, int y, boolean direct, char* string )
 //
 // M_WriteFile
 //
-boolean M_WriteFile(char const *name, void *source, int length)
+boolean M_WriteFile(char const *name, const void *source, int length)
 {
     uint16_t fc_path[100] = u"\\\\fls0\\";
     size_t size = length;
