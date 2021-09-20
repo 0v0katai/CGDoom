@@ -61,7 +61,7 @@ int Layout_Event(Layout *l, int key);
 /* Larger-scale functions. */
 
 /* Show the program's main screen; returns index of selected WAD file. */
-int UI_Main(WADFileInfo *wads, int wad_count,
+int UI_Main(CGD_WADFileInfo *wads, int wad_count,
     int *dev_info,        /* Enable technical detail screens */
     int *use_mmap,        /* Map file to memory (as opposed to using Bfile) */
     int *startmap,        /* Warp to this map */

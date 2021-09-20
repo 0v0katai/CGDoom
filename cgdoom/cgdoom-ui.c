@@ -375,7 +375,7 @@ int Layout_Event(Layout *l, int key)
 	return 0;
 }
 
-int UI_Main(WADFileInfo *wads, int wad_count, int *dev_info, int *use_mmap,
+int UI_Main(CGD_WADFileInfo *wads, int wad_count, int *dev_info, int *use_mmap,
 	int *startmap, int *startepisode, int *trustunaligned,
 	int *autostart, int *enabledemos, int *enable2MBline)
 {

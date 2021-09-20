@@ -44,7 +44,8 @@ CG_OBJ := $(SRC:cgdoom/%=build-cg/%.o) $(CG_SRC:src-cg/%=build-cg/%.o)
 CC ?= gcc
 
 SDL2_CFLAGS := $(CFLAGS) -I src-sdl2 -DCG_EMULATOR $(pkg-config sdl2 --cflags)
-SDL2_LDFLAGS := $(LDFLAGS) $(pkg-config sdl2 --libs)
+SDL2_CFLAGS += -O0 -g
+SDL2_LDFLAGS := $(LDFLAGS) $(shell pkg-config sdl2 --libs)
 
 SDL2_SRC := $(wildcard src-sdl2/*.c)
 SDL2_OBJ := $(SRC:cgdoom/%=build-sdl2/%.o) $(SDL2_SRC:src-sdl2/%=build-sdl2/%.o)

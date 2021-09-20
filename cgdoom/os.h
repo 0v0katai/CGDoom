@@ -20,6 +20,6 @@ int strnicmp (const char*s1,const char*s2,int iLen);
 void I_Error (const char *error, ...);
 
 //return ptr to flash
-int FindInFlash(const void **buf, int size, int readpos);
+int (FindInFlash)(const void **buf, int size, int readpos);
 //direct read from flash
 int Flash_ReadFile(void *buf, int size, int readpos);

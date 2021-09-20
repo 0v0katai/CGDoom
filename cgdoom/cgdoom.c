@@ -73,23 +73,8 @@ int strnicmp(const char *s1,const char *s2,int count)
 //   FLASH_END (of which there are 4096) are indexed by their first 4 bytes and
 //   binary searched for matches before anything else.
 //
-// See <platform.h> for Flash traversal parameters.
+// See <src-cg/platform.h> for Flash traversal parameters.
 ///////////////////////////////////////////////////////////////////////////////
-
-#ifndef CG_EMULATOR
-
-//The whole sound doesn't fir onto the RAM.
-//Reading per partes is not possible as this is synchronnous player (there would be silences when reading).
-
-/* Fast memcmp() for 512-byte sectors. */
-int CGD_sector_memcmp(const void *fast_ram, const void *rom, size_t _512);
-
-/* Caching structure to read WAD files by larger chunks than Flash sectors. */
-typedef struct {
-	int fd;
-	int size, offset;
-	char *data; /* of size FLASH_BFILE_UNIT */
-} FileAccessCache;
 
 /* Index of most likely ROM sectors. */
 typedef struct {
@@ -124,30 +109,6 @@ typedef struct {
 	int miTotalLength;
 } FileMapping;
 
-/* Find WAD files in the filesystem. */
-int FindWADs(WADFileInfo *files, int max)
-{
-	uint16_t path[32];
-	Bfile_FileInfo info;
-
-	int sd, rc, total=0;
-	rc = Bfile_FindFirst(u"\\\\fls0\\*.wad", &sd, path, &info);
-
-	while(rc != -16 && total < max)
-	{
-		memcpy(files[total].path, u"\\\\fls0\\", 14);
-		memcpy(files[total].path+7, path, 32*2);
-		Bfile_NameToStr_ncpy(files[total].name, path, 32);
-		files[total].size = info.fsize;
-		total++;
-
-		rc = Bfile_FindNext(sd, path, &info);
-	}
-
-	Bfile_FindClose(sd);
-	return total;
-}
-
 /* WAD file access method. */
 static int gWADmethod = CGDOOM_WAD_MMAP;
 /* File descriptor to WAD, used in Flash_ReadFile calls. (CGDOOM_WAD_BFILE) */
@@ -172,6 +133,21 @@ CGD_DelayedFileWrite CGD_DelayedSaves[6] = { 0 };
 struct CGD_Perf CGD_Perf;
 /* Developer statistics */
 struct CGD_Stats CGD_Stats;
+
+#ifndef CG_EMULATOR
+
+//The whole sound doesn't fir onto the RAM.
+//Reading per partes is not possible as this is synchronnous player (there would be silences when reading).
+
+/* Fast memcmp() for 512-byte sectors. */
+int CGD_sector_memcmp(const void *fast_ram, const void *rom, size_t _512);
+
+/* Caching structure to read WAD files by larger chunks than Flash sectors. */
+typedef struct {
+	int fd;
+	int size, offset;
+	char *data; /* of size FLASH_BFILE_UNIT */
+} FileAccessCache;
 
 /* Read next sector from file, while caching into a buffer. */
 const void *ReadNextSector(FileAccessCache *fc, int *size)
@@ -372,6 +348,30 @@ int FindInFlash(const void **buf, int size, int readpos)
 	return iAvailableLen;
 }
 
+static int FindZeroedMemory(void *start)
+{
+	/* Look for zero-longwords every 16 bytes */
+	int size = 0;
+
+	/* Limit to 6 MB since the fx-CG 50 doesn't have any more memory and
+	   anything after the RAM is likely to be zero non-writable */
+	while(size < CGDOOM_2MBLINEMEMORY_MAX && !*(uint32_t *)(start + size))
+		size += 16;
+
+	/* Round down to a multiple of 4096 */
+	return size & ~0xfff;
+}
+
+void abort(void){
+	int x=0,y=160;
+	PrintMini(&x,&y,"Abort called",0,0xFFFFFFFF,0,0,0xFFFF,0,1,0);
+	int key;
+	for(;;)
+		GetKey(&key);
+}
+
+#endif /* CG_EMULATOR */
+
 int Flash_ReadFile(void *buf, int size, int readpos)
 {
 	if(gWADmethod == CGDOOM_WAD_BFILE)
@@ -396,29 +396,29 @@ int Flash_ReadFile(void *buf, int size, int readpos)
 	return iRet;
 }
 
-static int FindZeroedMemory(void *start)
+/* Find WAD files in the filesystem. */
+int FindWADs(CGD_WADFileInfo *files, int max)
 {
-	/* Look for zero-longwords every 16 bytes */
-	int size = 0;
+	uint16_t path[32];
+	Bfile_FileInfo info;
 
-	/* Limit to 6 MB since the fx-CG 50 doesn't have any more memory and
-	   anything after the RAM is likely to be zero non-writable */
-	while(size < CGDOOM_2MBLINEMEMORY_MAX && !*(uint32_t *)(start + size))
-		size += 16;
+	int sd, rc, total=0;
+	rc = Bfile_FindFirst(u"\\\\fls0\\*.wad", &sd, path, &info);
 
-	/* Round down to a multiple of 4096 */
-	return size & ~0xfff;
+	while(rc != -16 && total < max)
+	{
+		memcpy(files[total].path, u"\\\\fls0\\", 14);
+		memcpy(files[total].path+7, path, 32*2);
+		Bfile_NameToStr_ncpy(files[total].name, path, 32);
+		files[total].size = info.fsize;
+		total++;
+
+		rc = Bfile_FindNext(sd, path, &info);
+	}
+
+	Bfile_FindClose(sd);
+	return total;
 }
-
-void abort(void){
-	int x=0,y=160;
-	PrintMini(&x,&y,"Abort called",0,0xFFFFFFFF,0,0,0xFFFF,0,1,0);
-	int key;
-	for(;;)
-		GetKey(&key);
-}
-
-#endif /* CG_EMULATOR */
 
 static void DelayedWriteFile(int i)
 {
@@ -484,14 +484,14 @@ int main(void)
 
 	prof_init();
 
-	WADFileInfo wads[16];
+	CGD_WADFileInfo wads[16];
 	int wad_count = FindWADs(wads, 16);
 
 	int dev_info = 0;
 
 	/* Allow the user to use memory past the 2 MB line on known OS versions */
 	int *enable_2MBline=NULL;
-	char const *osv = (void *)0x80020020;
+	char const *osv = GetOSVersion();
 	if(!strncmp(osv, "03.", 3) && osv[3] <= '6') // 3.60 or earlier
 		enable_2MBline = &CGD_2MBLineMemory;
 
@@ -503,6 +503,13 @@ int main(void)
 
 	autostart = autostart_;
 
+	/* Parameters unavailable on the SDL2 build */
+	#ifdef CG_EMULATOR
+	gWADmethod = CGDOOM_WAD_BFILE;
+	CGD_TrustUnalignedLumps = 0;
+	CGD_2MBLineMemory = 0;
+	#endif
+
 	/* Override version detection for single-episode Ultimate Doom WADs */
 	if (!strcmp(wads[choice].name, "doomu1.wad"))
 		CGD_SingleEpisodeUltimate = 1;
@@ -513,8 +520,9 @@ int main(void)
 	if (!strcmp(wads[choice].name, "doomu4.wad"))
 		CGD_SingleEpisodeUltimate = 4;
 
-	unsigned tmp=((unsigned)getSecondaryVramAddress()+3)&(~3);
-	SaveVRAMBuffer = (unsigned char*)tmp;
+	uintptr_t secondary_vram = ((uintptr_t)GetSecondaryVRAMAddress() | 3) + 1;
+	SaveVRAMBuffer = (void *)secondary_vram;
+
 	/* fx-CG 50 / Graph 90+E: RAM starts at 0x0c000000 in physical memory */
 	SystemStack = (void *)0xac0f0000;
 
@@ -529,9 +537,6 @@ int main(void)
 	CGD_WADFileName = wad_name;
 
 	/* Setup access to WAD file */
-	#ifdef CG_EMULATOR
-	gWADmethod = CGDOOM_WAD_BFILE;
-	#endif
 	if(gWADmethod == CGDOOM_WAD_BFILE)
 	{
 		gWADfd = Bfile_OpenFile_OS(wads[choice].path, 0, 0);

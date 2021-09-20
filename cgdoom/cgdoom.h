@@ -1,6 +1,7 @@
 #ifndef CGDOOM_H
 #define CGDOOM_H
 
+#include "platform.h"
 #include "libprof.h"
 #include <stdint.h>
 
@@ -17,7 +18,7 @@ typedef struct
     char name[32];
     uint16_t path[7+32];
     int size;
-} WADFileInfo;
+} CGD_WADFileInfo;
 
 /* Description of a file write that has been delated. */
 typedef struct
@@ -53,6 +54,10 @@ extern int CGD_EnableDemos;
 extern int CGD_SingleEpisodeUltimate;
 /* Skip this amount of frames after every rendered frame (default 1) */
 extern int CGD_Frameskip;
+/* Whether to trust unaligned lumps. If this is set, all non-fragmented lumps
+   will be accessed from ROM. Otherwise, lumps that are not 4-aligned will be
+   loaded to the heap even if they are available. (CGDOOM_WAD_MMAP) */
+extern int CGD_TrustUnalignedLumps;
 
 // Global variables interfacing with Doom itself.
 

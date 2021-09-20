@@ -28,6 +28,8 @@
 #ifndef __BYTEBOOL__
 #define __BYTEBOOL__
 
+#include <stdint.h>
+
 // Fixed to use builtin bool type with C++.
 /*#ifdef __cplusplus
 typedef bool boolean;

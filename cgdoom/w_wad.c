@@ -299,7 +299,7 @@ void * W_ReadLumpWithZ_Malloc(int lump,int tag,int iEnableFlash)
   }
 
   int full = (c == lumpinfo[lump].size);
-  int aligned = (((uint32_t)lumpcache[lump] & 1) == 0);
+  int aligned = (((uintptr_t)lumpcache[lump] & 1) == 0);
 
   if(CGD_TrustUnalignedLumps)
     aligned = 1;
