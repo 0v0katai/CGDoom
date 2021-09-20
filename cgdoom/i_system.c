@@ -69,9 +69,7 @@ byte* I_ZoneBase (int*	size, int i)
 
 byte *I_ScreenBase(int screen)
 {
-    if (screen == 0)
-        return malloc(320 * 200);
-    if (screen == 1)
+    if (screen == 0 || screen == 1 || screen == 2 || screen == 3)
         return malloc(320 * 200);
     if (screen == 4)
         return malloc(320 * 32);

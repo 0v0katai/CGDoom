@@ -236,7 +236,7 @@ void* Z_Malloc( int size,  int  tag,  void* user )
   memblock_t* newblock;
   memblock_t* base;
 
-  size = (size + 3) & ~3;
+  size = (size + (sizeof(void *)-1)) & ~(sizeof(void *)-1);
 
   // scan through the block list,
   // looking for the first free block
