@@ -484,13 +484,13 @@ void R_InitTextures (void)
   numtextures = numtextures1 + numtextures2;
 
   /* CGDoom: Allocate all of these in PRAM, since they have 4-byte elements */
-  textures = (texture_t **)CGD_PRAM_Malloc (numtextures*4);
-  texturecolumnlump = (short**)CGD_PRAM_Malloc (numtextures*4);
-  texturecolumnofs = (unsigned short**)CGD_PRAM_Malloc (numtextures*4);
-  texturecomposite = (byte**)CGD_PRAM_Malloc (numtextures*4);
-  texturecompositesize = (int*)CGD_PRAM_Malloc (numtextures*4);
-  texturewidthmask = (int*)CGD_PRAM_Malloc (numtextures*4);
-  textureheight = (fixed_t*)CGD_PRAM_Malloc (numtextures*4);
+  textures = (texture_t **)CGD_PRAM_Malloc (numtextures*sizeof(void *));
+  texturecolumnlump = (short**)CGD_PRAM_Malloc (numtextures*sizeof(void *));
+  texturecolumnofs = (unsigned short**)CGD_PRAM_Malloc (numtextures*sizeof(void *));
+  texturecomposite = (byte**)CGD_PRAM_Malloc (numtextures*sizeof(void *));
+  texturecompositesize = (int*)CGD_PRAM_Malloc (numtextures*sizeof(void *));
+  texturewidthmask = (int*)CGD_PRAM_Malloc (numtextures*sizeof(void *));
+  textureheight = (fixed_t*)CGD_PRAM_Malloc (numtextures*sizeof(void *));
 
   totalwidth = 0;
 
@@ -577,7 +577,7 @@ void R_InitTextures (void)
     R_GenerateLookup (i);
 
   // Create translation table for global animation.
-  texturetranslation = (int *)CGD_PRAM_Malloc ((numtextures+1)*4);
+  texturetranslation = (int *)CGD_PRAM_Malloc ((numtextures+1)*sizeof(void *));
 
   for (i=0 ; i<numtextures ; i++)
     texturetranslation[i] = i;

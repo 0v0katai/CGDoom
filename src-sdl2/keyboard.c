@@ -23,21 +23,21 @@ static int DoomKeyToKeycode(int key)
     case KEY_RIGHTARROW:    return SDL_SCANCODE_RIGHT;
     case KEY_UPARROW:       return SDL_SCANCODE_UP;
     case KEY_DOWNARROW:     return SDL_SCANCODE_DOWN;
-/*    case ' ':               return KEYCODE_SQUARE;
-    case KEY_RCTRL:         return KEYCODE_ALPHA;
-    case '1':               return KEYCODE_F1;
-    case '2':               return KEYCODE_F2;
-    case '3':               return KEYCODE_F3;
-    case '4':               return KEYCODE_F4;
-    case '5':               return KEYCODE_F5;
-    case '6':               return KEYCODE_F6;
-    case '7':               return KEYCODE_SHIFT;
-    case KEY_TAB:           return KEYCODE_EXIT;
-    case KEY_PAUSE:         return KEYCODE_OPTN;
-    case KEY_SLEFTARROW:    return KEYCODE_0;
-    case KEY_SRIGHTARROW:   return KEYCODE_DOT;
-    case KEY_ESCAPE:        return KEYCODE_MENU;
-    case KEY_ENTER:         return KEYCODE_EXE; */
+    case ' ':               return SDL_SCANCODE_SPACE;
+//    case KEY_RCTRL:         return KEYCODE_ALPHA;
+    case '1':               return SDL_SCANCODE_1;
+    case '2':               return SDL_SCANCODE_2;
+    case '3':               return SDL_SCANCODE_3;
+    case '4':               return SDL_SCANCODE_4;
+    case '5':               return SDL_SCANCODE_5;
+    case '6':               return SDL_SCANCODE_6;
+    case '7':               return SDL_SCANCODE_7;
+    case KEY_TAB:           return SDL_SCANCODE_TAB;
+//    case KEY_PAUSE:         return KEYCODE_OPTN;
+//    case KEY_SLEFTARROW:    return KEYCODE_0;
+//    case KEY_SRIGHTARROW:   return KEYCODE_DOT;
+    case KEY_ESCAPE:        return SDL_SCANCODE_ESCAPE;
+    case KEY_ENTER:         return SDL_SCANCODE_RETURN;
 
     /* Special CGDoom keys */
 /*    case SKEY_CHEAT:        return KEYCODE_POWER;
@@ -61,6 +61,12 @@ static int KeyDown(Uint8 *state, int key)
 
 void UpdateKeyboardState(void)
 {
+    SDL_Event e;
+    while(SDL_PollEvent(&e)) {
+        if(e.type == SDL_QUIT)
+            exit(0);
+    }
+
     free(st_prev);
     st_prev = st_now;
 	st_now = ScanKeyboard();

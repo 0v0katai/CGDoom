@@ -61,7 +61,7 @@ void I_SetPalette(byte* pal)
   }
 }
 
-#if !defined(CG_EMULATOR) && defined(CGDOOM_DIRECT_R61524)
+#ifdef CGDOOM_DIRECT_R61524
 
 #define SYNCO() __asm__ volatile("synco":::"memory");
 #define PRDR *(volatile uint8_t *)0xA405013C
@@ -174,7 +174,7 @@ void I_ReinitAfterError(void)
     st_firsttime = true;
 }
 
-#else /* fx-CG 50 without direct-DD access */
+#else /* CGDOOM_DIRECT_R61524 */
 
 void I_Flip (void)
 {
@@ -221,7 +221,7 @@ void I_ReinitAfterError(void)
     Bdisp_PutDisp_DD();
 }
 
-#endif
+#endif /* CGDOOM_DIRECT_R61524 */
 
 
 //

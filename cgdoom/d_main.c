@@ -279,7 +279,7 @@ void D_DoomLoop (void)
       D_Display ();
   }
  // I_ShutdownGraphics();
-  free(lumpinfo);
+  Z_Free(lumpinfo);
   CGD_PRAM_Free(lumpcache);
   I_ShutdownGraphics();
   return;

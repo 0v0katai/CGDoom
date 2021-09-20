@@ -47,6 +47,8 @@ extern struct CGD_Stats CGD_Stats;
 
 // CGDoom options (some more are specified in platform.h)
 
+/* File access method */
+extern int CGD_WADMethod;
 /* Enable demos in the title screen (most are incompatible and look bad) */
 extern int CGD_EnableDemos;
 /* The selected WAD is a split Ultimate Doom WAD with a single episode (this

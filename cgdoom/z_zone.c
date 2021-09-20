@@ -230,7 +230,6 @@ void* Z_Malloc( int size,  int  tag,  void* user )
   prof_enter(CGD_Perf.DynamicAllocation);
   CGD_Stats.MemoryAllocated += size;
 
-  static int iCalled = 0;
   int extra;
   memblock_t* start;
   memblock_t* rover;
@@ -238,18 +237,6 @@ void* Z_Malloc( int size,  int  tag,  void* user )
   memblock_t* base;
 
   size = (size + 3) & ~3;
-  iCalled++;
-#ifdef CG_EMULATOR
-  {
-    static int iMaxFree = 1024*1024;
-    int iF = Z_FreeMemory(-1);
-    if(iF < iMaxFree)
-    {
-      iMaxFree = iF;
-    }
-    printf("Z_Malloc[%u]: %u [%u,max:%u]\n",iCalled,size,iF,iMaxFree);
-  }
-#endif
 
   // scan through the block list,
   // looking for the first free block

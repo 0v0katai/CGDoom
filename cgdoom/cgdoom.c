@@ -110,7 +110,7 @@ typedef struct {
 } FileMapping;
 
 /* WAD file access method. */
-static int gWADmethod = CGDOOM_WAD_MMAP;
+int CGD_WADMethod = CGDOOM_WAD_MMAP;
 /* File descriptor to WAD, used in Flash_ReadFile calls. (CGDOOM_WAD_BFILE) */
 static int gWADfd = -1;
 /* Memory map of WAD file. (CGDOOM_WAD_MMAP) */
@@ -322,7 +322,7 @@ int FindFragmentInMap(FileMapping *map, int sector_number)
 
 int FindInFlash(const void **buf, int size, int readpos)
 {
-	if(gWADmethod == CGDOOM_WAD_BFILE)
+	if(CGD_WADMethod == CGDOOM_WAD_BFILE)
 		return 0;
 
 	ASSERT(readpos >= 0);
@@ -374,7 +374,7 @@ void abort(void){
 
 int Flash_ReadFile(void *buf, int size, int readpos)
 {
-	if(gWADmethod == CGDOOM_WAD_BFILE)
+	if(CGD_WADMethod == CGDOOM_WAD_BFILE)
 		return Bfile_ReadFile_OS(gWADfd, buf, size, readpos);
 
 	const void *pSrc;
@@ -495,7 +495,7 @@ int main(void)
 	if(!strncmp(osv, "03.", 3) && osv[3] <= '6') // 3.60 or earlier
 		enable_2MBline = &CGD_2MBLineMemory;
 
-	int choice = UI_Main(wads, wad_count, &dev_info, &gWADmethod,
+	int choice = UI_Main(wads, wad_count, &dev_info, &CGD_WADMethod,
 		&startmap, &startepisode, &CGD_TrustUnalignedLumps, &autostart_,
 		&CGD_EnableDemos, enable_2MBline);
 	if(choice < 0)
@@ -505,7 +505,7 @@ int main(void)
 
 	/* Parameters unavailable on the SDL2 build */
 	#ifdef CG_EMULATOR
-	gWADmethod = CGDOOM_WAD_BFILE;
+	CGD_WADMethod = CGDOOM_WAD_BFILE;
 	CGD_TrustUnalignedLumps = 0;
 	CGD_2MBLineMemory = 0;
 	#endif
@@ -537,7 +537,7 @@ int main(void)
 	CGD_WADFileName = wad_name;
 
 	/* Setup access to WAD file */
-	if(gWADmethod == CGDOOM_WAD_BFILE)
+	if(CGD_WADMethod == CGDOOM_WAD_BFILE)
 	{
 		gWADfd = Bfile_OpenFile_OS(wads[choice].path, 0, 0);
 	}
@@ -650,7 +650,5 @@ int main(void)
 	}
 
 	prof_quit();
-	return 1;
+	return EXIT_SUCCESS;
 }
-
-//todo: wrapper pro (patch_t*), + flash

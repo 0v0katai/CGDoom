@@ -41,8 +41,6 @@
 #endif
 #include "i_system.h"
 
-#define RAM_I_Zone_SIZE SYSTEM_STACK_SIZE
-
 int 			contrast_change= 0;
 int 			map_mode= 0;
 unsigned short 	timer_def_one;
@@ -54,12 +52,6 @@ ticcmd_t	emptycmd;
 ticcmd_t*	I_BaseTiccmd(void)
 {
     return &emptycmd;
-}
-
-
-int  I_GetHeapSize (void)
-{
-    return RAM_I_Zone_SIZE;
 }
 
 #ifdef CG_EMULATOR
@@ -95,9 +87,8 @@ byte* I_ZoneBase (int*  size, int i)
     if (i-- == 0)
     {
         /* System stack (~500 kiB) */
-        *size = RAM_I_Zone_SIZE;
-        mb_mainzone = (byte *) SystemStack;
-        ASSERT(RAM_I_Zone_SIZE <= SYSTEM_STACK_SIZE);
+        *size = SYSTEM_STACK_SIZE;
+        mb_mainzone = (byte *)SystemStack;
         return mb_mainzone;
     }
     if (i-- == 0)
@@ -213,6 +204,7 @@ void I_Error (const char *error, ...)
 #ifdef CG_EMULATOR
     printf("Error: ");
     vprintf(error, args);
+    printf("\n");
 #else
     I_ShutdownGraphics();
     UI_Error(error, args);
@@ -220,7 +212,6 @@ void I_Error (const char *error, ...)
 #endif
 
     va_end(args);
-    //I_Quit();
 }
 
 //

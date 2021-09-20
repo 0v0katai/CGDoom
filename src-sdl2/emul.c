@@ -67,14 +67,14 @@ void Bdisp_PutDisp_DD(void)
 	for(int x = 0; x < WIDTH; x++)
 	{
 		int rgb565 = VRAM[WIDTH * y + x];
-	    int r = (rgb565 >> 8) & 0xf8;
-	    int g = (rgb565 >> 3) & 0xfc;
-	    int b = (rgb565 << 3) & 0xf8;
+		int r = (rgb565 >> 8) & 0xf8;
+		int g = (rgb565 >> 3) & 0xfc;
+		int b = (rgb565 << 3) & 0xf8;
 
-	    Uint8 *rgb888 = VRAM_RGB888->pixels + y * VRAM_RGB888->pitch + 3 * x;
-	    rgb888[0] = r;
-	    rgb888[1] = g;
-	    rgb888[2] = b;
+		Uint8 *rgb888 = VRAM_RGB888->pixels + y * VRAM_RGB888->pitch + 3 * x;
+		rgb888[0] = b;
+		rgb888[1] = g;
+		rgb888[2] = r;
 	}
 
 	SDL_BlitSurface(VRAM_RGB888, NULL, SDL_GetWindowSurface(window), NULL);
@@ -90,7 +90,7 @@ int Bdisp_FrameAndColor(int p1, int p2)
 
 void Bdisp_AllClr_VRAM(void)
 {
-	memset(_VRAM, 0, WIDTH * HEIGHT * 2);
+	memset(_VRAM, 0xff, WIDTH * HEIGHT * 2);
 }
 
 /* Keyboard system emulation. */
@@ -111,16 +111,20 @@ void GetKey(int *key)
 	while(!valid)
 	{
 		SDL_WaitEvent(&e);
+		if(e.type == SDL_QUIT ||
+		        (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE))
+			exit(0);
+
 		if(e.type != SDL_KEYDOWN) continue;
 
 		valid = 1;
 		switch((sym = e.key.keysym.sym))
 		{
-		case SDL_SCANCODE_UP:     *key = KEY_CTRL_UP;
-		case SDL_SCANCODE_RIGHT:  *key = KEY_CTRL_RIGHT;
-		case SDL_SCANCODE_DOWN:   *key = KEY_CTRL_DOWN;
-		case SDL_SCANCODE_LEFT:   *key = KEY_CTRL_LEFT;
-		case SDL_SCANCODE_RETURN: *key = KEY_CTRL_EXE;
+		case SDLK_UP:     *key = KEY_CTRL_UP;     break;
+		case SDLK_RIGHT:  *key = KEY_CTRL_RIGHT;  break;
+		case SDLK_DOWN:   *key = KEY_CTRL_DOWN;   break;
+		case SDLK_LEFT:   *key = KEY_CTRL_LEFT;   break;
+		case SDLK_RETURN: *key = KEY_CTRL_EXE;    break;
 
 		default:
 			if(sym >= '0' && sym <= '9') *key = sym;
@@ -163,6 +167,10 @@ static struct {
 void Bfile_NameToStr_ncpy(char *dest, const uint16_t *source, size_t n)
 {
 	size_t i = 0;
+
+	if(!memcmp(source, u"\\\\fls0\\", 14))
+		source += 7;
+
 	while(i < n && source[i] != 0x0000 && source[i] != 0xffff) {
 		dest[i] = source[i];
 		i++;
@@ -173,6 +181,11 @@ void Bfile_NameToStr_ncpy(char *dest, const uint16_t *source, size_t n)
 
 void Bfile_StrToName_ncpy(uint16_t *dest, const char *source, size_t n)
 {
+	if(!strncmp(source, "\\\\fls0\\", 7)) {
+		memcpy(dest, u"\\\\fls0\\", 14);
+		dest += 7;
+	}
+
 	size_t i = 0;
 	while(i < n && source[i]) {
 		dest[i] = source[i];
@@ -244,6 +257,7 @@ int Bfile_OpenFile_OS(const uint16_t *filename_u16, int mode, int zero)
 		return -1;
 	}
 
+	printf("Bfile_OpenFile_OS(): opened %s\n", filename_u8);
 	file_table[slot] = fp;
 	return slot;
 }
@@ -290,7 +304,6 @@ int Bfile_FindFirst(const uint16_t *pattern_u16, int *fd, uint16_t *found,
 	char pattern_u8[1024];
 	Bfile_NameToStr_ncpy(pattern_u8, pattern_u16, 1024);
 
-
 	int slot = 0;
 	while(slot < FILE_TABLE_MAX && search_table[slot].pos != 0)
 		slot++;
@@ -301,6 +314,9 @@ int Bfile_FindFirst(const uint16_t *pattern_u16, int *fd, uint16_t *found,
 	}
 
 	int rc = glob(pattern_u8, 0, NULL, &search_table[slot].glob);
+
+	printf("Bfile_FindFirst(): Searching %s: %zu results\n", pattern_u8,
+		(rc == GLOB_NOMATCH) ? 0 : search_table[slot].glob.gl_pathc);
 
 	if(rc == GLOB_NOMATCH)
 		return -16;
@@ -322,7 +338,15 @@ int Bfile_FindNext(int fd, uint16_t *found, void *fileinfo0)
 	(*pos)++;
 
 	Bfile_FileInfo *fileinfo = fileinfo0;
-	fileinfo->fsize = 0;
+	// TODO: More resonsable Bfile_FileInfo entries?
+	memset(fileinfo, 0, sizeof *fileinfo);
+
+	FILE *fp = fopen(name, "rb");
+	if(fp) {
+		fseek(fp, 0, SEEK_END);
+		fileinfo->fsize = ftell(fp);
+		fclose(fp);
+	}
 
 	return 0;
 }

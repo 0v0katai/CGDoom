@@ -1,4 +1,5 @@
 #include "cgdoom-frag.h"
+#include "cgdoom.h"
 #include "os.h"
 #include "w_wad.h"
 
@@ -6,6 +7,8 @@ int CGD_Frag_Map(const char *lumpname, CGD_Frag *frag)
 {
     int lump = W_CheckNumForName(lumpname);
     if(lump < 0)
+        return 1;
+    if(CGD_WADMethod == CGDOOM_WAD_BFILE)
         return 1;
 
     lumpinfo_t *l = &lumpinfo[lump];
