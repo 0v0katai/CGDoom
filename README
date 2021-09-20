@@ -12,23 +12,35 @@ Credit goes to:
 CGDoom is licensed under GPLv2 as a derivative work of both the original DOOM
 sources (GPL) and nDoom (GPLv2). See LICENSE.
 
-UI improvements TODO:
--> Better keyboard layout (including more keys, eg. Run)
-   => Edit messages accordingly ("press y"/etc)
+Games officially supported:
+-> Doom (shareware version) [doom.wad]
+-> Ultimate Doom [doomu.wad]
+-> Ultimate Doom (split) [doomu1.wad, doomu2.wad, doomu3.wad, doomu4.wad]
+-> Doom II: Hell On Earth [doom2.wad*]
 
-WAD support TODO:
--> Shareware WAD should work 100% (if not, it's a bug)
--> Ultimate Doom WAD should work 100% (if not, it's a bug)
--> Doom II WAD seems to run out of memory halfway through
+Games with an asterisk* should be played with "Use experimental RAM" enabled.
+They can generally be played without it, but risk running out of memory.
+
+Status for other games:
+-> The Plutonia experiment: not tested
+-> TNT: Evilution: not tested
+-> Heretic: not tested
+-> Heretic: Shadow of the Serpent Riders: some crashes
+-> Fallout: not tested
+-> Pinochestein 3D: works at least partially
+-> Counter-strike: works at least partially
+-> HellRaiser: not tested
+-> Freedoom phase 1: E1 works, E2 crashes
+
+UI improvements TODO:
+* Better keyboard layout (including more keys, eg. Run)
+* Edit messages accordingly ("press y"/etc)
 
 Technical support TODO:
--> Supply more VRAM memory to internal allocator
-   => Merge internal heap into Z_Zone? (< 50 kB)
-   => Remove multiply-avoiding lookup tables?
--> Reenable LTO if possible
--> Built-in overclocking?
--> SDL2 debug version support?
--> Darken background in menu (some code does that somewhere?)
+* Built-in overclocking?
+* Auto frameskip?
+* Improve SDL2 build for video capture
+* Darken background in menu (some code does that somewhere?)
 
 CGDoom used to be compiled with the mini-SDK. However, it's become quite
 difficult to get a copy of that. Instead, this port is built with a modified

@@ -404,6 +404,8 @@ int UI_Main(CGD_WADFileInfo *wads, int wad_count, int *dev_info, int *use_mmap,
 				action = "Play Ultimate Doom E3";
 			else if(!strcmp(wads[i].name, "doomu4.wad"))
 				action = "Play Ultimate Doom E4";
+			else if(!strcmp(wads[i].name, "doom2.wad"))
+				action = "Play Doom II";
 
 			Layout_Text(&l, action, "%s (%d.%dM)",
 				wads[i].name, wads[i].size / 1000000,
@@ -422,7 +424,7 @@ int UI_Main(CGD_WADFileInfo *wads, int wad_count, int *dev_info, int *use_mmap,
 		Layout_Checkbox(&l, "Map file to memory:", use_mmap);
 		Layout_Checkbox(&l, "Trust unaligned lumps:", trustunaligned);
 		if(enable2MBline)
-			Layout_Checkbox(&l, "Use memory beyond 2MB:", enable2MBline);
+			Layout_Checkbox(&l, "Use experimental RAM:", enable2MBline);
 		Layout_EndFrame(&l);
 		Bdisp_PutDisp_DD();
 
@@ -430,6 +432,12 @@ int UI_Main(CGD_WADFileInfo *wads, int wad_count, int *dev_info, int *use_mmap,
 		GetKey(&key);
 
 		if(Layout_Event(&l, key)) {
+			/* Autostart when changing starting episode/map */
+			int startparam = (l.focus == wad_count || l.focus == wad_count+1);
+			int changekey = (key == KEY_CTRL_EXE || key == KEY_CTRL_LEFT ||
+                key == KEY_CTRL_RIGHT);
+			if(startparam && changekey)
+				*autostart = 1;
 		}
 		else if(key == KEY_CTRL_EXE && l.focus == wad_count + 2) {
 			if (!*autostart && *enabledemos)
