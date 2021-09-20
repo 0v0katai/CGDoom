@@ -1,13 +1,15 @@
-This repository is a fork of CGDOOM which was ported originally by MPoupe.
+This is CGDoom, a DOOM engine for the fx-CG 50 that brings new levels of DOOM
+performance, compatibility and goodness to the platform!
 
-Credit goes to:
-* Mrakoplaz for the original TI-Nspire port from MS-DOS sources.
-* Critor for the Nspire CX (now CX II) port (which includes support for a
-  number of WAD files).
-* MPoupe for the original fx-CG 10/20 port of DOOM.
-* ComputerNerd for the first attempts at an fx-CG 50 port.
-* Lephenixnoir for this fx-CG 50 version, with extensive feedback and testing
-  by Computer_Freak_2004 that made everything 10 times better.
+CGDoom is one iteration of a pretty long lineage of DOOM source ports:
+* Mrakoplaz created nDoom for the TI-Nspire based on the original MS-DOS game.
+* Critor then ported nDoom to the Nspire CX (now CX II), adding support for all
+  commercial games running on the original engine.
+* MPoupe then made a playable port called CGDoom to the fx-CG 10/20, which is
+  commendable given the steep hardware limitations.
+* ComputerNerd made the first attempts at an fx-CG 50 version of CGDoom.
+* Lephe created this fx-CG 50 version with a fair number of improvements,
+  supported by extensive feedback and guidance from Computer_Freak_2004.
 
 CGDoom is licensed under GPLv2 as a derivative work of both the original DOOM
 sources (GPL) and nDoom (GPLv2). See LICENSE.
@@ -19,7 +21,7 @@ Games officially supported:
 -> Doom II: Hell On Earth [doom2.wad*]
 
 Games with an asterisk* should be played with "Use experimental RAM" enabled.
-They can generally be played without it, but risk running out of memory.
+They can sometimes be played without it, but risk running out of memory.
 
 Status for other games:
 -> The Plutonia experiment: not tested

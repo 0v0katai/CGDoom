@@ -345,7 +345,7 @@ void I_StartTic (void)
     static const int base_keys[] = {
         KEY_LEFTARROW, KEY_RIGHTARROW, KEY_UPARROW, KEY_DOWNARROW,
         KEY_RCTRL, KEY_TAB, KEY_PAUSE, KEY_SLEFTARROW, KEY_SRIGHTARROW,
-        KEY_ESCAPE, KEY_ENTER,
+        KEY_RSHIFT, KEY_ESCAPE, KEY_ENTER,
         ' ', '1', '2', '3', '4', '5', '6', '7',
         0
     };

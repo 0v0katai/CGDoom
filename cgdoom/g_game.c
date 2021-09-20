@@ -139,17 +139,17 @@ byte*     savebuffer;
 // 
 // controls (have defaults) 
 // 
-int               key_right= KEY_RIGHTARROW;
-int      key_left= KEY_LEFTARROW;
+int key_right        = KEY_RIGHTARROW;
+int key_left         = KEY_LEFTARROW;
 
-int      key_up= KEY_UPARROW;
-int      key_down= KEY_DOWNARROW; 
-int               key_strafeleft= KEY_SRIGHTARROW;
-int      key_straferight= KEY_SLEFTARROW; 
-int               key_fire= KEY_RCTRL;
-int      key_use= 32;
-int      key_strafe;
-int      key_speed= KEY_RSHIFT; 
+int key_up           = KEY_UPARROW;
+int key_down         = KEY_DOWNARROW;
+int key_strafeleft   = KEY_SRIGHTARROW;
+int key_straferight  = KEY_SLEFTARROW;
+int key_fire         = KEY_RCTRL;
+int key_use          = 32;
+int key_strafe;
+int key_speed        = KEY_RSHIFT;
 
 #define MAXPLMOVE  (forwardmove[1]) 
 
@@ -157,7 +157,7 @@ int      key_speed= KEY_RSHIFT;
 
 const fixed_t     forwardmove[2] = {0x19, 0x32}; 
 const fixed_t     sidemove[2] = {0x18, 0x28}; 
-const fixed_t     angleturn[3] = {640, 1280, 320}; // + slow turn 
+const fixed_t     angleturn[3] = {720, 720, 320}; // + slow turn
 
 #define SLOWTURNTICS 6 
 
@@ -165,6 +165,7 @@ const fixed_t     angleturn[3] = {640, 1280, 320}; // + slow turn
 
 boolean           gamekeydown[NUMKEYS]; 
 int               turnheld;    // for accelerative turning 
+int               speedtoggle = 0;    // for run toggle
 
 int      savegameslot; 
 char     savedescription[32]; 
@@ -212,7 +213,12 @@ void G_BuildTiccmd (ticcmd_t* cmd)
 
   //cmd->consistancy = consistancy[consoleplayer][maketic%BACKUPTICS];
 
-  speed = gamekeydown[key_speed];
+  /* Bit 0 is the speed status, bit 1 is set until key is released */
+  speed = (speedtoggle != 0);
+  if (gamekeydown[key_speed] && !(speedtoggle & 2))
+    speedtoggle = (speedtoggle ^ 1) | 2;
+  if (!gamekeydown[key_speed])
+    speedtoggle &= ~2;
 
   forward = side = 0;
 

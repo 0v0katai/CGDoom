@@ -104,10 +104,11 @@ static int DoomKeyToKeycode(int key)
     case '7':               return KEYCODE_SHIFT;
     case KEY_TAB:           return KEYCODE_EXIT;
     case KEY_PAUSE:         return KEYCODE_OPTN;
-    case KEY_SLEFTARROW:    return KEYCODE_0;
-    case KEY_SRIGHTARROW:   return KEYCODE_DOT;
+    case KEY_SLEFTARROW:    return KEYCODE_LOG;
+    case KEY_SRIGHTARROW:   return KEYCODE_LN;
     case KEY_ESCAPE:        return KEYCODE_MENU;
     case KEY_ENTER:         return KEYCODE_EXE;
+    case KEY_RSHIFT:        return KEYCODE_XOT;
 
     /* Special CGDoom keys */
     case SKEY_CHEAT:        return KEYCODE_POWER;
