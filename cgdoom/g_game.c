@@ -216,17 +216,16 @@ void G_BuildTiccmd (ticcmd_t* cmd)
 
   forward = side = 0;
 
-  /* NO IDEA WHAT THIS DOES, LET'S KEEP IT COMMENTED AND HOPE IT DOESN'T BREAK ANYTHING
   // use two stage accelerative turning on the keyboard
   if (gamekeydown[key_right] || gamekeydown[key_left]) 
-  turnheld += ticdup; 
+    turnheld++;
   else 
-  turnheld = 0; 
-  */
-  /*if (turnheld < SLOWTURNTICS) 
-  tspeed = 2;             // slow turn 
-  else */
-  tspeed = speed;
+    turnheld = 0;
+
+  if (turnheld < SLOWTURNTICS)
+    tspeed = 2;             // slow turn
+  else
+    tspeed = speed;
 
   if (gamekeydown[key_right])
     cmd->angleturn -= angleturn[tspeed];
