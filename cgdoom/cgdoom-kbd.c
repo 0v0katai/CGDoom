@@ -252,30 +252,148 @@ int KeyWasJustReleased(int key)
     return KeyDown(st_prev, key) && !KeyDown(st_now, key);
 }
 
-static const char * const keynames[] = {
+//---
+// Key names and identification
+//---
+
+static const char * const display_keynames[] = {
     "F1",      "F2",      "F3",      "F4",      "F5",      "F6",
     "SHIFT",   "OPTN",    "VARS",    "MENU",    "Left",    "Up",
     "ALPHA",   "x^2",     "^",       "EXIT",    "Down",    "Right",
     "X,O,T",   "log",     "ln",      "sin",     "cos",     "tan",
     "Frac",    "S<>D",    "(",       ")",       ",",       "->",
-    "7",       "8",       "9",       "DEL",     NULL,      NULL,
+    "7",       "8",       "9",       "DEL",     "AC/ON",   "(None)",
     "4",       "5",       "6",       "x",       "/",       NULL,
     "1",       "2",       "3",       "+",       "-",       NULL,
     "0",       ".",       "x10^x",   "(-)",     "EXE",     NULL,
 };
+static const char * const technical_keynames[] = {
+    "F1",      "F2",      "F3",      "F4",      "F5",      "F6",
+    "SHIFT",   "OPTN",    "VARS",    "MENU",    "LEFT",    "UP",
+    "ALPHA",   "SQUARE",  "POWER",   "EXIT",    "DOWN",    "RIGHT",
+    "XOT",     "LOG",     "LN",      "SIN",     "COS",     "TAN",
+    "FRAC",    "FD",      "LEFTP",   "RIGHTP",  "COMMA",   "ARROW",
+    "7",       "8",       "9",       "DEL",     "ACON",    "NONE",
+    "4",       "5",       "6",       "MUL",     "DIV",     NULL,
+    "1",       "2",       "3",       "PLUS",    "MINUS",   NULL,
+    "0",       "DOT",     "EXP",     "NEG",     "EXE",     NULL,
+};
 
-const char *CGD_KeyName(int keycode)
+static const char *KeyName(int key, const char * const *names)
 {
-    if(keycode < 0)
-        return "(None)";
-    if(keycode == KEYCODE_ACON)
-        return "AC/ON";
+    if(key == KEYCODE_ACON)
+        key = 0x45;
+    if(key < 0)
+        key = 0x46;
 
-    int row = 9 - (keycode >> 4);
-    int col = (keycode & 0xf) - 1;
-
-    return keynames[6*row + col];
+    int row = 9 - (key >> 4);
+    int col = (key & 0xf) - 1;
+    return names[6*row + col];
 }
+
+const char *CGD_PhysicalKey_DisplayName(int key)
+{
+    return KeyName(key, display_keynames);
+}
+
+const char *CGD_PhysicalKey_TechnicalName(int key)
+{
+    return KeyName(key, technical_keynames);
+}
+
+int CGD_PhysicalKey_FromTechnicalName(const char *name, int length)
+{
+    int i, n = sizeof(technical_keynames) / sizeof(technical_keynames[0]);
+    if(length < 0)
+        length = strlen(name);
+
+    for(i = 0; i < n; i++) {
+        const char *t = technical_keynames[i];
+        if(t && !strncmp(name, t, length)) break;
+    }
+
+    int row = 9 - (i / 6);
+    int col = (i % 6) + 1;
+    int key = (row << 4) | col;
+
+    if(i >= n || key == 0x46)
+        key = -1;
+    if(key == 0x45)
+        key = KEYCODE_ACON;
+
+    return key;
+}
+
+struct DoomkeyInfo {
+    int key;
+    const char *technical_name;
+    const char *display_name;
+};
+
+static const struct DoomkeyInfo doomkeys[] = {
+    { KEY_LEFTARROW,     "Left",                "Look left"         },
+    { KEY_RIGHTARROW,    "Right",               "Look right"        },
+    { KEY_UPARROW,       "Up",                  "Move forward"      },
+    { KEY_DOWNARROW,     "Down",                "Move backward"     },
+    { ' ',               "Inteact",             "Interact"          },
+    { KEY_RCTRL,         "Shoot",               "Shoot"             },
+    { '1',               "Weapon1",             "1-Hand"            },
+    { '2',               "Weapon2",             "2-Pistol"          },
+    { '3',               "Weapon3",             "3-Shotgun"         },
+    { '4',               "Weapon4",             "4-Chaingun"        },
+    { '5',               "Weapon5",             "5-Rockets"         },
+    { '6',               "Weapon6",             "6-Plasma"          },
+    { '7',               "Weapon7",             "7-BFG9000"         },
+    { KEY_TAB,           "Map",                 "Map"               },
+    { KEY_PAUSE,         "Pause",               "Pause"             },
+    { KEY_SLEFTARROW,    "StrafeLeft",          "Strafe left"       },
+    { KEY_SRIGHTARROW,   "StrafeRight",         "Strafe right"      },
+    { KEY_RSHIFT,        "Run",                 "Toggle run"        },
+    { SKEY_DECVP,        "DecreaseViewport",    "Smaller view"      },
+    { SKEY_INCVP,        "IncreaseViewport",    "Larger view"       },
+    { SKEY_CHEAT,        "Cheat",               "Cheat"             },
+    { SKEY_NOCLIP,       "ToggleNoclip",        "Noclip"            },
+    { SKEY_GAMMA,        "GammaCorrection",     "Brightness"        },
+    { SKEY_FREEMEM,      "HeapStatistics",      "Heap stats"        },
+    { SKEY_FPSCOUNTER,   "FPSCounter",          "FPS counter"       },
+    { SKEY_FRAMESKIP,    "CycleFrameskip",      "Frameskip"         },
+    { SKEY_PROFILER,     "Profiler",            "Run profiler"      },
+    { -1,                NULL,                  NULL                },
+};
+
+const char *CGD_DoomKey_DisplayName(int key)
+{
+    for(int i = 0; doomkeys[i].key >= 0; i++) {
+        if(doomkeys[i].key == key)
+            return doomkeys[i].display_name;
+    }
+    return NULL;
+}
+
+const char *CGD_DoomKey_TechnicalName(int key)
+{
+    for(int i = 0; doomkeys[i].key >= 0; i++) {
+        if(doomkeys[i].key == key)
+            return doomkeys[i].technical_name;
+    }
+    return NULL;
+}
+
+int CGD_DoomKey_FromTechnicalName(const char *name, int length)
+{
+    if(length < 0)
+        length = strlen(name);
+
+    for(int i = 0; doomkeys[i].key >= 0; i++) {
+        if(!strncmp(doomkeys[i].technical_name, name, length))
+            return doomkeys[i].key;
+    }
+    return -1;
+}
+
+//---
+// Direct keyboard functions
+//---
 
 int CGD_PRGM_Getkey(void)
 {

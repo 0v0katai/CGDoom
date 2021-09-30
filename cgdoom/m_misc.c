@@ -86,11 +86,44 @@ int M_DrawText ( int x, int y, boolean direct, char* string )
 
 */
 
+//
+// M_WriteFile
+//
+boolean M_WriteFile(char const *name, const void *source, int length)
+{
+    uint16_t fc_path[100] = u"\\\\fls0\\";
+    size_t size = length;
+    int j = 7;
+    int rc, fd;
+
+    for (int i = 0; name[i]; i++)
+        fc_path[j++] = name[i];
+    fc_path[j++] = 0x0000;
+
+    Bfile_DeleteEntry(fc_path);
+
+    rc = Bfile_CreateEntry_OS(fc_path, BFILE_CREATEMODE_FILE, &size);
+    if (rc < 0) {
+        /* Displaying the error message destroys the save data, so quit */
+        I_Error("Bfile_CreateEntry_OS(%s, %d bytes): %d", name, length, rc);
+        return false;
+    }
+
+    fd = Bfile_OpenFile_OS(fc_path, BFILE_WRITE, 0);
+    if (fd < 0) {
+        I_Error("Bfile_OpenFile_OS(%s): %d", name, fd);
+        return false;
+    }
+
+    Bfile_WriteFile_OS(fd, source, length);
+    Bfile_CloseFile_OS(fd);
+    return true;
+}
 
 //
 // M_ReadFile
 //
-int M_ReadFile(const char *name, byte **buffer)
+int M_ReadFile(const char *name, byte **buffer, int signal_errors)
 {
     uint16_t fc_path[100] = u"\\\\fls0\\";
     int j = 7;
@@ -102,18 +135,23 @@ int M_ReadFile(const char *name, byte **buffer)
 
     fd = Bfile_OpenFile_OS(fc_path, BFILE_READ, 0);
     if (fd < 0) {
-        I_Error("Bfile_OpenFile_OS(%s): %d", name, fd);
+        if(signal_errors)
+            I_Error("Bfile_OpenFile_OS(%s): %d", name, fd);
         return -1;
     }
 
     int size = Bfile_GetFileSize_OS(fd);
     if (size <= 0) {
-        I_Error("Bfile_GetFileSize_OS(%s): %d", name, size);
+        if(signal_errors)
+            I_Error("Bfile_GetFileSize_OS(%s): %d", name, size);
         Bfile_CloseFile_OS(fd);
         return -1;
     }
 
-    void *buf = Z_Malloc(size, PU_STATIC, NULL);
+    byte *buf = *buffer;
+
+    if (!buf)
+        buf = Z_Malloc(size, PU_STATIC, NULL);
     if (!buf) {
         Bfile_CloseFile_OS(fd);
         return -1;

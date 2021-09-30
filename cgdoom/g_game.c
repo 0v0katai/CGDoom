@@ -955,7 +955,8 @@ void G_DoLoadGame (void)
     }
     else {
       sprintf(savename, "%s_%d.dsg", CGD_WADFileName, saveslotnumber);
-      length = M_ReadFile (savename, &savebuffer);
+      savebuffer = NULL;
+      length = M_ReadFile (savename, &savebuffer, 1);
       I_ReinitAfterError();
     }
 

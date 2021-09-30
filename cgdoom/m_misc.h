@@ -30,7 +30,7 @@
 // MISC
 //
 boolean M_WriteFile ( char const* name, const void* source, int length );
-int M_ReadFile ( char const* name, byte** buffer );
+int M_ReadFile ( char const* name, byte** buffer, int signal_errors );
 
 
 int M_DrawText ( int x, int y, boolean direct, char* string );

@@ -429,43 +429,6 @@ void UI_AdvancedOptions(int *dev_info, int *use_mmap, int *trustunaligned)
 	}
 }
 
-static const char *UI_ControlName(int key)
-{
-	switch(key)
-	{
-	case KEY_LEFTARROW:       return "Look left";
-	case KEY_RIGHTARROW:      return "Look right";
-	case KEY_UPARROW:         return "Move forward";
-	case KEY_DOWNARROW:       return "Move backward";
-	case ' ':                 return "Interact";
-	case KEY_RCTRL:           return "Shoot";
-	case '1':                 return "1-Hand";
-	case '2':                 return "2-Pistol";
-	case '3':                 return "3-Shotgun";
-	case '4':                 return "4-Chaingun";
-	case '5':                 return "5-Rockets";
-	case '6':                 return "6-Plasma";
-	case '7':                 return "7-BFG9000";
-	case KEY_TAB:             return "Map";
-	case KEY_PAUSE:           return "Pause";
-	case KEY_SLEFTARROW:      return "Strafe left";
-	case KEY_SRIGHTARROW:     return "Strafe right";
-	case KEY_RSHIFT:          return "Toggle run";
-
-	case SKEY_DECVP:          return "Smaller view";
-	case SKEY_INCVP:          return "Larger view";
-	case SKEY_CHEAT:          return "Cheat";
-	case SKEY_NOCLIP:         return "Noclip";
-	case SKEY_GAMMA:          return "Brightness";
-	case SKEY_FREEMEM:        return "Heap stats";
-	case SKEY_FPSCOUNTER:     return "FPS counter";
-	case SKEY_FRAMESKIP:      return "Frameskip";
-	case SKEY_PROFILER:       return "Run profiler";
-
-	default:                  return "???";
-	}
-}
-
 void UI_Controls(void)
 {
 	int focus_x=0, focus_y=-1;
@@ -501,9 +464,9 @@ void UI_Controls(void)
 			}
 			else {
 				UI_Printf(x1, y, 0x0000, UI_LEFT, "%s",
-					UI_ControlName(CGD_Keymap[2*i]));
+					CGD_DoomKey_DisplayName(CGD_Keymap[2*i]));
 				UI_Printf(x2, y, 0x0000, UI_RIGHT, "%s",
-					CGD_KeyName(CGD_Keymap[2*i+1]));
+					CGD_PhysicalKey_DisplayName(CGD_Keymap[2*i+1]));
 			}
 
 			if(focus_y >= 0 && 14 * focus_x + focus_y == i)

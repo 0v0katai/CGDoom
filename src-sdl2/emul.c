@@ -27,7 +27,7 @@ static void QuitSDL(void)
 static void InitSDL(void)
 {
 	if(SDL_Init(SDL_INIT_VIDEO) < 0) {
-		I_Error("InitSDL: %s", SDL_GetError());
+		printf("InitSDL: %s\n", SDL_GetError());
 		return;
 	}
 
@@ -37,7 +37,7 @@ static void InitSDL(void)
 
 	VRAM_RGB888 = SDL_CreateRGBSurface(0, WIDTH, HEIGHT, 24, 0, 0, 0, 0);
 	if(!VRAM_RGB888) {
-		I_Error("InitSDL: Cannot create intermediate surface: %s",
+		printf("InitSDL: Cannot create intermediate surface: %s\n",
 			SDL_GetError());
 		QuitSDL();
 		return;
@@ -201,7 +201,7 @@ int Bfile_DeleteEntry(const uint16_t *filename_u16)
 {
 	char filename_u8[1024];
 	Bfile_NameToStr_ncpy(filename_u8, filename_u16, 1024);
-	printf("Deleting %s (virtually)", filename_u8);
+	printf("Deleting %s (virtually)\n", filename_u8);
 	return 0;
 }
 
@@ -211,14 +211,14 @@ int Bfile_CreateEntry_OS(const uint16_t *filename_u16, int mode, size_t *size)
 	Bfile_NameToStr_ncpy(filename_u8, filename_u16, 1024);
 
 	if(mode == BFILE_CREATEMODE_FILE) {
-		printf("Creating %s with size %zu (virtually)", filename_u8, *size);
+		printf("Creating %s with size %zu (virtually)\n", filename_u8, *size);
 	}
 	else if(mode == BFILE_CREATEMODE_FOLDER) {
-		I_Error("Cannot create folder %s: Not Implemented", filename_u8);
+		printf("Cannot create folder %s: Not Implemented\n", filename_u8);
 		return -1;
 	}
 	else {
-		I_Error("Bfile_CreateEntry_OS(): Invalid mode %d", mode);
+		printf("Bfile_CreateEntry_OS(): Invalid mode %d\n", mode);
 		return -1;
 	}
 
@@ -239,13 +239,13 @@ int Bfile_OpenFile_OS(const uint16_t *filename_u16, int mode, int zero)
 	else if(mode == BFILE_READWRITE || mode == BFILE_READWRITE_SHARE)
 		bits = "w+b";
 	else {
-		I_Error("Bfile_OpenFile_OS(): invalid mode %d for %s", mode, filename_u8);
+		printf("Bfile_OpenFile_OS(): invalid mode %d for %s\n", mode, filename_u8);
 		return -1;
 	}
 
 	FILE *fp = fopen(filename_u8, bits);
 	if(!fp) {
-		I_Error("Bfile_OpenFile_OS(): cannot open %s: %m", filename_u8);
+		printf("Bfile_OpenFile_OS(): cannot open %s: %m\n", filename_u8);
 		return -1;
 	}
 
@@ -254,7 +254,7 @@ int Bfile_OpenFile_OS(const uint16_t *filename_u16, int mode, int zero)
 	while(slot < FILE_TABLE_MAX && file_table[slot] != NULL)
 		slot++;
 	if(slot >= FILE_TABLE_MAX) {
-		I_Error("Bfile_OpenFile_OS(): cannot open %s, table is full", filename_u8);
+		printf("Bfile_OpenFile_OS(): cannot open %s, table is full\n",filename_u8);
 		fclose(fp);
 		return -1;
 	}
@@ -310,7 +310,7 @@ int Bfile_FindFirst(const uint16_t *pattern_u16, int *fd, uint16_t *found,
 	while(slot < FILE_TABLE_MAX && search_table[slot].pos != 0)
 		slot++;
 	if(slot >= FILE_TABLE_MAX) {
-		I_Error("Bfile_FindFirst(): cannot search %s, table is full", pattern_u8);
+		printf("Bfile_FindFirst(): cannot search %s, table is full\n", pattern_u8);
 		*fd = -1;
 		return -16;
 	}

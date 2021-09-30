@@ -25,6 +25,7 @@
 #include "platform.h"
 #include "cgdoom.h"
 #include "cgdoom-alloc.h"
+#include "cgdoom-kbd.h"
 #include "cgdoom-ui.h"
 #include <stdlib.h>
 
@@ -181,6 +182,7 @@ int toupper_int(int i)
     else
         return i;
 }
+
 //
 // I_Error
 //
@@ -193,6 +195,8 @@ void I_Error (const char *error, ...)
     printf("Error: ");
     vprintf(error, args);
     printf("\n");
+    va_end(args);
+    va_start(args, error);
 #endif
 
     I_ShutdownGraphics();
