@@ -116,8 +116,6 @@ void R_InstallSpriteLump ( int lump, unsigned frame, unsigned rotation, boolean 
 {
   int		r;
 
-  //printf("R_InstallSpriteLump(...) called! \n");
-
   if (frame >= 29 || rotation > 8)
     I_Error("R_InstallSpriteLump: "
     "Bad frame characters in lump %i", lump);
@@ -216,10 +214,6 @@ void R_InitSpriteDefs (void)
   // Just compare 4 characters as ints
   for (i=0 ; i<numsprites ; i++)
   {
-    //printf ("i= %i \n",i);
-
-    //I_Error ("BRK1");
-
     spritename = sprnames[i];
 
     memset (sprtemp,-1, sizeof(sprtemp));
@@ -231,12 +225,10 @@ void R_InitSpriteDefs (void)
     //  filling in the frames for whatever is found
     for (l=start+1 ; l<end ; l++)
     {
-      //printf ("%s, %s \n",sprnames[i],lumpinfo[l].name);
       //if (*(int *)lumpinfo[l].name == intname)
       if ((sprnames[i][0]==lumpinfo[l].name[0]) && (sprnames[i][1]==lumpinfo[l].name[1]) && //UGLY UGLY UGLY
         (sprnames[i][2]==lumpinfo[l].name[2]) && (sprnames[i][3]==lumpinfo[l].name[3]))    //...but it works
       {
-        //printf ("spritename found! %s \n", sprnames[i]);
         frame = lumpinfo[l].name[4] - 'A';
         rotation = lumpinfo[l].name[5] - '0';
 
@@ -759,14 +751,6 @@ static void R_DrawPlayerSprites (void)
   pspdef_t*	psp;
 
   // get light level
-
-  //printf("viewplayer = %i \n",viewplayer);
-  //printf("viewplayer->mo = %i \n",viewplayer->mo);
-  //printf("viewplayer->mo->subsector = %i \n",viewplayer->mo->subsector);
-  //printf("viewplayer->mo->subsector->sector = %i \n",viewplayer->mo->subsector->sector);
-  //printf("viewplayer = %i \n",(int)viewplayer->mo->subsector->sector->lightlevel);
-
-  //I_Error("about to get lightnum");
   lightnum = (viewplayer->mo->subsector->sector->lightlevel >> LIGHTSEGSHIFT) + extralight;
 
   if (lightnum < 0)		
@@ -779,8 +763,6 @@ static void R_DrawPlayerSprites (void)
   // clip to screen bounds
   mfloorclip = screenheightarray;
   mceilingclip = (short *)negonearray;
-
-  //I_Error("About to draw psprites");
 
   // add all active psprites
   for (i=0, psp=viewplayer->psprites;

@@ -669,18 +669,18 @@ extern int	screenblocks;
 
 void R_Init (void)
 {
-  //printf ("R_InitData\n");
+  printf ("R_InitData\n");
   R_InitData ();
   // viewwidth / viewheight / detailLevel are set by the defaults
   //R_SetViewSize (screenblocks, detailLevel);
   R_SetViewSize (10);  //11 = fullscreen
-  //printf ("R_InitPlanes\n");
+  printf ("R_InitPlanes\n");
   R_InitPlanes ();
-  //printf ("R_InitLightTables\n");
+  printf ("R_InitLightTables\n");
   R_InitLightTables ();
-  //printf ("R_InitSkyMap\n");
+  printf ("R_InitSkyMap\n");
   R_InitSkyMap ();
-  //printf ("R_InitTranslationsTables\n");
+  printf ("R_InitTranslationsTables\n");
   R_InitTranslationTables ();
 
   framecount = 0;

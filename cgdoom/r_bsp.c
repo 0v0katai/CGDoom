@@ -594,7 +594,6 @@ void R_Subsector (int num)
 
   if (frontsector->floorheight < viewz)
   {
-    //printf("frontsector->floorpic = %i \n",frontsector->floorpic);
     floorplane = R_FindPlane (frontsector->floorheight, frontsector->floorpic, frontsector->lightlevel);
   }
   else
@@ -602,7 +601,6 @@ void R_Subsector (int num)
 
   if (frontsector->ceilingheight > viewz  || frontsector->ceilingpic == skyflatnum)
   {
-    //printf("frontsector->ceilingpic = %i \n",frontsector->ceilingpic);
     ceilingplane = R_FindPlane (frontsector->ceilingheight, frontsector->ceilingpic, frontsector->lightlevel);
   }
   else

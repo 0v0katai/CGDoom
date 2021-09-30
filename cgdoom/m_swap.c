@@ -29,15 +29,10 @@
 #endif
 #include "m_swap.h"
 
-#if !defined(CG_EMULATOR) && !defined(__BIG_ENDIAN__)
-#define __BIG_ENDIAN__
-#endif 
-
-
 // Swap 16bit, that is, MSB and LSB byte.
 unsigned short SwapSHORT(const unsigned short x)
 {
-#ifdef __BIG_ENDIAN__
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
     // No masking with 0xFF should be necessary. 
     return (x>>8) | (x<<8);
 #else
@@ -48,7 +43,7 @@ unsigned short SwapSHORT(const unsigned short x)
 // Swapping 32bit.
 unsigned long SwapLONG(const unsigned long x)
 {
-#ifdef __BIG_ENDIAN__
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
     return
 	(x>>24)
 	| ((x>>8) & 0xff00)

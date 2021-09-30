@@ -193,11 +193,11 @@ void I_Error (const char *error, ...)
     printf("Error: ");
     vprintf(error, args);
     printf("\n");
-#else
+#endif
+
     I_ShutdownGraphics();
     UI_Error(error, args);
     I_ReinitAfterError();
-#endif
 
     va_end(args);
 }

@@ -352,7 +352,6 @@ void G_DoLoadLevel (void)
   gameaction = ga_nothing; 
   //Z_CheckHeap ();
 
-  //printf(" \n ...heap OK \n");
 
   // clear cmd building stuff
   memset (gamekeydown, 0, sizeof(gamekeydown)); 

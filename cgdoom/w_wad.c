@@ -93,7 +93,6 @@ static int W_AddFile ()
   filelump_t*  fileinfo;
   filelump_t*  fileinfo_mem;
 
-  //printf ("Adding %s\n",filename);
   startlump = numlumps;
 
   Flash_ReadFile(&header, sizeof(header),0);
@@ -165,7 +164,7 @@ int W_InitMultipleFiles(void)
   }
 
   // set up caching
-  //printf ("numlumps = %i \n",numlumps);
+  printf ("numlumps = %i \n",numlumps);
   if (lumpcache != NULL && numlumps <= previous_numlumps) {
     /* Don't realloc when not needed */
   }
@@ -224,14 +223,10 @@ int W_CheckNumForName (const char* name)
 int W_GetNumForName (const char* name)
 {
   int i;
-  //printf("w_getnumforname(%s) called \n",name);
   i = W_CheckNumForName (name);
 
   if (i == -1)
   {
-#ifdef CG_EMULATOR
-    printf("Accessing %s \n",name);
-#endif //#ifdef CG_EMULATOR
     I_Error ("W_GetNumForName: %s not found!", name);
   }
 

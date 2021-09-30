@@ -264,8 +264,6 @@ void HU_Start(void)
     break;
   }
 
-  //printf("s= %s \n",s);
-  //printf("*s= %s \n",());
   //I_Error("presy");
 
   while (*s)

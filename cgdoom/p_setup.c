@@ -199,37 +199,6 @@ void P_LoadSegs (int lump)
     }
     else
       li->backsector = 0;
-
-    /*
-    //LineDef8, E1M2
-    if (i==761)
-    {
-    printf("| ldef->sidenum[side] %i \n",ldef->sidenum[side]);
-    printf("| li->v1, %i, %i \n",li->v1->x>>16,li->v1->y>>16);
-    printf("| li->v2, %i, %i \n",li->v2->x>>16,li->v2->y>>16);
-    printf("| li->sidedef->sector %p \n",li->sidedef->sector);
-    printf("| li->frontsector %p \n",li->frontsector);
-    printf("| li->backsector %p \n",li->backsector);
-    printf("| sector->floorheight %i \n",li->sidedef->sector->floorheight>>16);
-    printf("| sector->ceilingheight %i \n",li->sidedef->sector->ceilingheight>>16);
-    printf("| sector->lightlevel %i \n",li->sidedef->sector->lightlevel);
-    //BAD SECTOR ALERT!!! The Fuxxoration already appears here...
-    //Possible Points of Failure:
-    //	[X] ldef (lines[] filled with garbage prior) - THE BELOW WORKS, SO THIS MUST TOO
-    //	[X] ldef->sidenum[side] (sidenum[] filled with garbage prior) - CORRECT SIDEDEF IS INDEED LOADED
-    //	[X] sides[] filled with garbage prior to this - AHA!
-    }
-    */
-
-    /*if (i==150)
-    {
-    printf("| li->v1, %i, %i \n",li->v1->x>>16,li->v1->y>>16);
-    printf("| li->v2, %i, %i \n",li->v2->x>>16,li->v2->y>>16);
-    printf("| id %i; %X \n",i,ldef-> flags);
-    printf("| twosided, %i \n",(ldef-> flags & ML_TWOSIDED));
-    }
-    else
-    printf("id %i; %X \n",i,ldef-> flags);*/
   }
 
   Z_Free (data);
@@ -258,7 +227,6 @@ void P_LoadSubsectors (int lump)
   {
     ss->numlines = SHORT(ms->numsegs);
     ss->firstline = SHORT(ms->firstseg);
-    //printf("^%i|%i|%i \n",i,ss->numlines,ss->firstline);
   }
 
   Z_Free (data);
@@ -290,19 +258,10 @@ void P_LoadSectors (int lump)
     //Some funkiness has to be done because the floorpic and ceilingpic definitions are missing their NULL terminators...
     ss->floorheight = SHORT(ms->floorheight)<<FRACBITS;
     ss->ceilingheight = SHORT(ms->ceilingheight)<<FRACBITS;
-    //printf("S%if%i|c%i\n",i,ss->floorheight>>16,ss->ceilingheight>>16);
     strncpy(tmp,ms->floorpic,8);tmp[8]=0;
-    //printf ("tmp= %s \n",tmp);
-    /*printf ("ms->floorpic= %s \n",ms->floorpic);
-    printf ("tmp= %s \n",&tmp);
-    printf ("ms->ceilingpic= %s \n",ms->ceilingpic);
-    ss->floorpic = R_FlatNumForName(ms->floorpic);
-    ss->ceilingpic = R_FlatNumForName(ms->ceilingpic);*/
     ss->floorpic = (short)R_FlatNumForName(tmp);
     strncpy(tmp,ms->ceilingpic,8);tmp[8]=0;
-    //printf ("tmp= %s \n",tmp);
     ss->ceilingpic = (short)R_FlatNumForName(tmp);
-    //printf("gotf: %i, gotc: %i \n",ss->floorpic,ss->ceilingpic);
     ss->lightlevel = SHORT(ms->lightlevel);
     ss->special = SHORT(ms->special);
     ss->tag = SHORT(ms->tag);
@@ -511,15 +470,6 @@ void P_LoadSideDefs (int lump)
   sd = sides;
   for (i=0 ; i<numsides ; i++, msd++, sd++)
   {
-
-    /*//The buggy sidedefs
-    if (i==8 || i==154)
-    {
-    printf("sidedef%i: sector=%i, \n",i,msd->sector);
-    //printf("_sector%i: normal=%i, SHORT()=%i \n",i,msd->sector,SHORT(msd->sector));
-    }*/
-    //HAX HAX HAX
-    //I've got no idea why it's getting changed below, so I'll just move it here...
     sd->sector = &sectors[SHORT(msd->sector)];
 
     sd->textureoffset = SHORT(msd->textureoffset)<<FRACBITS;
@@ -527,28 +477,6 @@ void P_LoadSideDefs (int lump)
     sd->toptexture = (short)R_TextureNumForName(msd->toptexture);
     sd->bottomtexture = (short)R_TextureNumForName(msd->bottomtexture);
     sd->midtexture = (short)R_TextureNumForName(msd->midtexture);
-    //sd->sector = &sectors[SHORT(msd->sector)];
-    //printf("$SIDEDEF %i IS IN SECTOR %i\n",i,SHORT(msd->sector)); //error already here!
-
-
-    /*//OK, WTF? This should be the FUCKING SAME AS THE THING ABOVE!1!!
-    if (i==8 || i==154)
-    {
-    printf("sidedef%i: sector=%i, \n",i,msd->sector);
-    //printf("_sector%i: normal=%i, SHORT()=%i \n",i,msd->sector,SHORT(msd->sector));
-    ///AAAAAAAAAAAAAAAARGH WTF!!!! HOW CAN IT BE DIFFERENT?! HOW?! GOD, PLEASE TELL ME, HOW??!!
-    }*/
-
-    /*
-    sd->sector CORRECTLY ASSIGNED HERE into the sides[] array!
-    AHA! BUT ONLY 99% of the time!!!
-    SIDEDEF8->sector should be 103 (0110 0111),
-    but instead is set to       73 (0100 0111)!
-    ...
-    WTF?! ONE BIT?! ALL THESE HEADACHES TO DUE ONE SINGLE STINKING BIT????!!!!
-    AAAAAAAAAAAAAAAAAAAAARGH!
-    I'm guessing it's getting AND'ed with 0x20 for some mysterious reason...
-    */
   }
 
   Z_Free (data);
@@ -638,12 +566,6 @@ void P_GroupLines (void)
   {
     seg = &segs[ss->firstline];
     ss->sector = seg->sidedef->sector;
-    /*if (ss->firstline==761)
-    printf("|I%iZ%iZ%iZ%i\n",i,ss->sector->floorheight>>16,ss->sector->ceilingheight>>16,ss->sector->lightlevel);*/
-    /* DEBUG NOTE:
-    -The floorheight/ceilingheight variables get fuxxored BEFORE this step
-    -Well, either that, or the &seg[ss->firstline] list is failing...
-    */
   }
 
   // count number of lines in each sector
@@ -760,8 +682,6 @@ void P_SetupLevel ( int episode, int map, int playermask)
   leveltime = 0;
 
   // note: most of this ordering is important	
-  //printf ("lumpname= %s \n",lumpname);
-
   P_LoadBlockMap (lumpnum+ML_BLOCKMAP);
   P_LoadVertexes (lumpnum+ML_VERTEXES);
   P_LoadSectors (lumpnum+ML_SECTORS); //This loads fine
@@ -791,8 +711,6 @@ void P_SetupLevel ( int episode, int map, int playermask)
   // preload graphics
   //if (precache) R_PrecacheLevel ();
   ASSERT(!precache);
-
-  //printf ("Free memory: %i bytes\n", Z_FreeMemory());
 }
 
 

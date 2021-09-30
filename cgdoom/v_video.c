@@ -26,6 +26,7 @@
 
 //static const char 
 
+#include "cgdoom.h"
 #include "cgdoom-frag.h"
 
 #include "i_system.h"
@@ -212,9 +213,9 @@ void V_DrawPatch(int x,int y,int scrn,const patch_t* patch)
 #ifdef RANGECHECK 
   if (x<0 ||x+w >SCREENWIDTH || y<0 || y+h>SCREENHEIGHT)
   {
-    //printf("Patch at %d,%d exceeds LFB\n", x,y );
+    printf("Patch at %d,%d exceeds LFB\n", x,y );
     // No I_Error abort - what is up with TNT.WAD?
-    //printf("V_DrawPatch: bad patch (ignored)\n");
+    printf("V_DrawPatch: bad patch (ignored)\n");
     return;
   }
 #endif 
@@ -292,9 +293,9 @@ void V_DrawPatchFlipped(int x,int y,int scrn,const patch_t* patch)
 #ifdef RANGECHECK 
   if (x<0 ||x+w >SCREENWIDTH || y<0 || y+h>SCREENHEIGHT)
   {
-    //printf("Patch at %d,%d exceeds LFB\n", x,y );
+    printf("Patch at %d,%d exceeds LFB\n", x,y );
     // No I_Error abort - what is up with TNT.WAD?
-    //printf("V_DrawPatch: bad patch (ignored)\n");
+    printf("V_DrawPatch: bad patch (ignored)\n");
     return;
   }
 #endif 

@@ -132,7 +132,6 @@ void P_RunThinkers (void)
         case TT_Glow:T_Glow((glow_t*)currentthinker->target);break;
         case TT_FireFlicker:T_FireFlicker((fireflicker_t*)currentthinker->target);break;
         default:
-          //printf("func= %i \n",currentthinker->function);
           I_Error("UNDEFINED OBJ FUNCTION");
           break;
         }

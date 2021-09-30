@@ -307,12 +307,9 @@ void R_GenerateLookup (int texnum)
   memset (patchcount, 0, texture->width);
   patch = texture->patches;
 
-  //printf("[%s, ",texture->name);
-
   for (i=0 , patch = texture->patches;     i<texture->patchcount;    i++, patch++)
   {
     realpatch = W_CacheLumpNumPatch(patch->patch, PU_CACHE);
-    //printf("%i/%i] ",realpatch->leftoffset,patch->originx);
     x1 = patch->originx;
     x2 = x1 + SHORT(realpatch->width);
 
@@ -336,10 +333,9 @@ void R_GenerateLookup (int texnum)
   {
     if (!patchcount[x])
     {
-      //printf ("R_GenerateLookup: column without a patch (%s)\n",texture->name);
+      I_Error ("R_GenerateLookup: column without a patch (%s)\n",texture->name);
       return;
     }
-    // I_Error ("R_GenerateLookup: column without a patch");
 
     if (patchcount[x] > 1)
     {
@@ -446,15 +442,6 @@ void R_InitTextures (void)
 
   for (i=0 ; i<nummappatches ; i++)
   {
-    //strncpy (name,name_p+i*8, 8);
-    //printf ("%i \n",i);
-    //printf ("%s \n",name);
-    //printf ("%i \n",sizeof(name));
-    /*if (i==1)
-    {
-    printf ("nummappatches = %i \n",nummappatches);
-    I_Error("BREAK3","");
-    }*/
     patchlookup[i] = W_CheckNumForName (name_p+i*8);
   }
 
@@ -530,30 +517,18 @@ void R_InitTextures (void)
     texture->width = SHORT(mtexture->width);
     texture->height = SHORT(mtexture->height);
     texture->patchcount = SHORT(mtexture->patchcount);
-    //printf("mtex= %i, tex= %i \n",texture->width,mtexture->height);
 
     memcpy (texture->name, mtexture->name, sizeof(texture->name));
     mpatch = &mtexture->patches[0];
     patch = &texture->patches[0];
 
-    //printf("%s, patchcount= %i \n",texture->name,texture->patchcount);
-
-    //printf ("texture->name = %s \n",texture->name);
     for (j=0 ; j<texture->patchcount ; j++, mpatch++, patch++)
     {
       patch->originx = SHORT(mpatch->originx);
       patch->originy = SHORT(mpatch->originy);
       patch->patch = patchlookup[SHORT(mpatch->patch)];
       if (patch->patch == -1)
-      {
-        /*printf ("texture->name= %s \n",texture->name);
-        printf ("patchcount= %i \n", texture->patchcount);
-        printf ("patch->originx= %i \n",patch->originx);
-        printf ("patch->originy= %i \n",patch->originy);
-        printf ("patch->patch= %i \n",patch->patch);
-        printf ("mpatch->patch= %i \n",mpatch->patch);*/
         I_Error ("R_InitTextures: Missing patch in texture %s", texture->name);
-      }
     }		
     texturecolumnlump[i] = (short*)Z_Malloc (texture->width*2, PU_STATIC,0);
     texturecolumnofs[i] = (unsigned short*)Z_Malloc (texture->width*2, PU_STATIC,0);
@@ -667,13 +642,13 @@ void R_InitColormaps (void)
 //
 void R_InitData (void)
 {
-  //printf ("InitTextures\n");
+  printf ("InitTextures\n");
   R_InitTextures ();
-  //printf ("InitFlats\n");
+  printf ("InitFlats\n");
   R_InitFlats ();
-  //printf ("InitSprites\n");
+  printf ("InitSprites\n");
   R_InitSpriteLumps ();
-  //printf ("InitColormaps\n");
+  printf ("InitColormaps\n");
   R_InitColormaps ();
 }
 
@@ -694,8 +669,6 @@ int R_FlatNumForName (const char* name)
   {
     I_Error ("R_FlatNumForName: %s not found",name);
   }
-
-  //printf(", %i \n", i-firstflat);
 
   return i - firstflat;
 }
@@ -742,7 +715,6 @@ int	R_TextureNumForName (const char* name)
 
   if (i==-1)
   {
-    //printf ("Texture Not Found: '%s' \n",name);
     I_Error ("R_TextureNumForName: %s not found", name);
   }
   return i;

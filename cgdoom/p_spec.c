@@ -27,6 +27,7 @@
 
 //static const char 
 
+#include "cgdoom.h"
 #include "os.h"
 
 #include "doomdef.h"
@@ -176,8 +177,6 @@ void P_InitPicAnims (void)
 
     if (lastanim->numpics < 2)
     {
-      //printf ("bad cycle: %s \n",animdefs[i].startname);
-      //printf ("...cont': %s \n",animdefs[i].endname);
       I_Error ("P_InitPicAnims: bad cycle from %s to %s", animdefs[i].startname, animdefs[i].endname);
     }
     lastanim->speed = animdefs[i].speed;
@@ -337,7 +336,7 @@ fixed_t P_FindNextHighestFloor( sector_t*	sec, int currentheight )
     // Check for overflow. Exit.
     if ( h >= MAX_ADJOINING_SECTORS )
     {
-      //printf( "ERR: Sector with more than 20 adjoining sectors\n" );
+      printf( "ERR: Sector with more than 20 adjoining sectors\n" );
       break;
     }
   }

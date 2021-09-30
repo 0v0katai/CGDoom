@@ -504,18 +504,17 @@ void D_DoomMain()
     else if(skill==4) startskill = sk_nightmare;
 
     // init subsystems
-    //printf ("V_Init: Allocate screens\n");
+    printf ("V_Init: Allocate screens\n");
     V_Init ();
-    //printf ("Z_Init: Init zone memory allocation daemon \n");
+    printf ("Z_Init: Init zone memory allocation daemon \n");
     //Z_Init ();
-    //printf ("W_Init: Init WADfiles\n");
+    printf ("W_Init: Init WADfiles\n");
 
     W_InitMultipleFiles ();
     //Just in case we haven't found the WAD files...
     if (fuck)
       return;
 
-#ifdef CG_EMULATOR
     // Check and print which version is executed.
     switch ( gamemode )
     {
@@ -542,20 +541,20 @@ void D_DoomMain()
       // Ouch.
       break;
     }
-#endif //#ifdef CG_EMULATOR
-    //printf ("I_Init: Setting up machine state\n");
+
+    printf ("I_Init: Setting up machine state\n");
     I_Init ();
-    //printf ("M_Init: Init miscellaneous info\n");
+    printf ("M_Init: Init miscellaneous info\n");
     M_Init ();
-    //printf ("R_Init: Init DOOM refresh daemon \n");
+    printf ("R_Init: Init DOOM refresh daemon \n");
     R_Init ();
-    //printf ("P_Init: Init Playloop state\n");
+    printf ("P_Init: Init Playloop state\n");
     P_Init ();
-    //printf ("HU_Init: Setup heads up display\n");
+    printf ("HU_Init: Setup heads up display\n");
     HU_Init ();
-    //printf ("ST_Init: Init status bar\n");
+    printf ("ST_Init: Init status bar\n");
     ST_Init ();
-    //printf ("Engage... \n");
+    printf ("Engage... \n");
 
     if (autostart)
       G_DeferedInitNew (startskill, startepisode, startmap);

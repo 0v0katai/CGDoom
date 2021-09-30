@@ -143,13 +143,21 @@ int wipe_initMelt( int width, int height, int ticks )
 /* See wipe_doMelt(). */
 short SPU2_read16(short *x)
 {
-  if ((uintptr_t)x & 2) {
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+  #define SECOND(v) (v & 0xffff)
+  #define FIRST(v) (v >> 16)
+#else
+  #define SECOND(v) (v >> 16)
+  #define FIRST(v) (v & 0xffff)
+#endif
+
+  if((uintptr_t)x & 2) {
     volatile int *z = (int *)(x - 1);
-    return *z & 0xffff;
+    return SECOND(*z);
   }
   else {
     volatile int *z = (int *)x;
-    return *z >> 16;
+    return FIRST(*z);
   }
 }
 

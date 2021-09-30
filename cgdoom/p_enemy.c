@@ -1967,8 +1967,6 @@ void A_PlayerScream (mobj_t* mo)
 //
 void A_SetState(int action,mobj_t* actor)
 {
-  //printf("action= %i\n",action);
-  //printf("actor_x= %i \n", (actor->x)>>16);
   //I_Error("Glargha");
   switch (action)
   {
@@ -2025,7 +2023,6 @@ void A_SetState(int action,mobj_t* actor)
   case TA_SpawnFly:A_SpawnFly(actor);break;
   case TA_BrainExplode:A_BrainExplode(actor);break;
   default:
-    //printf("st= %i \n",action);
     I_Error("debug: UNDEFINED MOBJ STATE");
     break;
   }

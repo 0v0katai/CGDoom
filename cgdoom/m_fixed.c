@@ -75,26 +75,10 @@ fixed_t FixedMul( fixed_t	a, fixed_t	b )
     }
     ua <<= 1;
   }
-#ifdef CG_EMULATOR
-  ASSERT(FRACBITS == 16);
-  {
-    long long c = iResHi;
-    c <<= 32;
-    c |= iResLo;
-    if(iNegative) c= -c;
-    ASSERT(c == (((long long)a) * ((long long) b)));
-  }
-#endif //#ifdef CG_EMULATOR
   iResLo >>= FRACBITS;
   iResHi <<= FRACBITS;
   iResult = iResHi | iResLo;
   if(iNegative) iResult= -iResult;
-#ifdef CG_EMULATOR
-  {
-    fixed_t y =(int)((((long long)a) * ((long long) b)) >> FRACBITS); 
-    ASSERT(abs(iResult-y)<=1);
-  }
-#endif //#ifdef CG_EMULATOR
   return iResult;
 }
 
@@ -127,8 +111,5 @@ fixed_t FixedDiv( fixed_t	a, fixed_t	b )
     return iNegative ? MININT : MAXINT;
   iResult = FixedDivU(abs(a),abs(b));
   if(iNegative) iResult = -iResult;
-#ifdef CG_EMULATOR
-  ASSERT(abs(iResult-((long long)a<<16) /((long long)b))<2);
-#endif //#ifdef CG_EMULATOR
   return iResult;
 }

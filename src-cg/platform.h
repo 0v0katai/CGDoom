@@ -101,5 +101,6 @@ extern int CGD_2MBLineMemory;
 
 #define ASSERT(x)
 #define GetOSVersion() ((char *)0x80020020)
+#define printf(...)
 
 #endif //#ifndef PLATFORM_H
