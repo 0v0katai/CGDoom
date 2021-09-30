@@ -74,15 +74,15 @@ extern CGD_DelayedFileWrite CGD_DelayedSaves[6];
 // Keyboard interface.
 
 // Special key names for cheats, debugs, etc (completes doomdef.h).
-#define SKEY_CHEAT       0x10001
-#define SKEY_DECVP       0x10002
-#define SKEY_INCVP       0x10003
-#define SKEY_NOCLIP      0x10004
-#define SKEY_GAMMA       0x10005
-#define SKEY_FREEMEM     0x10006
-#define SKEY_FPSCOUNTER  0x10007
-#define SKEY_FRAMESKIP   0x10008
-#define SKEY_PROFILER    0x10009
+#define SKEY_CHEAT       0x101
+#define SKEY_DECVP       0x102
+#define SKEY_INCVP       0x103
+#define SKEY_NOCLIP      0x104
+#define SKEY_GAMMA       0x105
+#define SKEY_FREEMEM     0x106
+#define SKEY_FPSCOUNTER  0x107
+#define SKEY_FRAMESKIP   0x108
+#define SKEY_PROFILER    0x109
 
 // Scan keyboard (the previous state is also retained).
 void UpdateKeyboardState(void);

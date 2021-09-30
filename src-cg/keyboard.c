@@ -74,6 +74,132 @@
 /* Copy of the keyboard state, one byte per row */
 typedef uint8_t KeyboardState[12] __attribute__((aligned(2)));
 
+/* Keymap */
+static uint16_t Keymap[] = {
+    KEY_LEFTARROW,          0,
+    KEY_RIGHTARROW,         0,
+    KEY_UPARROW,            0,
+    KEY_DOWNARROW,          0,
+    ' ',                    0, /* Open doors etc */
+    KEY_RCTRL,              0, /* Shoot */
+    '1',                    0,
+    '2',                    0,
+    '3',                    0,
+    '4',                    0,
+    '5',                    0,
+    '6',                    0,
+    '7',                    0,
+    KEY_TAB,                0,
+    KEY_PAUSE,              0,
+    KEY_SLEFTARROW,         0,
+    KEY_SRIGHTARROW,        0,
+    KEY_RSHIFT,             0, /* Speed toggle */
+    /* Special CGDoom keys */
+    SKEY_DECVP,             0,
+    SKEY_INCVP,             0,
+    SKEY_CHEAT,             0,
+    SKEY_NOCLIP,            0,
+    SKEY_GAMMA,             0,
+    SKEY_FREEMEM,           0,
+    SKEY_FPSCOUNTER,        0,
+    SKEY_FRAMESKIP,         0,
+    SKEY_PROFILER,          0,
+    0,
+};
+
+/* Default keymap: CGDoom 0.3 */
+static const uint16_t KeyMap_CGDoom_0_3[] = {
+    KEYCODE_LEFT,
+    KEYCODE_RIGHT,
+    KEYCODE_UP,
+    KEYCODE_DOWN,
+    KEYCODE_EXE,
+    KEYCODE_ALPHA,
+    KEYCODE_F1,
+    KEYCODE_F2,
+    KEYCODE_F3,
+    KEYCODE_F4,
+    KEYCODE_F5,
+    KEYCODE_F6,
+    KEYCODE_SHIFT,
+    KEYCODE_EXIT,
+    KEYCODE_OPTN,
+    KEYCODE_0,
+    KEYCODE_DOT,
+    KEYCODE_MINUS,
+    KEYCODE_PLUS,
+    KEYCODE_POWER,
+    KEYCODE_ARROW,
+    KEYCODE_FRAC,
+    KEYCODE_FD,
+    KEYCODE_LEFTP,
+    KEYCODE_VARS,
+    KEYCODE_RIGHTP,
+    0,
+};
+/* Default keymap: thumbs only */
+static const uint16_t KeyMap_ThumbsOnly[] = {
+    KEYCODE_LEFT,
+    KEYCODE_RIGHT,
+    KEYCODE_UP,
+    KEYCODE_DOWN,
+    KEYCODE_SQUARE,
+    KEYCODE_ALPHA,
+    KEYCODE_F1,
+    KEYCODE_F2,
+    KEYCODE_F3,
+    KEYCODE_F4,
+    KEYCODE_F5,
+    KEYCODE_F6,
+    KEYCODE_SHIFT,
+    KEYCODE_EXIT,
+    KEYCODE_OPTN,
+    KEYCODE_LOG,
+    KEYCODE_LN,
+    KEYCODE_XOT,
+    KEYCODE_MINUS,
+    KEYCODE_PLUS,
+    KEYCODE_COMMA,
+    KEYCODE_ARROW,
+    KEYCODE_FRAC,
+    KEYCODE_FD,
+    KEYCODE_LEFTP,
+    KEYCODE_VARS,
+    KEYCODE_RIGHTP,
+    0,
+};
+/* Default keymap: full-hands */
+static const uint16_t KeyMap_FullHands[] = {
+    KEYCODE_F5,
+    KEYCODE_F6,
+    KEYCODE_OPTN,
+    KEYCODE_SQUARE,
+    KEYCODE_MUL,
+    KEYCODE_DEL,
+    KEYCODE_1,
+    KEYCODE_2,
+    KEYCODE_3,
+    KEYCODE_4,
+    KEYCODE_5,
+    KEYCODE_6,
+    KEYCODE_7,
+    KEYCODE_TAN,
+    KEYCODE_ACON,
+    KEYCODE_ALPHA,
+    KEYCODE_POWER,
+    KEYCODE_COS,
+    KEYCODE_MINUS,
+    KEYCODE_PLUS,
+    KEYCODE_COMMA,
+    KEYCODE_ARROW,
+    KEYCODE_FRAC,
+    KEYCODE_FD,
+    KEYCODE_LEFTP,
+    KEYCODE_SIN,
+    KEYCODE_RIGHTP,
+    0,
+};
+
 /* Current keyboard state. */
 static KeyboardState st_prev={0}, st_now={0};
 
@@ -84,42 +210,33 @@ static void ScanKeyboard(KeyboardState state)
     for(int i = 0; i < 6; i++) array[i] = KEYSC[i];
 }
 
+static void LoadKeymap(uint16_t *map, uint16_t *template)
+{
+    for(int i = 0; map[2*i] != 0; i++) {
+        map[2*i+1] = template[i];
+    }
+}
+
+static int DecodeKeymap(uint16_t *map, int key)
+{
+    for(int i = 0; map[2*i] != 0; i++) {
+        if(map[2*i] == key)
+            return map[2*i+1];
+    }
+    return -1;
+}
+
 static int DoomKeyToKeycode(int key)
 {
+    int code = DecodeKeymap(Keymap, key);
+    if(code != -1)
+        return code;
+
     switch(key)
     {
-    /* Normal Doom keys */
-    case KEY_LEFTARROW:     return KEYCODE_LEFT;
-    case KEY_RIGHTARROW:    return KEYCODE_RIGHT;
-    case KEY_UPARROW:       return KEYCODE_UP;
-    case KEY_DOWNARROW:     return KEYCODE_DOWN;
-    case ' ':               return KEYCODE_SQUARE;
-    case KEY_RCTRL:         return KEYCODE_ALPHA;
-    case '1':               return KEYCODE_F1;
-    case '2':               return KEYCODE_F2;
-    case '3':               return KEYCODE_F3;
-    case '4':               return KEYCODE_F4;
-    case '5':               return KEYCODE_F5;
-    case '6':               return KEYCODE_F6;
-    case '7':               return KEYCODE_SHIFT;
-    case KEY_TAB:           return KEYCODE_EXIT;
-    case KEY_PAUSE:         return KEYCODE_OPTN;
-    case KEY_SLEFTARROW:    return KEYCODE_LOG;
-    case KEY_SRIGHTARROW:   return KEYCODE_LN;
+    /* Interface constants */
     case KEY_ESCAPE:        return KEYCODE_MENU;
     case KEY_ENTER:         return KEYCODE_EXE;
-    case KEY_RSHIFT:        return KEYCODE_XOT;
-
-    /* Special CGDoom keys */
-    case SKEY_CHEAT:        return KEYCODE_POWER;
-    case SKEY_DECVP:        return KEYCODE_MINUS;
-    case SKEY_INCVP:        return KEYCODE_PLUS;
-    case SKEY_NOCLIP:       return KEYCODE_ARROW;
-    case SKEY_GAMMA:        return KEYCODE_FRAC;
-    case SKEY_FREEMEM:      return KEYCODE_FD;
-    case SKEY_FPSCOUNTER:   return KEYCODE_LEFTP;
-    case SKEY_FRAMESKIP:    return KEYCODE_VARS;
-    case SKEY_PROFILER:     return KEYCODE_RIGHTP;
 
     /* Alphabetic keys */
     case 'A':               return KEYCODE_XOT;
