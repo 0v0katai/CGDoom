@@ -47,11 +47,13 @@ void Layout_EndFrame(Layout *l);
 /* Add a centered text. */
 void Layout_CenteredText(Layout *l, const char *text);
 /* Add a labeled field with printf-formatted contents. */
-void Layout_Text(Layout *l, const char *label, const char *fmt, ...);
+int Layout_Text(Layout *l, const char *label, const char *fmt, ...);
+/* Add a subtext field with no focus. */
+void Layout_Subtext(Layout *l, const char *fmt, ...);
 /* Add a checkbox. */
-void Layout_Checkbox(Layout *l, const char *label, int *checked);
+int Layout_Checkbox(Layout *l, const char *label, int *checked);
 /* Add an integer input. */
-void Layout_Integer(Layout *l, const char *label, int *value);
+int Layout_Integer(Layout *l, const char *label, int *value);
 /* Add spacing. */
 void Layout_Spacing(Layout *l, int spacing);
 

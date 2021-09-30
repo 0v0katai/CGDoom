@@ -3,7 +3,7 @@
 #include "doomdef.h"
 
 /* Dynamic keymap */
-static uint16_t Keymap[] = {
+uint16_t CGD_Keymap[] = {
     KEY_LEFTARROW,          -1,
     KEY_RIGHTARROW,         -1,
     KEY_UPARROW,            -1,
@@ -54,6 +54,7 @@ const uint16_t CGD_Keymap_CGDoom_0_3[] = {
     KEYCODE_OPTN,
     KEYCODE_0,
     KEYCODE_DOT,
+    -1,
     KEYCODE_MINUS,
     KEYCODE_PLUS,
     KEYCODE_POWER,
@@ -142,8 +143,8 @@ void CGD_ScanKeyboard(CGD_KeyboardState state)
 
 void CGD_LoadKeymap(const uint16_t *template)
 {
-    for(int i = 0; Keymap[2*i] != 0; i++) {
-        Keymap[2*i+1] = template[i];
+    for(int i = 0; CGD_Keymap[2*i] != 0; i++) {
+        CGD_Keymap[2*i+1] = template[i];
     }
 }
 
@@ -158,7 +159,7 @@ static int DecodeKeymap(uint16_t *map, int key)
 
 static int DoomKeyToKeycode(int key)
 {
-    int code = DecodeKeymap(Keymap, key);
+    int code = DecodeKeymap(CGD_Keymap, key);
     if(code != -1)
         return code;
 
@@ -249,4 +250,46 @@ int KeyWasJustPressed(int key)
 int KeyWasJustReleased(int key)
 {
     return KeyDown(st_prev, key) && !KeyDown(st_now, key);
+}
+
+static const char * const keynames[] = {
+    "F1",      "F2",      "F3",      "F4",      "F5",      "F6",
+    "SHIFT",   "OPTN",    "VARS",    "MENU",    "Left",    "Up",
+    "ALPHA",   "x^2",     "^",       "EXIT",    "Down",    "Right",
+    "X,O,T",   "log",     "ln",      "sin",     "cos",     "tan",
+    "Frac",    "S<>D",    "(",       ")",       ",",       "->",
+    "7",       "8",       "9",       "DEL",     NULL,      NULL,
+    "4",       "5",       "6",       "x",       "/",       NULL,
+    "1",       "2",       "3",       "+",       "-",       NULL,
+    "0",       ".",       "x10^x",   "(-)",     "EXE",     NULL,
+};
+
+const char *CGD_KeyName(int keycode)
+{
+    if(keycode < 0)
+        return "(None)";
+    if(keycode == KEYCODE_ACON)
+        return "AC/ON";
+
+    int row = 9 - (keycode >> 4);
+    int col = (keycode & 0xf) - 1;
+
+    return keynames[6*row + col];
+}
+
+int CGD_PRGM_Getkey(void)
+{
+    CGD_KeyboardState st;
+    CGD_ScanKeyboard(st);
+
+    for(int code_y = 9; code_y >= 1; code_y--) {
+        for(int code_x = 1; code_x <= 6 - (code_y < 5); code_x++) {
+            int code = (code_y << 4) | code_x;
+            if(code == 0x45) code = KEYCODE_ACON;
+
+            if(KeycodeDown(st, code))
+                return code;
+        }
+    }
+    return -1;
 }

@@ -496,6 +496,9 @@ int main(void)
 	if(!strncmp(osv, "03.", 3) && osv[3] <= '6') // 3.60 or earlier
 		enable_2MBline = &CGD_2MBLineMemory;
 
+	/* Load initial keyboard layout */
+	CGD_LoadKeymap(CGD_Keymap_ThumbsOnly);
+
 	int choice = UI_Main(wads, wad_count, &dev_info, &CGD_WADMethod,
 		&startmap, &startepisode, &CGD_TrustUnalignedLumps, &autostart_,
 		&CGD_EnableDemos, enable_2MBline);
@@ -510,9 +513,6 @@ int main(void)
 	CGD_TrustUnalignedLumps = 0;
 	CGD_2MBLineMemory = 0;
 	#endif
-
-	/* Load keyboard layout */
-    CGD_LoadKeymap(CGD_Keymap_ThumbsOnly);
 
 	/* Override version detection for single-episode Ultimate Doom WADs */
 	if (!strcmp(wads[choice].name, "doomu1.wad"))

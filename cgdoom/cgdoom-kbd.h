@@ -19,9 +19,17 @@ extern const uint16_t CGD_Keymap_CGDoom_0_3[];
 extern const uint16_t CGD_Keymap_ThumbsOnly[];
 extern const uint16_t CGD_Keymap_FullHands[];
 
+/* Dynamic keymap (the format is slightly different, see cgdoom-kbd.c) */
+extern uint16_t CGD_Keymap[];
+
 /* Load a default keymap */
 void CGD_LoadKeymap(const uint16_t *template);
 
+/* Key name from matrix code */
+const char *CGD_KeyName(int keycode);
+
+/* PRGM_Getkey() but with the direct driver */
+int CGD_PRGM_Getkey(void);
 
 /* Keyboard matrix codes for the keyboard driver */
 

@@ -1,8 +1,13 @@
 #include "cgdoom-ui.h"
+#include "cgdoom-kbd.h"
+#include "doomdef.h"
 #include "i_system.h"
 #include "z_zone.h"
 #include <stdio.h>
 #include <stdlib.h>
+
+/* RGB color composition, all channels in 0..31 */
+#define C_RGB(r,g,b) (((r) << 11) | ((g) << 6) | (b))
 
 /* gint's font in a PrizmSDK-friendly (though ugly) form */
 static uint8_t const font_width[96] = {
@@ -263,7 +268,7 @@ void Layout_CenteredText(Layout *l, const char *text)
 	l->y += 14;
 }
 
-void Layout_Text(Layout *l, const char *label, const char *fmt, ...)
+int Layout_Text(Layout *l, const char *label, const char *fmt, ...)
 {
 	va_list args;
 	va_start(args, fmt);
@@ -272,17 +277,28 @@ void Layout_Text(Layout *l, const char *label, const char *fmt, ...)
 	UI_Vprintf(LAYOUT_RIGHT, l->y, 0x0000, UI_RIGHT, fmt, args);
 	l->y += 14;
 	va_end(args);
+	return l->focus_count - 1;
 }
 
-void Layout_Checkbox(Layout *l, const char *label, int *checked)
+void Layout_Subtext(Layout *l, const char *fmt, ...)
+{
+	va_list args;
+	va_start(args, fmt);
+	UI_Vprintf(LAYOUT_LEFT, l->y, C_RGB(20, 20, 20), UI_LEFT, fmt, args);
+	l->y += 14;
+	va_end(args);
+}
+
+int Layout_Checkbox(Layout *l, const char *label, int *checked)
 {
 	Layout_AddFocus(l, FOCUS_CHECKBOX, checked);
 	UI_Print(LAYOUT_LEFT, l->y, 0x0000, UI_LEFT, label, -1);
 	UI_Checkbox(LAYOUT_RIGHT-7, l->y+1, *checked);
 	l->y += 14;
+	return l->focus_count - 1;
 }
 
-void Layout_Integer(Layout *l, const char *label, int *value)
+int Layout_Integer(Layout *l, const char *label, int *value)
 {
 	Layout_AddFocus(l, FOCUS_INTEGER, value);
 	UI_Print(LAYOUT_LEFT, l->y, 0x0000, UI_LEFT, label, -1);
@@ -291,6 +307,7 @@ void Layout_Integer(Layout *l, const char *label, int *value)
 	else
 		UI_Printf(LAYOUT_RIGHT, l->y, 0x0000, UI_RIGHT, "%d", *value);
 	l->y += 14;
+	return l->focus_count - 1;
 }
 
 void Layout_Spacing(Layout *l, int spacing)
@@ -375,6 +392,192 @@ int Layout_Event(Layout *l, int key)
 	return 0;
 }
 
+void UI_AdvancedOptions(int *dev_info, int *use_mmap, int *trustunaligned)
+{
+	Layout l;
+	Layout_Init(&l);
+
+	while(1)
+	{
+		Bdisp_AllClr_VRAM();
+		Layout_StartFrame(&l);
+		Layout_CenteredText(&l, "CGDoom: Advanced options");
+		Layout_Spacing(&l, 10);
+
+		Layout_Checkbox(&l, "Developer info:", dev_info);
+		Layout_Subtext(&l, "Start/end screens with statistics.");
+		Layout_Spacing(&l, 10);
+
+		Layout_Checkbox(&l, "Map file to memory:", use_mmap);
+		Layout_Subtext(&l, "Much faster than BFile.");
+		Layout_Spacing(&l, 10);
+
+		Layout_Checkbox(&l, "Trust unaligned lumps", trustunaligned);
+		Layout_Subtext(&l, "Faster; if System ERROR, report a bug!");
+
+		Layout_EndFrame(&l);
+		Bdisp_PutDisp_DD();
+
+		int key;
+		GetKey(&key);
+
+		if(Layout_Event(&l, key)) {
+		}
+		else if(key == KEY_CTRL_EXIT) {
+			break;
+		}
+	}
+}
+
+static const char *UI_ControlName(int key)
+{
+	switch(key)
+	{
+	case KEY_LEFTARROW:       return "Look left";
+	case KEY_RIGHTARROW:      return "Look right";
+	case KEY_UPARROW:         return "Move forward";
+	case KEY_DOWNARROW:       return "Move backward";
+	case ' ':                 return "Interact";
+	case KEY_RCTRL:           return "Shoot";
+	case '1':                 return "1-Hand";
+	case '2':                 return "2-Pistol";
+	case '3':                 return "3-Shotgun";
+	case '4':                 return "4-Chaingun";
+	case '5':                 return "5-Rockets";
+	case '6':                 return "6-Plasma";
+	case '7':                 return "7-BFG9000";
+	case KEY_TAB:             return "Map";
+	case KEY_PAUSE:           return "Pause";
+	case KEY_SLEFTARROW:      return "Strafe left";
+	case KEY_SRIGHTARROW:     return "Strafe right";
+	case KEY_RSHIFT:          return "Toggle run";
+
+	case SKEY_DECVP:          return "Smaller view";
+	case SKEY_INCVP:          return "Larger view";
+	case SKEY_CHEAT:          return "Cheat";
+	case SKEY_NOCLIP:         return "Noclip";
+	case SKEY_GAMMA:          return "Brightness";
+	case SKEY_FREEMEM:        return "Heap stats";
+	case SKEY_FPSCOUNTER:     return "FPS counter";
+	case SKEY_FRAMESKIP:      return "Frameskip";
+	case SKEY_PROFILER:       return "Run profiler";
+
+	default:                  return "???";
+	}
+}
+
+void UI_Controls(void)
+{
+	int focus_x=0, focus_y=-1;
+	int dflt = 0;
+	int editing = -1;
+
+	uint16_t saved_keymap[28] = { 0 };
+	for(int i = 0; CGD_Keymap[2*i] != 0; i++)
+		saved_keymap[i] = CGD_Keymap[2*i+1];
+
+	while(1) {
+		Bdisp_AllClr_VRAM();
+		UI_Print(LAYOUT_LEFT, 10, 0x0000, UI_LEFT, "Load default:", -1);
+		UI_Print(LAYOUT_RIGHT, 10, 0x0000, UI_RIGHT,
+			(dflt == 0) ? "Thumbs only >" :
+			(dflt == 1) ? "< Full hands >" :
+			(dflt == 2) ? "< CGDoom 0.3" :
+			"?", -1);
+		if(focus_y == -1)
+			UI_AreaReverse(0, 10-2, WIDTH-1, 10+11);
+
+		for(int i = 0; CGD_Keymap[2*i] != 0; i++) {
+			int x1 = (i < 14) ? LAYOUT_LEFT - 20 : WIDTH/2 + 15;
+			int x2 = (i < 14) ? WIDTH/2 - 15 : LAYOUT_RIGHT + 20;
+			int y = 29 + 12 * (i % 14);
+
+			/* Skip a row before special keys */
+			if(CGD_Keymap[2*i] >= 0x100)
+				y += 12;
+
+			if(editing == i) {
+				UI_Print(x2, y, 0x0000, UI_RIGHT, "Press a key...", -1);
+			}
+			else {
+				UI_Printf(x1, y, 0x0000, UI_LEFT, "%s",
+					UI_ControlName(CGD_Keymap[2*i]));
+				UI_Printf(x2, y, 0x0000, UI_RIGHT, "%s",
+					CGD_KeyName(CGD_Keymap[2*i+1]));
+			}
+
+			if(focus_y >= 0 && 14 * focus_x + focus_y == i)
+				UI_AreaReverse(x1-4, y-1, x2+4, y+10);
+		}
+
+		UI_Print(LAYOUT_LEFT, HEIGHT-11, 0x0000, UI_LEFT,
+			"F1: Save and quit", -1);
+		UI_Print(LAYOUT_RIGHT, HEIGHT-11, 0x0000, UI_RIGHT,
+			"F6: Cancel", -1);
+		Bdisp_PutDisp_DD();
+
+		/* This is quite hackish */
+		if(editing >= 0) {
+			int key = -1;
+
+			/* Wait for all keys to be released */
+			while(CGD_PRGM_Getkey() != -1) {}
+			/* Wait for a new key to be pressed */
+			while((key = CGD_PRGM_Getkey()) == -1) {}
+			CGD_Keymap[2*editing+1] = key;
+			editing = -1;
+
+			/* Unbuffer that key so GetKey() won't return it again */
+			GetKey(&key);
+			continue;
+		}
+
+		int key;
+		GetKey(&key);
+
+		/* Exit */
+		if(key == KEY_CTRL_F1)
+			break;
+		if(key == KEY_CTRL_F6) {
+			CGD_LoadKeymap(saved_keymap);
+			break;
+		}
+		/* Default selection */
+		else if(key == KEY_CTRL_LEFT && focus_y == -1 && dflt > 0)
+			dflt--;
+		else if(key == KEY_CTRL_RIGHT && focus_y == -1 && dflt < 2)
+			dflt++;
+		else if(key == KEY_CTRL_EXE && focus_y == -1) {
+			if(dflt == 0)
+				CGD_LoadKeymap(CGD_Keymap_ThumbsOnly);
+			else if(dflt == 1)
+				CGD_LoadKeymap(CGD_Keymap_FullHands);
+			else if(dflt == 2)
+				CGD_LoadKeymap(CGD_Keymap_CGDoom_0_3);
+		}
+		/* Focus movement */
+		else if(key == KEY_CTRL_UP && focus_y >= 0)
+			focus_y--;
+		else if(key == KEY_CTRL_DOWN && focus_y < 13 - (focus_x == 1))
+			focus_y++;
+		else if(key == KEY_CTRL_LEFT && focus_x > 0) {
+			focus_x--;
+			focus_y += (focus_y >= 4);
+		}
+		else if(key == KEY_CTRL_RIGHT && focus_x < 1 && focus_y != 4) {
+			focus_x++;
+			focus_y -= (focus_y > 4);
+		}
+		/* Key edition */
+		else if(key == KEY_CTRL_EXE && focus_y >= 0) {
+			editing = 14 * focus_x + focus_y;
+		}
+		else if(key == KEY_CTRL_DEL && focus_y >= 0) {
+			CGD_Keymap[2*(14*focus_x + focus_y)+1] = -1;
+		}
+	}
+}
+
 int UI_Main(CGD_WADFileInfo *wads, int wad_count, int *dev_info, int *use_mmap,
 	int *startmap, int *startepisode, int *trustunaligned,
 	int *autostart, int *enabledemos, int *enable2MBline)
@@ -415,16 +618,15 @@ int UI_Main(CGD_WADFileInfo *wads, int wad_count, int *dev_info, int *use_mmap,
 		Layout_Spacing(&l, 10);
 		Layout_Integer(&l, "Start at episode:", startepisode);
 		Layout_Integer(&l, "Start at map:", startmap);
-		Layout_Text(&l, "Title screen:",
+		int i_title = Layout_Text(&l, "Title screen:",
 			*autostart ? "Skip" :
 			!*enabledemos ? "No demos" : "Full");
 
 		Layout_Spacing(&l, 10);
-		Layout_Checkbox(&l, "Developer info:", dev_info);
-		Layout_Checkbox(&l, "Map file to memory:", use_mmap);
-		Layout_Checkbox(&l, "Trust unaligned lumps:", trustunaligned);
 		if(enable2MBline)
 			Layout_Checkbox(&l, "Use experimental RAM:", enable2MBline);
+		int i_controls = Layout_Text(&l, "Customize controls...", "");
+		int i_advanced = Layout_Text(&l, "Advanced options...", "");
 		Layout_EndFrame(&l);
 		Bdisp_PutDisp_DD();
 
@@ -439,13 +641,19 @@ int UI_Main(CGD_WADFileInfo *wads, int wad_count, int *dev_info, int *use_mmap,
 			if(startparam && changekey)
 				*autostart = 1;
 		}
-		else if(key == KEY_CTRL_EXE && l.focus == wad_count + 2) {
+		else if(key == KEY_CTRL_EXE && l.focus == i_title) {
 			if (!*autostart && *enabledemos)
 				*autostart = 1;
 			else if (!*autostart)
 				*enabledemos = 1;
 			else
 				*autostart = 0, *enabledemos = 0;
+		}
+		else if(key == KEY_CTRL_EXE && l.focus == i_controls) {
+			UI_Controls();
+		}
+		else if(key == KEY_CTRL_EXE && l.focus == i_advanced) {
+			UI_AdvancedOptions(dev_info, use_mmap, trustunaligned);
 		}
 		else if(key == KEY_CTRL_EXE && l.focus < wad_count) {
 			return l.focus;
