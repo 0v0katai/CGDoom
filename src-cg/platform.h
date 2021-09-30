@@ -51,6 +51,15 @@
 #define CGDOOM_DIRECT_R61524
 
 //---
+// Memory layout
+//---
+
+/* PRAM0 is an area of SPU2 memory that supports only 32-bit access. It is used
+   for the file mapping and some allocations; see <cgdoom-alloc.h>. */
+#define PRAM0_START ((void *)0xfe200000)
+#define PRAM0_END   ((void *)0xfe228000)
+
+//---
 // Memory distribution
 //---
 

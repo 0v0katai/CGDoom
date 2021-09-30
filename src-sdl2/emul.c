@@ -8,6 +8,8 @@
 SDL_Window *window = NULL;
 SDL_Surface *VRAM_RGB888 = NULL;
 
+char _PRAM0[160*1024];
+
 /* Rendering system emulation. */
 
 uint16_t _VRAM[WIDTH * HEIGHT];
@@ -334,7 +336,7 @@ int Bfile_FindNext(int fd, uint16_t *found, void *fileinfo0)
 		return -16;
 
 	const char *name = glob->gl_pathv[*pos];
-	Bfile_StrToName_ncpy(found, name, strlen(name));
+	Bfile_StrToName_ncpy(found, name, strlen(name)+1);
 	(*pos)++;
 
 	Bfile_FileInfo *fileinfo = fileinfo0;

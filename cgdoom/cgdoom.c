@@ -524,7 +524,7 @@ int main(void)
 	if (!strcmp(wads[choice].name, "doomu4.wad"))
 		CGD_SingleEpisodeUltimate = 4;
 
-	uintptr_t secondary_vram = ((uintptr_t)GetSecondaryVRAMAddress() | 3) + 1;
+	uintptr_t secondary_vram = ((uintptr_t)GetSecondaryVRAMAddress() + 3) & -4;
 	SaveVRAMBuffer = (void *)secondary_vram;
 
 	/* fx-CG 50 / Graph 90+E: RAM starts at 0x0c000000 in physical memory */
@@ -533,6 +533,8 @@ int main(void)
 	/* Determine how much RAM is zeroed out at 2 MB */
 	if(CGD_2MBLineMemory)
 		CGD_2MBLineMemory = FindZeroedMemory((void *)0xac200000);
+
+	void *PRAM0_alloc_start = PRAM0_START;
 
 	/* Remember WAD file name for saves and loads */
 	static char wad_name[32] = { 0 };
@@ -564,7 +566,7 @@ int main(void)
 		#endif /* FLASH_INDEX */
 
 		time = RTC_GetTicks();
-		gWADMap.mTable = (void *)0xfe200000; /* PRAM0 */
+		gWADMap.mTable = PRAM0_START;
 		int fd = Bfile_OpenFile_OS(wads[choice].path, 0, 0);
 		int size = CreateFileMapping(fd, &gWADMap);
 		Bfile_CloseFile_OS(fd);
@@ -605,12 +607,11 @@ int main(void)
 			GetKey(&key);
 		}
 
-		/* Initialize the PRAM allocator */
-		void *PRAM0_start = (void *)0xfe200000;
-		void *PRAM0_end   = (void *)0xfe228000;
-		PRAM0_start += gWADMap.miItemCount * sizeof(FileMappingItem);
-		CGD_PRAM_Init(PRAM0_start, PRAM0_end);
+		PRAM0_alloc_start += gWADMap.miItemCount * sizeof(FileMappingItem);
 	}
+
+	/* Initialize the PRAM allocator */
+	CGD_PRAM_Init(PRAM0_alloc_start, PRAM0_END);
 
 	memset(VRAM, 0, WIDTH*HEIGHT*2);
 	D_DoomMain();
