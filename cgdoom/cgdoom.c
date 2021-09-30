@@ -9,6 +9,7 @@
 #include "d_main.h"
 
 #include "cgdoom-alloc.h"
+#include "cgdoom-kbd.h"
 #include "cgdoom-ui.h"
 
 void *CGD_malloc(int size)
@@ -509,6 +510,9 @@ int main(void)
 	CGD_TrustUnalignedLumps = 0;
 	CGD_2MBLineMemory = 0;
 	#endif
+
+	/* Load keyboard layout */
+    CGD_LoadKeymap(CGD_Keymap_ThumbsOnly);
 
 	/* Override version detection for single-episode Ultimate Doom WADs */
 	if (!strcmp(wads[choice].name, "doomu1.wad"))
