@@ -434,8 +434,8 @@ static void R_DrawVisSprite( vissprite_t* vis)
   {
     texturecolumn = frac>>FRACBITS;
 #ifdef RANGECHECK
-    if (texturecolumn < 0 || texturecolumn >= SHORT(patch->width))
-      I_Error ("R_DrawSpriteRange: bad texturecolumn");
+//    if (texturecolumn < 0 || texturecolumn >= SHORT(patch->width))
+//      I_Error ("R_DrawSpriteRange: bad texturecolumn");
 #endif
     column = (const column_t *) ((const byte *)patch + INTFromBytes((const byte*)&patch->columnofsLE[texturecolumn]));
     R_DrawMaskedColumn(column);
