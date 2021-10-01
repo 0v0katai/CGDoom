@@ -3,9 +3,6 @@
 #define SYSTEM_STACK_SAFE (64*1024)
 #define USER_STACK_SAFE (32*1024)
 
-// SaveVRAMBuffer (384*216*2 bytes)
-extern unsigned char *SaveVRAMBuffer;
-
 // system stack (512 kB).
 #define SYSTEM_STACK_SIZE (512*1024-SYSTEM_STACK_SAFE)
 extern unsigned char *SystemStack;

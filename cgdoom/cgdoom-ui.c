@@ -392,7 +392,7 @@ int Layout_Event(Layout *l, int key)
 	return 0;
 }
 
-void UI_AdvancedOptions(int *dev_info, int *use_mmap, int *trustunaligned)
+void UI_AdvancedOptions(CGDoom_Options *o)
 {
 	Layout l;
 	Layout_Init(&l);
@@ -404,15 +404,18 @@ void UI_AdvancedOptions(int *dev_info, int *use_mmap, int *trustunaligned)
 		Layout_CenteredText(&l, "CGDoom: Advanced options");
 		Layout_Spacing(&l, 10);
 
-		Layout_Checkbox(&l, "Developer info:", dev_info);
+		Layout_Checkbox(&l, "Developer info:", &o->DeveloperInfo);
 		Layout_Subtext(&l, "Start/end screens with statistics.");
 		Layout_Spacing(&l, 10);
 
-		Layout_Checkbox(&l, "Map file to memory:", use_mmap);
-		Layout_Subtext(&l, "Much faster than BFile.");
+		int i_wad = Layout_Text(&l, "WAD file access method:", "%s",
+			o->WADMethod == CGDOOM_WAD_BFILE ? "< BFile" :
+			o->WADMethod == CGDOOM_WAD_MMAP ? "Memory map >" :
+			"?");
+		Layout_Subtext(&l, "Mapping is much faster.");
 		Layout_Spacing(&l, 10);
 
-		Layout_Checkbox(&l, "Trust unaligned lumps", trustunaligned);
+		Layout_Checkbox(&l, "Trust unaligned lumps", &o->TrustUnalignedLumps);
 		Layout_Subtext(&l, "Faster; if System ERROR, report a bug!");
 
 		Layout_EndFrame(&l);
@@ -423,21 +426,26 @@ void UI_AdvancedOptions(int *dev_info, int *use_mmap, int *trustunaligned)
 
 		if(Layout_Event(&l, key)) {
 		}
+		else if(key == KEY_CTRL_RIGHT && l.focus == i_wad) {
+			o->WADMethod = CGDOOM_WAD_BFILE;
+		}
+		else if(key == KEY_CTRL_LEFT && l.focus == i_wad) {
+			o->WADMethod = CGDOOM_WAD_MMAP;
+		}
 		else if(key == KEY_CTRL_EXIT) {
 			break;
 		}
 	}
 }
 
-void UI_Controls(void)
+void UI_Controls(CGDoom_Keymap map)
 {
 	int focus_x=0, focus_y=-1;
 	int dflt = 0;
 	int editing = -1;
 
-	uint16_t saved_keymap[28] = { 0 };
-	for(int i = 0; CGD_Keymap[2*i] != 0; i++)
-		saved_keymap[i] = CGD_Keymap[2*i+1];
+	CGDoom_Keymap saved_map;
+	CGD_CopyKeymap(saved_map, map);
 
 	while(1) {
 		Bdisp_AllClr_VRAM();
@@ -450,13 +458,13 @@ void UI_Controls(void)
 		if(focus_y == -1)
 			UI_AreaReverse(0, 10-2, WIDTH-1, 10+11);
 
-		for(int i = 0; CGD_Keymap[2*i] != 0; i++) {
+		for(int i = 0; i < CGDOOM_KEYMAP_SIZE; i++) {
 			int x1 = (i < 14) ? LAYOUT_LEFT - 20 : WIDTH/2 + 15;
 			int x2 = (i < 14) ? WIDTH/2 - 15 : LAYOUT_RIGHT + 20;
 			int y = 29 + 12 * (i % 14);
 
 			/* Skip a row before special keys */
-			if(CGD_Keymap[2*i] >= 0x100)
+			if(CGD_KeymapEntries[i] >= 0x100)
 				y += 12;
 
 			if(editing == i) {
@@ -464,9 +472,9 @@ void UI_Controls(void)
 			}
 			else {
 				UI_Printf(x1, y, 0x0000, UI_LEFT, "%s",
-					CGD_DoomKey_DisplayName(CGD_Keymap[2*i]));
+					CGD_DoomKey_DisplayName(CGD_KeymapEntries[i]));
 				UI_Printf(x2, y, 0x0000, UI_RIGHT, "%s",
-					CGD_PhysicalKey_DisplayName(CGD_Keymap[2*i+1]));
+					CGD_PhysicalKey_DisplayName(map[i]));
 			}
 
 			if(focus_y >= 0 && 14 * focus_x + focus_y == i)
@@ -487,7 +495,7 @@ void UI_Controls(void)
 			while(CGD_PRGM_Getkey() != -1) {}
 			/* Wait for a new key to be pressed */
 			while((key = CGD_PRGM_Getkey()) == -1) {}
-			CGD_Keymap[2*editing+1] = key;
+			map[editing] = key;
 			editing = -1;
 
 			/* Unbuffer that key so GetKey() won't return it again */
@@ -502,7 +510,7 @@ void UI_Controls(void)
 		if(key == KEY_CTRL_F1)
 			break;
 		if(key == KEY_CTRL_F6) {
-			CGD_LoadKeymap(saved_keymap);
+			CGD_CopyKeymap(map, saved_map);
 			break;
 		}
 		/* Default selection */
@@ -512,11 +520,11 @@ void UI_Controls(void)
 			dflt++;
 		else if(key == KEY_CTRL_EXE && focus_y == -1) {
 			if(dflt == 0)
-				CGD_LoadKeymap(CGD_Keymap_ThumbsOnly);
+				CGD_CopyKeymap(map, CGD_Keymap_ThumbsOnly);
 			else if(dflt == 1)
-				CGD_LoadKeymap(CGD_Keymap_FullHands);
+				CGD_CopyKeymap(map, CGD_Keymap_FullHands);
 			else if(dflt == 2)
-				CGD_LoadKeymap(CGD_Keymap_CGDoom_0_3);
+				CGD_CopyKeymap(map, CGD_Keymap_CGDoom_0_03);
 		}
 		/* Focus movement */
 		else if(key == KEY_CTRL_UP && focus_y >= 0)
@@ -536,17 +544,20 @@ void UI_Controls(void)
 			editing = 14 * focus_x + focus_y;
 		}
 		else if(key == KEY_CTRL_DEL && focus_y >= 0) {
-			CGD_Keymap[2*(14*focus_x + focus_y)+1] = -1;
+			map[14*focus_x + focus_y] = -1;
 		}
 	}
 }
 
-int UI_Main(CGD_WADFileInfo *wads, int wad_count, int *dev_info, int *use_mmap,
-	int *startmap, int *startepisode, int *trustunaligned,
-	int *autostart, int *enabledemos, int *enable2MBline, int *recorddemo)
+int UI_Main(CGDoom_FileInfo *wads, int wad_count, CGDoom_Options *o,
+    int *startmap, int *startepisode, int *recorddemo,
+    int allow_experimental_memory)
 {
 	Layout l;
 	Layout_Init(&l);
+
+	enum { TS_SKIP, TS_NODEMOS, TS_FULL };
+	int title = o->AutoStart ? TS_SKIP : o->EnableDemos ? TS_FULL : TS_NODEMOS;
 
 	while(1)
 	{
@@ -582,12 +593,15 @@ int UI_Main(CGD_WADFileInfo *wads, int wad_count, int *dev_info, int *use_mmap,
 		Layout_Integer(&l, "Start at episode:", startepisode);
 		Layout_Integer(&l, "Start at map:", startmap);
 		int i_title = Layout_Text(&l, "Title screen:",
-			*autostart ? "Skip" :
-			!*enabledemos ? "No demos" : "Full");
+			title == TS_SKIP ? "Skip >" :
+			title == TS_NODEMOS ? "< No demos >" :
+			title == TS_FULL ? "< Full" :
+			"?");
 
 		Layout_Spacing(&l, 10);
-		if(enable2MBline)
-			Layout_Checkbox(&l, "Use experimental RAM:", enable2MBline);
+		if(allow_experimental_memory)
+			Layout_Checkbox(&l, "Use experimental RAM:",
+				&o->EnableExperimentalMemory);
 		int i_demo = Layout_Text(&l, "Record demo:",
 			(*recorddemo < 0) ? "None" : "DEMO%02d.lmp", *recorddemo);
 		int i_controls = Layout_Text(&l, "Customize controls...", "");
@@ -602,25 +616,21 @@ int UI_Main(CGD_WADFileInfo *wads, int wad_count, int *dev_info, int *use_mmap,
 			/* Set autostart when changing starting episode/map */
 			int startparam = (l.focus == wad_count || l.focus == wad_count+1);
 			int changekey = (key == KEY_CTRL_EXE || key == KEY_CTRL_LEFT ||
-                key == KEY_CTRL_RIGHT);
+				key == KEY_CTRL_RIGHT);
 			if(startparam && changekey)
-				*autostart = 1;
+				title = TS_SKIP;
 		}
 		/* Title screen options */
-		else if(key == KEY_CTRL_EXE && l.focus == i_title) {
-			if (!*autostart && *enabledemos)
-				*autostart = 1;
-			else if (!*autostart)
-				*enabledemos = 1;
-			else
-				*autostart = 0, *enabledemos = 0;
-		}
+		else if(key == KEY_CTRL_LEFT && l.focus == i_title)
+			title -= (title > TS_SKIP);
+		else if(key == KEY_CTRL_RIGHT && l.focus == i_title)
+			title += (title < TS_FULL);
 		/* Submenus */
 		else if(key == KEY_CTRL_EXE && l.focus == i_controls) {
-			UI_Controls();
+			UI_Controls(o->Keymap);
 		}
 		else if(key == KEY_CTRL_EXE && l.focus == i_advanced) {
-			UI_AdvancedOptions(dev_info, use_mmap, trustunaligned);
+			UI_AdvancedOptions(o);
 		}
 		/* Select demo file to save */
 		else if(key == KEY_CTRL_LEFT && l.focus == i_demo) {
@@ -638,6 +648,9 @@ int UI_Main(CGD_WADFileInfo *wads, int wad_count, int *dev_info, int *use_mmap,
 			*startmap = 1;
 		if(*startepisode < 1)
 			*startepisode = 1;
+
+		o->AutoStart = (title == TS_SKIP);
+		o->EnableDemos = (title == TS_FULL);
 	}
 
 	return -1;
@@ -702,7 +715,7 @@ void UI_Error(const char *fmt, va_list args)
 	GetKey(&key);
 }
 
-void UI_DelayedWrites(CGD_DelayedFileWrite const *dfw, int count,
+void UI_DelayedWrites(CGDoom_DelayedFileWrite const *dfw, int count,
 	int current_file, int current_file_done)
 {
 	int total = 0;

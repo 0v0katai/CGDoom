@@ -16,7 +16,7 @@ extern char _PRAM0[160*1024];
 #define PRAM0_START ((void *)_PRAM0)
 #define PRAM0_END ((void *)_PRAM0 + sizeof _PRAM0)
 
-#define CGDOOM_SCREENS_BASE SaveVRAMBuffer
+#define CGDOOM_SCREENS_BASE (void *)SecondaryVRAM
 
 //---
 // fx-CG-specific functions not defined on emulator

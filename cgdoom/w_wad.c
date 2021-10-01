@@ -296,11 +296,10 @@ void * W_ReadLumpWithZ_Malloc(int lump,int tag,int iEnableFlash)
   int full = (c == lumpinfo[lump].size);
   int aligned = (((uintptr_t)lumpcache[lump] & 1) == 0);
 
-  if(CGD_TrustUnalignedLumps)
+  if(CGD_Options.TrustUnalignedLumps)
     aligned = 1;
 
   /* Record statistics on loading unaligned but full lumps */
-  extern struct CGD_Stats CGD_Stats;
   if(full && !aligned) {
     CGD_Stats.UnalignedLumpsLoaded++;
     CGD_Stats.UnalignedLumpsLoadedTotal += lumpinfo[lump].size;

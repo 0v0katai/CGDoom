@@ -59,7 +59,7 @@ all: all-cg
 all-cg: $(NAME).g3a
 
 $(NAME).g3a: build-cg/$(NAME).bin
-	mkg3a -n : -i uns:CGDOOM_UNSELECTED.png -i sel:CGDOOM_SELECTED.png $< $@
+	mkg3a -n CGDoom -i uns:icon-uns.png -i sel:icon-sel.png $< $@
 
 build-cg/%.s.o: cgdoom/%.s | build-cg/
 	$(CG_CC) $(CG_CFLAGS) -c $< -o $@

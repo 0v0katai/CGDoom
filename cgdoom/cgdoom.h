@@ -1,34 +1,52 @@
 #ifndef CGDOOM_H
 #define CGDOOM_H
 
+#include "cgdoom-kbd.h"
 #include "platform.h"
 #include "libprof.h"
 #include <stdint.h>
 
-// CGDoom-specific definitions that cover both calculator and native builds.
+//---
+// Memory layout
+//---
 
-#define SETTINGS_FILE_VERSION 1
-
-/* VRAM pointer and size */
+/* Size of VRAM buffers */
+#define WIDTH   384
+#define HEIGHT  216
+/* Main and secondary VRAMs (both supplied by the OS) */
 extern uint16_t *VRAM;
-#define WIDTH  384
-#define HEIGHT 216
+extern uint16_t *SecondaryVRAM;
 
-/* Description of a WAD file selectable by user. */
+//---
+// Filesystem
+//---
+
+/* Description of a WAD or demo file selectable by user. */
 typedef struct
 {
     char name[32];
     uint16_t path[7+32];
     int size;
-} CGD_WADFileInfo;
 
-/* Description of a file write that has been delated. */
+} CGDoom_FileInfo;
+
+/* Description of a file write that has been delayed. */
 typedef struct
 {
    char filename[32];
    const void *data;
    int size;
-} CGD_DelayedFileWrite;
+
+} CGDoom_DelayedFileWrite;
+
+/* IDs for delayed saves */
+enum {
+   CGD_DELAYEDSAVES_SAVES = 0, /* 6 entries */
+   CGD_DELAYEDSAVES_DEMO = 6,
+   CGD_DELAYEDSAVES_COUNT,
+};
+/* Save Game operations delayed until closing the add-in (one per save) */
+extern CGDoom_DelayedFileWrite CGD_DelayedSaves[CGD_DELAYEDSAVES_COUNT];
 
 /* File access method (numbering is used in checkbox; keep as is) */
 enum {
@@ -43,56 +61,53 @@ enum {
 /* Delay file saves until exit to avoid quitting immediately */
 #define CGDOOM_DELAY_SAVES
 
-/* CGDoom statistics */
-extern struct CGD_Perf CGD_Perf;
-extern struct CGD_Stats CGD_Stats;
+//---
+// CGDoom options
+//---
 
-// CGDoom options (some more are specified in platform.h)
+/* The settings file is text-based and probably doesn't ever need to change
+   even if settings are added or removed. This is just in case. */
+#define CGDOOM_SETTINGS_FILE_VERSION 1
 
-/* File access method */
-extern int CGD_WADMethod;
-/* Enable demos in the title screen (most are incompatible and look bad) */
-extern int CGD_EnableDemos;
+typedef struct {
+    /* Enable technical detail screens. These screens are shown at the start
+       and end of the game and display some statistics and debug data. */
+    int DeveloperInfo;
+    /* File access method (see above). */
+    int WADMethod;
+   /* Whether to trust unaligned lumps. If this is set, all non-fragmented
+      lumps will be accessed from ROM. Otherwise, lumps that are not 4-aligned
+      will be loaded to the heap even if they are available. This option is
+      relevant only if WADMethod == CGDOOM_WAD_MMAP. */
+    int TrustUnalignedLumps;
+    /* Skip title screen and get straight to gameplay. */
+    int AutoStart;
+    /* Enable demos in the title screen (most are for previous versions of
+       the engine and just look bad). */
+    int EnableDemos;
+    /* Enable the use of experimental memory. */
+    int EnableExperimentalMemory;
+    /* Custom controls. */
+    CGDoom_Keymap Keymap;
+
+} CGDoom_Options;
+
+extern CGDoom_Options CGD_Options;
+
+// CGDoom settings that affect the game
+
 /* The selected WAD is a split Ultimate Doom WAD with a single episode (this
    exists on the fx-CG 50 and is incorrectly detected by normal logic) */
 extern int CGD_SingleEpisodeUltimate;
 /* Skip this amount of frames after every rendered frame (default 1) */
 extern int CGD_Frameskip;
-/* Whether to trust unaligned lumps. If this is set, all non-fragmented lumps
-   will be accessed from ROM. Otherwise, lumps that are not 4-aligned will be
-   loaded to the heap even if they are available. (CGDOOM_WAD_MMAP) */
-extern int CGD_TrustUnalignedLumps;
-
-// Global variables interfacing with Doom itself.
-
-/* Map and episode to start at when loading the game. */
-extern int startmap, startepisode;
-/* WAD file name (without .wad), used to avoid save file conflicts */
+/* WAD file name (without .wad), used to name save and demo files */
 extern const char *CGD_WADFileName;
 /* Name of record demo file */
 extern const char *CGD_RecordDemoName;
 
-/* IDs for delayed saves */
-enum {
-   CGD_DELAYEDSAVES_SAVES = 0, /* 6 entries */
-   CGD_DELAYEDSAVES_DEMO = 6,
-   CGD_DELAYEDSAVES_COUNT,
-};
-/* Save Game operations delayed until closing the add-in (one per save) */
-extern CGD_DelayedFileWrite CGD_DelayedSaves[CGD_DELAYEDSAVES_COUNT];
-
-
-// Keyboard interface.
-
-// Scan keyboard (the previous state is also retained).
-void UpdateKeyboardState(void);
-
-// Check if a Doom key has just been pressed, or released.
-int KeyWasJustPressed(int key);
-int KeyWasJustReleased(int key);
-
 //---
-// Control systems
+// Control functions (mapped to special keys)
 //---
 
 void CGD_Cheat();
@@ -106,16 +121,23 @@ void CGD_ProfilerResults();
 // Performance metrics
 //---
 
-struct CGD_Perf
+typedef struct
 {
    prof_t DynamicAllocation;
    prof_t GraphicsRendering;
    prof_t DisplayInterface;
    prof_t LumpLoading;
    prof_t UnalignedLumpLoading;
-};
 
-struct CGD_Stats
+} CGDoom_Perf;
+
+extern CGDoom_Perf CGD_Perf;
+
+//---
+// Game and debugging statistics
+//---
+
+typedef struct
 {
    /* Fragments in the WAD file */
    int WADFragments;
@@ -137,6 +159,9 @@ struct CGD_Stats
    uint64_t LumpsLoadedTotal;
    uint64_t LumpsReferencedTotal;
    uint64_t UnalignedLumpsLoadedTotal;
-};
+
+} CGDoom_Stats;
+
+extern CGDoom_Stats CGD_Stats;
 
 #endif /* CGDOOM_H */

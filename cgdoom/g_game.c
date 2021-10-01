@@ -1069,7 +1069,7 @@ boolean G_DoSaveGame (void)
 #endif
 
     int n = CGD_DELAYEDSAVES_SAVES + savegameslot;
-    CGD_DelayedFileWrite *dfw = &CGD_DelayedSaves[n];
+    CGDoom_DelayedFileWrite *dfw = &CGD_DelayedSaves[n];
 
     /* Allocate memory to hold the data while delaying */
     if (!save_now) {
@@ -1135,6 +1135,9 @@ void G_DoNewGame (void)
   consoleplayer = 0;
   G_InitNew (d_skill, d_episode, d_map);
   gameaction = ga_nothing; 
+
+  if (demorecording)
+    G_BeginRecording ();
 } 
 
 // The sky texture to be used instead of the F_SKY1 dummy.
@@ -1436,7 +1439,7 @@ boolean G_CheckDemoStatus (void)
   if (demorecording)
   {
     *demo_p++ = DEMOMARKER;
-    CGD_DelayedFileWrite *dfw = &CGD_DelayedSaves[CGD_DELAYEDSAVES_DEMO];
+    CGDoom_DelayedFileWrite *dfw = &CGD_DelayedSaves[CGD_DELAYEDSAVES_DEMO];
     strcpy(dfw->filename, demoname);
     dfw->data = demobuffer;
     dfw->size = demo_p - demobuffer;

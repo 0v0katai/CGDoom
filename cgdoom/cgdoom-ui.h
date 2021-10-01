@@ -2,6 +2,7 @@
 #define CGDOOM_UI_H
 
 #include "cgdoom.h"
+
 #include <stdarg.h>
 #include <stdint.h>
 
@@ -63,23 +64,19 @@ int Layout_Event(Layout *l, int key);
 /* Larger-scale functions. */
 
 /* Show the program's main screen; returns index of selected WAD file. */
-int UI_Main(CGD_WADFileInfo *wads, int wad_count,
-    int *dev_info,        /* Enable technical detail screens */
-    int *use_mmap,        /* Map file to memory (as opposed to using Bfile) */
-    int *startmap,        /* Warp to this map */
-    int *startepisode,    /* Warp to this episode */
-    int *trustunaligned,  /* Trust unaligned lumps */
-    int *autostart,       /* Skip title screen, straight to gameplay */
-    int *enabledemos,     /* Enable demos on the title screen */
-    int *enable2MBline,   /* Enable memory past the 2MB line */
-    int *recorddemo       /* Number of demo to record (-1 for none) */
+int UI_Main(CGDoom_FileInfo *wads, int wad_count,
+    CGDoom_Options *options,
+    int *startmap,        /* Warp to this map (autostart only) */
+    int *startepisode,    /* Warp to this episode (autostart only) */
+    int *recorddemo,      /* Number of demo to record (-1 for none) */
+    int allow_2MBline     /* Allow setting the experimental RAM option */
 );
 
 /* Show an error with custom formatting. */
 void UI_Error(const char *fmt, va_list args);
 
 /* Show a file save with a progress bar. */
-void UI_DelayedWrites(CGD_DelayedFileWrite const *dfw, int count,
+void UI_DelayedWrites(CGDoom_DelayedFileWrite const *dfw, int count,
     int current_file, int current_amount);
 
 #endif /* CGDOOM_UI_H */

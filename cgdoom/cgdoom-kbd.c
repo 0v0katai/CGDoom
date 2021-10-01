@@ -2,41 +2,45 @@
 #include "cgdoom-kbd.h"
 #include "doomdef.h"
 
-/* Dynamic keymap */
-uint16_t CGD_Keymap[] = {
-    KEY_LEFTARROW,          -1,
-    KEY_RIGHTARROW,         -1,
-    KEY_UPARROW,            -1,
-    KEY_DOWNARROW,          -1,
-    ' ',                    -1, /* Open doors etc */
-    KEY_RCTRL,              -1, /* Shoot */
-    '1',                    -1,
-    '2',                    -1,
-    '3',                    -1,
-    '4',                    -1,
-    '5',                    -1,
-    '6',                    -1,
-    '7',                    -1,
-    KEY_TAB,                -1,
-    KEY_PAUSE,              -1,
-    KEY_SLEFTARROW,         -1,
-    KEY_SRIGHTARROW,        -1,
-    KEY_RSHIFT,             -1, /* Speed toggle */
+//---
+// Keymaps
+//---
+
+/* List of Doom keys in their order of assignment in keymaps */
+int16_t CGD_KeymapEntries[CGDOOM_KEYMAP_SIZE] = {
+    KEY_LEFTARROW,
+    KEY_RIGHTARROW,
+    KEY_UPARROW,
+    KEY_DOWNARROW,
+    ' ',                     /* Open doors etc */
+    KEY_RCTRL,               /* Shoot */
+    '1',
+    '2',
+    '3',
+    '4',
+    '5',
+    '6',
+    '7',
+    KEY_TAB,
+    KEY_PAUSE,
+    KEY_SLEFTARROW,
+    KEY_SRIGHTARROW,
+    KEY_RSHIFT,              /* Speed toggle */
+
     /* Special CGDoom keys */
-    SKEY_DECVP,             -1,
-    SKEY_INCVP,             -1,
-    SKEY_CHEAT,             -1,
-    SKEY_NOCLIP,            -1,
-    SKEY_GAMMA,             -1,
-    SKEY_FREEMEM,           -1,
-    SKEY_FPSCOUNTER,        -1,
-    SKEY_FRAMESKIP,         -1,
-    SKEY_PROFILER,          -1,
-    0,
+    SKEY_DECVP,
+    SKEY_INCVP,
+    SKEY_CHEAT,
+    SKEY_NOCLIP,
+    SKEY_GAMMA,
+    SKEY_FREEMEM,
+    SKEY_FPSCOUNTER,
+    SKEY_FRAMESKIP,
+    SKEY_PROFILER,
 };
 
-/* Default keymap: CGDoom 0.3 */
-const uint16_t CGD_Keymap_CGDoom_0_3[] = {
+/* Default keymap: CGDoom 0.03 */
+const CGDoom_Keymap CGD_Keymap_CGDoom_0_03 = {
     KEYCODE_LEFT,
     KEYCODE_RIGHT,
     KEYCODE_UP,
@@ -64,10 +68,9 @@ const uint16_t CGD_Keymap_CGDoom_0_3[] = {
     KEYCODE_LEFTP,
     KEYCODE_VARS,
     KEYCODE_RIGHTP,
-    0,
 };
 /* Default keymap: thumbs only */
-const uint16_t CGD_Keymap_ThumbsOnly[] = {
+const CGDoom_Keymap CGD_Keymap_ThumbsOnly = {
     KEYCODE_LEFT,
     KEYCODE_RIGHT,
     KEYCODE_UP,
@@ -95,10 +98,9 @@ const uint16_t CGD_Keymap_ThumbsOnly[] = {
     KEYCODE_LEFTP,
     KEYCODE_VARS,
     KEYCODE_RIGHTP,
-    0,
 };
 /* Default keymap: full-hands */
-const uint16_t CGD_Keymap_FullHands[] = {
+const CGDoom_Keymap CGD_Keymap_FullHands = {
     KEYCODE_F5,
     KEYCODE_F6,
     KEYCODE_OPTN,
@@ -126,14 +128,31 @@ const uint16_t CGD_Keymap_FullHands[] = {
     KEYCODE_LEFTP,
     KEYCODE_SIN,
     KEYCODE_RIGHTP,
-    0,
 };
 
-/* Current keyboard state. */
-static CGD_KeyboardState st_prev={0}, st_now={0};
+void CGD_CopyKeymap(CGDoom_Keymap dest, const CGDoom_Keymap src)
+{
+    memcpy(dest, src, sizeof(CGDoom_Keymap));
+}
+
+static int DecodeKeymap(const CGDoom_Keymap map, int key)
+{
+    for(int i = 0; i < CGDOOM_KEYMAP_SIZE; i++) {
+        if(CGD_KeymapEntries[i] == key)
+            return map[i];
+    }
+    return -1;
+}
+
+//---
+// Physical keyboard driver
+//---
+
+static CGDoom_KeyboardState st_prev = { 0 };
+static CGDoom_KeyboardState st_now = { 0 };
 
 #ifndef CG_EMULATOR
-void CGD_ScanKeyboard(CGD_KeyboardState state)
+void CGD_ScanKeyboard(CGDoom_KeyboardState state)
 {
     volatile uint16_t *KEYSC = (void *)0xa44b0000;
     uint16_t *array = (void *)state;
@@ -141,25 +160,38 @@ void CGD_ScanKeyboard(CGD_KeyboardState state)
 }
 #endif
 
-void CGD_LoadKeymap(const uint16_t *template)
+int KeycodeDown(CGDoom_KeyboardState state, int code)
 {
-    for(int i = 0; CGD_Keymap[2*i] != 0; i++) {
-        CGD_Keymap[2*i+1] = template[i];
-    }
+    if(code < 0) return 0;
+    int row = (code >> 4) ^ 1;
+    int col = 0x80 >> (code & 0x7);
+    return (state[row] & col) != 0;
 }
 
-static int DecodeKeymap(uint16_t *map, int key)
+int CGD_PRGM_Getkey(void)
 {
-    for(int i = 0; map[2*i] != 0; i++) {
-        if(map[2*i] == key)
-            return map[2*i+1];
+    CGDoom_KeyboardState st;
+    CGD_ScanKeyboard(st);
+
+    for(int code_y = 9; code_y >= 1; code_y--) {
+        for(int code_x = 1; code_x <= 6 - (code_y < 5); code_x++) {
+            int code = (code_y << 4) | code_x;
+            if(code == 0x45) code = KEYCODE_ACON;
+
+            if(KeycodeDown(st, code))
+                return code;
+        }
     }
     return -1;
 }
 
+//---
+// Doom keys
+//---
+
 static int DoomKeyToKeycode(int key)
 {
-    int code = DecodeKeymap(CGD_Keymap, key);
+    int code = DecodeKeymap(CGD_Options.Keymap, key);
     if(code != -1)
         return code;
 
@@ -215,15 +247,7 @@ static int DoomKeyToKeycode(int key)
     }
 }
 
-static int KeycodeDown(CGD_KeyboardState state, int code)
-{
-    if(code < 0) return 0;
-    int row = (code >> 4) ^ 1;
-    int col = 0x80 >> (code & 0x7);
-    return (state[row] & col) != 0;
-}
-
-static int KeyDown(CGD_KeyboardState state, int key)
+static int KeyDown(CGDoom_KeyboardState state, int key)
 {
     int code = DoomKeyToKeycode(key);
 
@@ -236,18 +260,18 @@ static int KeyDown(CGD_KeyboardState state, int key)
         return KeycodeDown(state, code);
 }
 
-void UpdateKeyboardState(void)
+void CGD_UpdateKeyboardState(void)
 {
 	memcpy(st_prev, st_now, sizeof st_now);
 	CGD_ScanKeyboard(st_now);
 }
 
-int KeyWasJustPressed(int key)
+int CGD_KeyWasJustPressed(int key)
 {
     return !KeyDown(st_prev, key) && KeyDown(st_now, key);
 }
 
-int KeyWasJustReleased(int key)
+int CGD_KeyWasJustReleased(int key)
 {
     return KeyDown(st_prev, key) && !KeyDown(st_now, key);
 }
@@ -283,7 +307,7 @@ static const char *KeyName(int key, const char * const *names)
 {
     if(key == KEYCODE_ACON)
         key = 0x45;
-    if(key < 0)
+    if(key <= 0)
         key = 0x46;
 
     int row = 9 - (key >> 4);
@@ -367,7 +391,7 @@ const char *CGD_DoomKey_DisplayName(int key)
         if(doomkeys[i].key == key)
             return doomkeys[i].display_name;
     }
-    return NULL;
+    return "(None)";
 }
 
 const char *CGD_DoomKey_TechnicalName(int key)
@@ -376,7 +400,7 @@ const char *CGD_DoomKey_TechnicalName(int key)
         if(doomkeys[i].key == key)
             return doomkeys[i].technical_name;
     }
-    return NULL;
+    return "NONE";
 }
 
 int CGD_DoomKey_FromTechnicalName(const char *name, int length)
@@ -387,27 +411,6 @@ int CGD_DoomKey_FromTechnicalName(const char *name, int length)
     for(int i = 0; doomkeys[i].key >= 0; i++) {
         if(!strncmp(doomkeys[i].technical_name, name, length))
             return doomkeys[i].key;
-    }
-    return -1;
-}
-
-//---
-// Direct keyboard functions
-//---
-
-int CGD_PRGM_Getkey(void)
-{
-    CGD_KeyboardState st;
-    CGD_ScanKeyboard(st);
-
-    for(int code_y = 9; code_y >= 1; code_y--) {
-        for(int code_x = 1; code_x <= 6 - (code_y < 5); code_x++) {
-            int code = (code_y << 4) | code_x;
-            if(code == 0x45) code = KEYCODE_ACON;
-
-            if(KeycodeDown(st, code))
-                return code;
-        }
     }
     return -1;
 }

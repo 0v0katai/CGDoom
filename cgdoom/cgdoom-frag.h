@@ -25,20 +25,22 @@
    This interface exists just in case it is be useful for other lumps. */
 
 /* Maximum number of fragments that we expect in a lump (+1 for terminator) */
-#define CGD_FRAG_ESTIMATE 33
+#define CGDOOM_FRAG_ESTIMATE 33
 
 /* Fragmented lump lookup table */
-typedef struct {
-    const void *data[CGD_FRAG_ESTIMATE];
-    int size[CGD_FRAG_ESTIMATE+1];
-} CGD_Frag;
+typedef struct
+{
+    const void *data[CGDOOM_FRAG_ESTIMATE];
+    int size[CGDOOM_FRAG_ESTIMATE+1];
+
+} CGDoom_Frag;
 
 /* Compute the lookup table for a lump; if successful, returns 0 */
-int CGD_Frag_Map(const char *lumpname, CGD_Frag *frag);
+int CGD_Frag_Map(const char *lumpname, CGDoom_Frag *frag);
 
 /* Read different types within the lump */
-uint8_t CGD_Frag_u8(CGD_Frag const *frag, int offset);
-short CGD_Frag_i16LE(CGD_Frag const *frag, int offset);
-int CGD_Frag_i32LE(CGD_Frag const *frag, int offset);
+uint8_t CGD_Frag_u8(CGDoom_Frag const *frag, int offset);
+short CGD_Frag_i16LE(CGDoom_Frag const *frag, int offset);
+int CGD_Frag_i32LE(CGDoom_Frag const *frag, int offset);
 
 #endif /* CGDOOM_FRAG_H */

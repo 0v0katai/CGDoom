@@ -252,7 +252,7 @@ void V_DrawPatch(int x,int y,int scrn,const patch_t* patch)
 //
 void V_DrawFullscreenPatchFragmented(int scrn, const char *lumpname)
 {
-  CGD_Frag patch;
+  CGDoom_Frag patch;
   if (CGD_Frag_Map(lumpname, &patch)) {
     V_DrawPatch(0, 0, scrn, W_CacheLumpNamePatch(lumpname, PU_CACHE));
     return;

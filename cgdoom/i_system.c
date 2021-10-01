@@ -99,7 +99,7 @@ byte* I_ZoneBase (int*  size, int i)
         /* Secondary VRAM (screen buffers being in the main VRAM because we're
            doing direct access so we don't need Bdisp_PutDisp_DD() */
         *size = 384 * 216 * 2;
-        return SaveVRAMBuffer;
+        return (void *)SecondaryVRAM;
     }
     #endif
     return NULL;
@@ -290,26 +290,26 @@ void I_StartTic (void)
     /* This variable is set in m_menu.c while typing save file names */
     extern int saveStringEnter;
 
-    UpdateKeyboardState();
+    CGD_UpdateKeyboardState();
 
     if(!saveStringEnter)
     {
         /* Capture events for special keys */
-        if(KeyWasJustPressed(SKEY_CHEAT))
+        if(CGD_KeyWasJustPressed(SKEY_CHEAT))
             CGD_Cheat();
-        if(KeyWasJustPressed(SKEY_DECVP))
+        if(CGD_KeyWasJustPressed(SKEY_DECVP))
             R_SetViewSizeChange(-1);
-        if(KeyWasJustPressed(SKEY_INCVP))
+        if(CGD_KeyWasJustPressed(SKEY_INCVP))
             R_SetViewSizeChange(1);
-        if(KeyWasJustPressed(SKEY_NOCLIP))
+        if(CGD_KeyWasJustPressed(SKEY_NOCLIP))
             CGD_SwitchClip();
-        if(KeyWasJustPressed(SKEY_GAMMA))
+        if(CGD_KeyWasJustPressed(SKEY_GAMMA))
             CGD_CycleGamma();
-        if(KeyWasJustPressed(SKEY_FREEMEM))
+        if(CGD_KeyWasJustPressed(SKEY_FREEMEM))
             CGD_FreeMem();
-        if(KeyWasJustPressed(SKEY_FPSCOUNTER))
+        if(CGD_KeyWasJustPressed(SKEY_FPSCOUNTER))
             fpscounteractive = !fpscounteractive;
-        if(KeyWasJustPressed(SKEY_FRAMESKIP))
+        if(CGD_KeyWasJustPressed(SKEY_FRAMESKIP))
             CGD_CycleFrameskip();
     }
 
@@ -320,7 +320,7 @@ void I_StartTic (void)
     /* Number of ticks left before reporting results */
     static int profiler_ticks = -1;
 
-    if (!saveStringEnter && KeyWasJustPressed(SKEY_PROFILER)) {
+    if (!saveStringEnter && CGD_KeyWasJustPressed(SKEY_PROFILER)) {
         prof_t *counters = (prof_t *)&CGD_Perf;
         for(int i = 0; i < sizeof CGD_Perf / sizeof (prof_t); i++) {
             counters[i] = prof_make();
@@ -364,9 +364,9 @@ void I_StartTic (void)
     for(int i = 0; keys[i]; i++)
     {
         event_t e;
-        if(KeyWasJustPressed(keys[i]))
+        if(CGD_KeyWasJustPressed((uint8_t)keys[i]))
             e.type = ev_keydown;
-        else if(KeyWasJustReleased(keys[i]))
+        else if(CGD_KeyWasJustReleased((uint8_t)keys[i]))
             e.type = ev_keyup;
         else continue;
 

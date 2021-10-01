@@ -258,9 +258,6 @@ extern  boolean  demorecording;
 
 void D_DoomLoop (void)
 {
-  if (demorecording)
-    G_BeginRecording ();
-
   I_InitGraphics ();
 
   while (!fuck)
@@ -398,7 +395,7 @@ void D_DoAdvanceDemo (void)
     }
 
     /* CGDoom: Skip demos on option (often incompatible) */
-    if (gameaction == ga_playdemo && !CGD_EnableDemos) {
+    if (gameaction == ga_playdemo && !CGD_Options.EnableDemos) {
       D_DoAdvanceDemo();
     }
 }

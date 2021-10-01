@@ -72,7 +72,7 @@
        ((uint32_t)GetVRAMAddress() & 0x1fffffff) | 0x80000000 \
    ))
 #else
-# define CGDOOM_SCREENS_BASE SaveVRAMBuffer
+# define CGDOOM_SCREENS_BASE SecondaryVRAM
 #endif
 
 /* Amount of extra memory past the 2 MB line that we deem safe to access. */

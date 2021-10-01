@@ -38,8 +38,8 @@ void *CGD_realloc(void *p, int size)
 		return realloc(p, size);
 }
 
-unsigned short *VRAM;
-unsigned char *SaveVRAMBuffer;
+uint16_t *VRAM;
+uint16_t *SecondaryVRAM;
 unsigned char *SystemStack;
 
 int strnicmp(const char *s1,const char *s2,int count)
@@ -112,8 +112,6 @@ typedef struct {
 	int miTotalLength;
 } FileMapping;
 
-/* WAD file access method. */
-int CGD_WADMethod = CGDOOM_WAD_MMAP;
 /* File descriptor to WAD, used in Flash_ReadFile calls. (CGDOOM_WAD_BFILE) */
 static int gWADfd = -1;
 /* Memory map of WAD file. (CGDOOM_WAD_MMAP) */
@@ -121,9 +119,11 @@ static FileMapping gWADMap;
 /* Index of most likely sectors for fragment search. (CGDOOM_WAD_MMAP) */
 static SectorIndexInfo *gIndex = NULL;
 
+CGDoom_Options CGD_Options;
+CGDoom_Perf CGD_Perf;
+CGDoom_Stats CGD_Stats;
+
 /* Global options */
-int CGD_TrustUnalignedLumps = 1;
-int CGD_EnableDemos = 0;
 int CGD_SingleEpisodeUltimate = 0;
 int CGD_2MBLineMemory = 0;
 int CGD_Frameskip = 1;
@@ -131,12 +131,7 @@ const char *CGD_WADFileName = NULL;
 const char *CGD_RecordDemoName = NULL;
 
 /* Delayed file accesses */
-CGD_DelayedFileWrite CGD_DelayedSaves[CGD_DELAYEDSAVES_COUNT] = { 0 };
-
-/* Performance counters */
-struct CGD_Perf CGD_Perf;
-/* Developer statistics */
-struct CGD_Stats CGD_Stats;
+CGDoom_DelayedFileWrite CGD_DelayedSaves[CGD_DELAYEDSAVES_COUNT] = { 0 };
 
 #ifndef CG_EMULATOR
 
@@ -326,7 +321,7 @@ int FindFragmentInMap(FileMapping *map, int sector_number)
 
 int FindInFlash(const void **buf, int size, int readpos)
 {
-	if(CGD_WADMethod == CGDOOM_WAD_BFILE)
+	if(CGD_Options.WADMethod == CGDOOM_WAD_BFILE)
 		return 0;
 
 	ASSERT(readpos >= 0);
@@ -378,7 +373,7 @@ void abort(void){
 
 int Flash_ReadFile(void *buf, int size, int readpos)
 {
-	if(CGD_WADMethod == CGDOOM_WAD_BFILE)
+	if(CGD_Options.WADMethod == CGDOOM_WAD_BFILE)
 		return Bfile_ReadFile_OS(gWADfd, buf, size, readpos);
 
 	const void *pSrc;
@@ -401,7 +396,7 @@ int Flash_ReadFile(void *buf, int size, int readpos)
 }
 
 /* Find WAD files in the filesystem. */
-int FindWADs(CGD_WADFileInfo *files, int max)
+int FindWADs(CGDoom_FileInfo *files, int max)
 {
 	uint16_t path[32];
 	Bfile_FileInfo info;
@@ -426,7 +421,7 @@ int FindWADs(CGD_WADFileInfo *files, int max)
 
 static void DelayedWriteFile(int i)
 {
-	CGD_DelayedFileWrite const *dfw = &CGD_DelayedSaves[i];
+	CGDoom_DelayedFileWrite const *dfw = &CGD_DelayedSaves[i];
 
     uint16_t fc_path[100] = u"\\\\fls0\\";
     int j=7, rc, fd;
@@ -470,35 +465,46 @@ static void DelayedWriteFile(int i)
     Bfile_CloseFile_OS(fd);
 }
 
-static void SaveSettings(int dev_info, int autostart)
+//---
+// Setting save/load
+//---
+
+static void SaveSettings(const CGDoom_Options *o)
 {
 	char *out_start = (char *)CGDOOM_SCREENS_BASE;
 	char *out = out_start;
 
 	/* Version identifcation (just in case something goes wrong) */
-	out += sprintf(out, "Version=%d\n", SETTINGS_FILE_VERSION);
+	out += sprintf(out, "Version=%d\n", CGDOOM_SETTINGS_FILE_VERSION);
 
 	/* Settings */
 	out += sprintf(out, "WADMethod=%s\n",
-		CGD_WADMethod == CGDOOM_WAD_BFILE ? "BFILE" : "MMAP");
-	out += sprintf(out, "DeveloperInfo=%d\n", dev_info);
-	out += sprintf(out, "TrustUnalignedLumps=%d\n", CGD_TrustUnalignedLumps);
-	out += sprintf(out, "EnableDemos=%d\n", CGD_EnableDemos);
-	out += sprintf(out, "Autostart=%d\n", autostart);
-	out += sprintf(out, "ExperimentalMemory=%d\n", CGD_2MBLineMemory != 0);
+		o->WADMethod == CGDOOM_WAD_BFILE ? "BFILE" :
+		o->WADMethod == CGDOOM_WAD_MMAP  ? "MMAP"  :
+		"?");
+	out += sprintf(out, "DeveloperInfo=%d\n",
+		o->DeveloperInfo);
+	out += sprintf(out, "TrustUnalignedLumps=%d\n",
+		o->TrustUnalignedLumps);
+	out += sprintf(out, "EnableDemos=%d\n",
+		o->EnableDemos);
+	out += sprintf(out, "Autostart=%d\n",
+		o->AutoStart);
+	out += sprintf(out, "ExperimentalMemory=%d\n",
+		o->EnableExperimentalMemory);
 
 	/* Keyboard layout */
-	for(int i = 0; CGD_Keymap[2*i] != 0; i++) {
+	for(int i = 0; i < CGDOOM_KEYMAP_SIZE; i++) {
 		out += sprintf(out, "Keymap.%s=%s\n",
-			CGD_DoomKey_TechnicalName(CGD_Keymap[2*i]),
-			CGD_PhysicalKey_TechnicalName(CGD_Keymap[2*i+1]));
+			CGD_DoomKey_TechnicalName(CGD_KeymapEntries[i]),
+			CGD_PhysicalKey_TechnicalName(o->Keymap[i]));
 	}
 
 	M_WriteFile("CGDoom.cfg", out_start, out - out_start);
 	memset(out_start, 0xff, out - out_start);
 }
 
-static void LoadSettings(int *dev_info, int *autostart)
+static void LoadSettings(CGDoom_Options *o)
 {
 	char *buffer = (char *)CGDOOM_SCREENS_BASE;
 	int length = M_ReadFile("CGDoom.cfg", (byte **)&buffer, 0);
@@ -523,14 +529,15 @@ static void LoadSettings(int *dev_info, int *autostart)
 
 		if(!strncmp(line, "Version", eq-line)) {
 			int version = atoi(value);
-			if(version != SETTINGS_FILE_VERSION) return;
+			if(version != CGDOOM_SETTINGS_FILE_VERSION)
+				return;
 		}
 
 		else if(!strncmp(line, "WADMethod", eq-line)) {
 			if(!strncmp(value, "BFILE", 5))
-				CGD_WADMethod = CGDOOM_WAD_BFILE;
+				o->WADMethod = CGDOOM_WAD_BFILE;
 			else if(!strncmp(value, "MMAP", 4))
-				CGD_WADMethod = CGDOOM_WAD_MMAP;
+				o->WADMethod = CGDOOM_WAD_MMAP;
 		}
 
 		else if(!strncmp(line, "Keymap.", 7)) {
@@ -538,9 +545,9 @@ static void LoadSettings(int *dev_info, int *autostart)
 			int k2 = CGD_PhysicalKey_FromTechnicalName(value,nextline-value-1);
 
 			if(k1 > 0 && k2 >= 0) {
-				for(int i = 0; CGD_Keymap[2*i] != 0; i++) {
-					if(CGD_Keymap[2*i] == k1) {
-						CGD_Keymap[2*i+1] = k2;
+				for(int i = 0; i < CGDOOM_KEYMAP_SIZE; i++) {
+					if(CGD_KeymapEntries[i] == k1) {
+						o->Keymap[i] = k2;
 						break;
 					}
 				}
@@ -548,32 +555,38 @@ static void LoadSettings(int *dev_info, int *autostart)
 		}
 
 		else if(!strncmp(line, "DeveloperInfo", eq-line))
-			*dev_info = atoi(value);
+			o->DeveloperInfo = atoi(value);
 		else if(!strncmp(line, "TrustUnalignedLumps", eq-line))
-			CGD_TrustUnalignedLumps = atoi(value);
+			o->TrustUnalignedLumps = atoi(value);
 		else if(!strncmp(line, "EnableDemos", eq-line))
-			CGD_EnableDemos = atoi(value);
+			o->EnableDemos = atoi(value);
 		else if(!strncmp(line, "Autostart", eq-line))
-			*autostart = atoi(value);
+			o->AutoStart = atoi(value);
 		else if(!strncmp(line, "ExperimentalMemory", eq-line))
-			CGD_2MBLineMemory = atoi(value);
+			o->EnableExperimentalMemory = atoi(value);
 	}
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
+static int SettingsChanged(const CGDoom_Options *before,
+	const CGDoom_Options *after)
+{
+	return memcmp(before, after, sizeof *before) != 0;
+}
+
+//---
+// Main function
+//---
+
 int main(void)
 {
-	extern boolean autostart;
-	int autostart_ = 0;
-	startmap = 1;
-	startepisode = 1;
+	//---
+	// First configuration step
+	//---
 
 	VRAM = (void *)GetVRAMAddress();
 
-    uintptr_t secondary_vram = ((uintptr_t)GetSecondaryVRAMAddress() + 3) & -4;
-    SaveVRAMBuffer = (void *)secondary_vram;
-
-	int time, ms_index=0, ms_mmap=0;
+    uintptr_t vram2 = ((uintptr_t)GetSecondaryVRAMAddress() + 3) & -4;
+    SecondaryVRAM = (void *)vram2;
 
 	EnableColor(1);
 	EnableStatusArea(3);
@@ -582,40 +595,81 @@ int main(void)
 
 	prof_init();
 
-	CGD_WADFileInfo wads[16];
-	int wad_count = FindWADs(wads, 16);
-
-	int dev_info = 0;
-	int recorddemo = -1;
-
-	/* Set initial keyboard layout to thumbs-only */
-	CGD_LoadKeymap(CGD_Keymap_ThumbsOnly);
-
-	/* Load settings from file if there is one */
-	LoadSettings(&dev_info, &autostart_);
-
-	/* Allow the user to use memory past the 2 MB line on known OS versions */
-	int *enable_2MBline=NULL;
+	/* Allow the user to use memory past the 2 MB line on tested OS versions */
+	int allow_experimental_RAM = 0;
 	char const *osv = GetOSVersion();
 	if(!strncmp(osv, "03.", 3) && osv[3] <= '6') // 3.60 or earlier
-		enable_2MBline = &CGD_2MBLineMemory;
+		allow_experimental_RAM = 1;
 	else
-		CGD_2MBLineMemory = 0;
+		CGD_Options.EnableExperimentalMemory = 0;
 
-	int choice = UI_Main(wads, wad_count, &dev_info, &CGD_WADMethod,
-		&startmap, &startepisode, &CGD_TrustUnalignedLumps, &autostart_,
-		&CGD_EnableDemos, enable_2MBline, &recorddemo);
+	//---
+	// Load default and saved options
+	//---
+
+	CGDoom_Options o = {
+		.DeveloperInfo				= 0,
+		.WADMethod					= CGDOOM_WAD_MMAP,
+		.TrustUnalignedLumps		= 1,
+		.AutoStart					= 0,
+		.EnableDemos				= 0,
+		.EnableExperimentalMemory	= 0,
+	};
+	CGD_CopyKeymap(o.Keymap, CGD_Keymap_ThumbsOnly);
+
+	/* Override with settings read from file if there is one */
+	LoadSettings(&o);
+
+	/* Keep o so we can later look for changes and resave them */
+	memcpy(&CGD_Options, &o, sizeof o);
+
+    /* Offer to start at E1M1 if skipping the title screen */
+	extern int startmap;
+	extern int startepisode;
+	startmap = 1;
+	startepisode = 1;
+	/* Don't record demos by default */
+	int recorddemo = -1;
+
+	//---
+	// Run main menu and apply settings
+	//---
+
+	/* Look for WAD files at the root of the filesystem */
+	CGDoom_FileInfo wads[16];
+	int wad_count = FindWADs(wads, 16);
+
+	int choice = UI_Main(wads, wad_count, &CGD_Options,
+		&startmap, &startepisode, &recorddemo, allow_experimental_RAM);
 	if(choice < 0)
 		return 1;
 
-	autostart = autostart_;
-
-	/* Parameters unavailable on the SDL2 build */
+	/* Override parameters unavailable on the SDL2 build */
 	#ifdef CG_EMULATOR
-	CGD_WADMethod = CGDOOM_WAD_BFILE;
-	CGD_TrustUnalignedLumps = 0;
-	CGD_2MBLineMemory = 0;
+	CGD_Options.WADMethod = CGDOOM_WAD_BFILE;
+	CGD_Options.TrustUnalignedLumps = 0;
+	CGD_Options.EnableExperimentalMemory = 0;
 	#endif
+
+	/* Apply settings to Doom variables */
+	extern boolean autostart;
+	autostart = CGD_Options.AutoStart;
+
+	/* Determine how much RAM is zeroed out at 2 MB */
+	if(CGD_Options.EnableExperimentalMemory)
+		CGD_2MBLineMemory = FindZeroedMemory((void *)0xac200000);
+	else
+		CGD_2MBLineMemory = 0;
+
+	/* Save settings for the next load */
+	if(SettingsChanged(&o, &CGD_Options))
+		SaveSettings(&CGD_Options);
+
+	//---
+	// Second configuration step
+	//---
+
+	void *PRAM0_alloc_start = PRAM0_START;
 
 	/* Override version detection for single-episode Ultimate Doom WADs */
 	if (!strcmp(wads[choice].name, "doomu1.wad"))
@@ -627,26 +681,22 @@ int main(void)
 	if (!strcmp(wads[choice].name, "doomu4.wad"))
 		CGD_SingleEpisodeUltimate = 4;
 
-	/* fx-CG 50 / Graph 90+E: RAM starts at 0x0c000000 in physical memory */
-	SystemStack = (void *)0xac0f0000;
-
-	/* Determine how much RAM is zeroed out at 2 MB */
-	if(CGD_2MBLineMemory)
-		CGD_2MBLineMemory = FindZeroedMemory((void *)0xac200000);
-
-	void *PRAM0_alloc_start = PRAM0_START;
-
 	/* Remember WAD file name for saves and loads */
 	static char wad_name[32] = { 0 };
 	for (int i = 0; wads[choice].name[i] != '.'; i++)
 		wad_name[i] = wads[choice].name[i];
 	CGD_WADFileName = wad_name;
 
-	/* Save settings for the next load */
-	SaveSettings(dev_info, autostart_);
+	/* fx-CG 50 / Graph 90+E: RAM starts at 0x0c000000 in physical memory */
+	SystemStack = (void *)0xac0f0000;
 
-	/* Setup access to WAD file */
-	if(CGD_WADMethod == CGDOOM_WAD_BFILE)
+	//---
+	// Setup access to the WAD file
+	//---
+
+	int time, ms_index=0, ms_mmap=0;
+
+	if(CGD_Options.WADMethod == CGDOOM_WAD_BFILE)
 	{
 		gWADfd = Bfile_OpenFile_OS(wads[choice].path, 0, 0);
 	}
@@ -688,7 +738,7 @@ int main(void)
 			I_Error ("File too fragmented");
 			return 1;
 		}
-		else if(dev_info) {
+		else if(CGD_Options.DeveloperInfo) {
 			Layout l;
 			Layout_Init(&l);
 			Bdisp_AllClr_VRAM();
@@ -730,12 +780,12 @@ int main(void)
 		Bfile_CloseFile_OS(gWADfd);
 
 	for(int i = 0; i < CGD_DELAYEDSAVES_COUNT; i++) {
-		CGD_DelayedFileWrite *dfw = &CGD_DelayedSaves[i];
+		CGDoom_DelayedFileWrite *dfw = &CGD_DelayedSaves[i];
 		if(dfw->data != NULL)
 			DelayedWriteFile(i);
 	}
 
-	if(dev_info) {
+	if(CGD_Options.DeveloperInfo) {
 		Layout l;
 		Layout_Init(&l);
 		Bdisp_AllClr_VRAM();
