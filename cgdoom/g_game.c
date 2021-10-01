@@ -1296,8 +1296,8 @@ void G_RecordDemo (const char* name)
     usergame = false;
     strcpy (demoname, name);
     strcat (demoname, ".lmp");
-    /* CGDoom: Maximum is 64 kiB instead of 128 kiB */
-    maxsize = 0x10000;
+    /* CGDoom: Maximum is 64 kiB instead of 128 kiB to save RAM */
+    maxsize = CGD_Options.EnableExperimentalMemory ? 0x20000 : 0x10000;
     demobuffer = Z_Malloc (maxsize,PU_STATIC,NULL);
 
     if (demobuffer) {
@@ -1333,12 +1333,21 @@ void G_BeginRecording (void)
 //
 
 char* defdemoname; 
+char* defdemofilename;
 
 void G_DeferedPlayDemo (char* name) 
 { 
   defdemoname = name; 
+  defdemofilename = NULL;
   gameaction = ga_playdemo; 
 } 
+
+void G_DeferedPlayDemoFile (char* name)
+{
+  defdemoname = NULL;
+  defdemofilename = name;
+  gameaction = ga_playdemo;
+}
 
 void G_DoPlayDemo (void)
 {
@@ -1346,7 +1355,16 @@ void G_DoPlayDemo (void)
   int i, episode, map;
 
   gameaction = ga_nothing;
-  demobuffer = demo_p = (byte *)W_CacheLumpNameConst (defdemoname, PU_STATIC);
+  if (defdemoname)
+  {
+    demobuffer = demo_p = (byte *)W_CacheLumpNameConst(defdemoname, PU_STATIC);
+  }
+  else if (defdemofilename)
+  {
+    demobuffer = NULL;
+    M_ReadFile(defdemofilename, &demobuffer, 1);
+    demo_p = demobuffer;
+  }
 
   /* CGDoom: We have old WADs with demos at versions 108 and 109. The decoding
      work similarly, it's probably enemy position/AI that mess up */
@@ -1422,6 +1440,12 @@ boolean G_CheckDemoStatus (void)
 
   if (demoplayback)
   {
+    if(CGD_PlayDemoOnly)
+    {
+      fuck = true;
+      return true;
+    }
+
     Z_ChangeTag (demobuffer, PU_CACHE);
     demoplayback = false;
     netdemo = false;

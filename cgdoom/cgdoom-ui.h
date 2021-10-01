@@ -64,7 +64,9 @@ int Layout_Event(Layout *l, int key);
 /* Larger-scale functions. */
 
 /* Show the program's main screen; returns index of selected WAD file. */
-int UI_Main(CGDoom_FileInfo *wads, int wad_count,
+CGDoom_FileInfo *UI_Main(
+    CGDoom_FileInfo *wads, int wad_count,
+    CGDoom_FileInfo *demos, int demo_count,
     CGDoom_Options *options,
     int *startmap,        /* Warp to this map (autostart only) */
     int *startepisode,    /* Warp to this episode (autostart only) */
@@ -73,7 +75,8 @@ int UI_Main(CGDoom_FileInfo *wads, int wad_count,
 );
 
 /* Show an error with custom formatting. */
-void UI_Error(const char *fmt, va_list args);
+void UI_Error(const char *fmt, ...);
+void UI_Errorv(const char *fmt, va_list args);
 
 /* Show a file save with a progress bar. */
 void UI_DelayedWrites(CGDoom_DelayedFileWrite const *dfw, int count,

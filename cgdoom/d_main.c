@@ -557,10 +557,16 @@ void D_DoomMain()
     ST_Init ();
     printf ("Engage... \n");
 
-    if (CGD_RecordDemoName)
-      G_RecordDemo(CGD_RecordDemoName);
+    if (CGD_RecordDemoSlot >= 0) {
+      static char filename[32];
+      sprintf(filename, "%s_demo%02d", CGD_WADFileName, CGD_RecordDemoSlot);
+      G_RecordDemo(filename);
+    }
 
-    if (autostart)
+    /* CGDoom: Demo file was specified from main menu */
+    if (gameaction == ga_playdemo)
+      {}
+    else if (autostart)
       G_DeferedInitNew (startskill, startepisode, startmap);
     else
       D_StartTitle ();

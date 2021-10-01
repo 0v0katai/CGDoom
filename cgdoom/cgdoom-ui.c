@@ -392,7 +392,7 @@ int Layout_Event(Layout *l, int key)
 	return 0;
 }
 
-void UI_AdvancedOptions(CGDoom_Options *o)
+static void UI_AdvancedOptions(CGDoom_Options *o)
 {
 	Layout l;
 	Layout_Init(&l);
@@ -438,7 +438,7 @@ void UI_AdvancedOptions(CGDoom_Options *o)
 	}
 }
 
-void UI_Controls(CGDoom_Keymap map)
+static void UI_Controls(CGDoom_Keymap map)
 {
 	int focus_x=0, focus_y=-1;
 	int dflt = 0;
@@ -549,7 +549,41 @@ void UI_Controls(CGDoom_Keymap map)
 	}
 }
 
-int UI_Main(CGDoom_FileInfo *wads, int wad_count, CGDoom_Options *o,
+static int UI_DemoSelection(CGDoom_FileInfo *demos, int demo_count)
+{
+	Layout l;
+	Layout_Init(&l);
+
+	while(1)
+	{
+		Bdisp_AllClr_VRAM();
+		Layout_StartFrame(&l);
+		Layout_CenteredText(&l, "Select a demo file");
+		Layout_Spacing(&l, 10);
+
+		for(int i = 0; i < demo_count; i++)
+			Layout_Text(&l, demos[i].name, "(%dk)", demos[i].size >> 10);
+
+		Layout_EndFrame(&l);
+		Bdisp_PutDisp_DD();
+
+		int key;
+		GetKey(&key);
+
+		if(Layout_Event(&l, key))
+			{}
+		else if(key == KEY_CTRL_EXIT)
+			return -1;
+		else if(key == KEY_CTRL_EXE) {
+			return l.focus;
+		}
+	}
+}
+
+CGDoom_FileInfo *UI_Main(
+	CGDoom_FileInfo *wads, int wad_count,
+	CGDoom_FileInfo *demos, int demo_count,
+	CGDoom_Options *o,
     int *startmap, int *startepisode, int *recorddemo,
     int allow_experimental_memory)
 {
@@ -602,8 +636,12 @@ int UI_Main(CGDoom_FileInfo *wads, int wad_count, CGDoom_Options *o,
 		if(allow_experimental_memory)
 			Layout_Checkbox(&l, "Use experimental RAM:",
 				&o->EnableExperimentalMemory);
-		int i_demo = Layout_Text(&l, "Record demo:",
-			(*recorddemo < 0) ? "None" : "DEMO%02d.lmp", *recorddemo);
+		int i_demo = Layout_Text(&l, "Record on demo slot:",
+			(*recorddemo < 0) ? "None >" : "< %d%s", *recorddemo,
+			(*recorddemo < 99) ? " >" : "");
+		int i_replay = -1;
+		if(demo_count > 0)
+			i_replay = Layout_Text(&l, "Replay demo...", "");
 		int i_controls = Layout_Text(&l, "Customize controls...", "");
 		int i_advanced = Layout_Text(&l, "Advanced options...", "");
 		Layout_EndFrame(&l);
@@ -626,6 +664,11 @@ int UI_Main(CGDoom_FileInfo *wads, int wad_count, CGDoom_Options *o,
 		else if(key == KEY_CTRL_RIGHT && l.focus == i_title)
 			title += (title < TS_FULL);
 		/* Submenus */
+		else if(key == KEY_CTRL_EXE && l.focus == i_replay) {
+			int n = UI_DemoSelection(demos, demo_count);
+			if(n >= 0)
+				return &demos[n];
+		}
 		else if(key == KEY_CTRL_EXE && l.focus == i_controls) {
 			UI_Controls(o->Keymap);
 		}
@@ -641,7 +684,7 @@ int UI_Main(CGDoom_FileInfo *wads, int wad_count, CGDoom_Options *o,
 		}
 		/* Start game */
 		else if(key == KEY_CTRL_EXE && l.focus < wad_count) {
-			return l.focus;
+			return &wads[l.focus];
 		}
 
 		if(*startmap < 1)
@@ -653,7 +696,7 @@ int UI_Main(CGDoom_FileInfo *wads, int wad_count, CGDoom_Options *o,
 		o->EnableDemos = (title == TS_FULL);
 	}
 
-	return -1;
+	return NULL;
 }
 
 static int isspace_(int c)
@@ -661,7 +704,7 @@ static int isspace_(int c)
 	return (c == ' ' || c == '\t' || c == '\n');
 }
 
-void UI_Error(const char *fmt, va_list args)
+void UI_Errorv(const char *fmt, va_list args)
 {
 	char message[256], *str=message;
 	vsnprintf(message, 256, fmt, args);
@@ -713,6 +756,14 @@ void UI_Error(const char *fmt, va_list args)
 	int key;
 	while(PRGM_GetKey());
 	GetKey(&key);
+}
+
+void UI_Error(const char *fmt, ...)
+{
+	va_list args;
+	va_start(args, fmt);
+	UI_Errorv(fmt, args);
+	va_end(args);
 }
 
 void UI_DelayedWrites(CGDoom_DelayedFileWrite const *dfw, int count,

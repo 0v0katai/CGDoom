@@ -103,8 +103,10 @@ extern int CGD_SingleEpisodeUltimate;
 extern int CGD_Frameskip;
 /* WAD file name (without .wad), used to name save and demo files */
 extern const char *CGD_WADFileName;
-/* Name of record demo file */
-extern const char *CGD_RecordDemoName;
+/* Slot of demo file to record */
+extern int CGD_RecordDemoSlot;
+/* Whether we're only playing a demo and leaving */
+extern int CGD_PlayDemoOnly;
 
 //---
 // Control functions (mapped to special keys)

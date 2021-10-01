@@ -128,7 +128,8 @@ int CGD_SingleEpisodeUltimate = 0;
 int CGD_2MBLineMemory = 0;
 int CGD_Frameskip = 1;
 const char *CGD_WADFileName = NULL;
-const char *CGD_RecordDemoName = NULL;
+int CGD_RecordDemoSlot = -1;
+int CGD_PlayDemoOnly = 0;
 
 /* Delayed file accesses */
 CGDoom_DelayedFileWrite CGD_DelayedSaves[CGD_DELAYEDSAVES_COUNT] = { 0 };
@@ -395,14 +396,14 @@ int Flash_ReadFile(void *buf, int size, int readpos)
 	return iRet;
 }
 
-/* Find WAD files in the filesystem. */
-int FindWADs(CGDoom_FileInfo *files, int max)
+/* Find files in the filesystem based on a pattern. */
+static int FindFiles(const uint16_t *wildcard, CGDoom_FileInfo *files, int max)
 {
 	uint16_t path[32];
 	Bfile_FileInfo info;
 
 	int sd, rc, total=0;
-	rc = Bfile_FindFirst(u"\\\\fls0\\*.wad", &sd, path, &info);
+	rc = Bfile_FindFirst(wildcard, &sd, path, &info);
 
 	while(rc != -16 && total < max)
 	{
@@ -628,8 +629,6 @@ int main(void)
 	extern int startepisode;
 	startmap = 1;
 	startepisode = 1;
-	/* Don't record demos by default */
-	int recorddemo = -1;
 
 	//---
 	// Run main menu and apply settings
@@ -637,12 +636,39 @@ int main(void)
 
 	/* Look for WAD files at the root of the filesystem */
 	CGDoom_FileInfo wads[16];
-	int wad_count = FindWADs(wads, 16);
+	int wad_count = FindFiles(u"\\\\fls0\\*.wad", wads, 16);
 
-	int choice = UI_Main(wads, wad_count, &CGD_Options,
-		&startmap, &startepisode, &recorddemo, allow_experimental_RAM);
-	if(choice < 0)
-		return 1;
+	/* Look for demo files to replay, also at the root */
+	CGDoom_FileInfo demos[32];
+	int demo_count = FindFiles(u"\\\\fls0\\*_demo*.lmp", demos, 32);
+
+	CGDoom_FileInfo *selection = UI_Main(wads, wad_count, demos, demo_count,
+		&CGD_Options, &startmap, &startepisode, &CGD_RecordDemoSlot,
+		allow_experimental_RAM);
+
+	int choice = -1;
+	if(selection >= demos && selection < demos + demo_count) {
+		/* Find the WAD file with the correct name */
+		for(int i = 0; i < wad_count; i++) {
+			int len = strlen(wads[i].name) - 4; /* omit ".wad" */
+			if(!strncmp(selection->name, wads[i].name, len)
+					&& !strncmp(selection->name + len, "_demo", 5)) {
+				choice = i;
+				break;
+			}
+		}
+		if(choice == -1) {
+			UI_Error("The WAD file for %s has been removed or renamed!",
+				selection->name);
+			return 1;
+		}
+		G_DeferedPlayDemoFile(selection->name);
+		CGD_PlayDemoOnly = 1;
+	}
+	else if(selection >= wads && selection < wads + wad_count) {
+		choice = selection - wads;
+	}
+	else return 1;
 
 	/* Override parameters unavailable on the SDL2 build */
 	#ifdef CG_EMULATOR
@@ -765,13 +791,6 @@ int main(void)
 
 	/* Initialize the PRAM allocator */
 	CGD_PRAM_Init(PRAM0_alloc_start, PRAM0_END);
-
-	/* Set up demo recording for this session */
-	if(recorddemo >= 0) {
-		static char demoname[20];
-		sprintf(demoname, "DEMO%02d", recorddemo);
-		CGD_RecordDemoName = demoname;
-	}
 
 	memset(VRAM, 0, WIDTH*HEIGHT*2);
 	D_DoomMain();

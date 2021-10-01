@@ -205,7 +205,7 @@ void I_Error (const char *error, ...)
         G_CheckDemoStatus();
 
     I_ShutdownGraphics();
-    UI_Error(error, args);
+    UI_Errorv(error, args);
     I_ReinitAfterError();
 
     va_end(args);
