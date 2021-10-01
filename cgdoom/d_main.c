@@ -258,6 +258,9 @@ extern  boolean  demorecording;
 
 void D_DoomLoop (void)
 {
+  if (demorecording)
+    G_BeginRecording ();
+
   I_InitGraphics ();
 
   while (!fuck)
@@ -278,7 +281,8 @@ void D_DoomLoop (void)
     if(!(gametic % (CGD_Frameskip + 1)))
       D_Display ();
   }
- // I_ShutdownGraphics();
+
+  G_CheckDemoStatus();
   Z_Free(lumpinfo);
   CGD_PRAM_Free(lumpcache);
   I_ShutdownGraphics();
@@ -555,6 +559,9 @@ void D_DoomMain()
     printf ("ST_Init: Init status bar\n");
     ST_Init ();
     printf ("Engage... \n");
+
+    if (CGD_RecordDemoName)
+      G_RecordDemo(CGD_RecordDemoName);
 
     if (autostart)
       G_DeferedInitNew (startskill, startepisode, startmap);

@@ -51,6 +51,10 @@ void G_DoLoadGame (void);
 void G_LoadGame (int slot);
 void G_SaveGame (int slot, char* description);
 
+void G_RecordDemo (const char* name);
+void G_BeginRecording (void);
+
+void G_PlayDemo (char* name);
 void G_TimeDemo (char* name);
 boolean G_CheckDemoStatus (void);
 

@@ -71,6 +71,8 @@ extern int startmap, startepisode;
 extern const char *CGD_WADFileName;
 /* Save Game operations delayed until closing the add-in (one per save) */
 extern CGD_DelayedFileWrite CGD_DelayedSaves[6];
+/* Name of record demo file */
+extern const char *CGD_RecordDemoName;
 
 
 // Keyboard interface.

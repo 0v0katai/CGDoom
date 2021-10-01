@@ -186,6 +186,8 @@ int toupper_int(int i)
 //
 // I_Error
 //
+extern boolean demorecording;
+
 void I_Error (const char *error, ...)
 {
     va_list args;
@@ -198,6 +200,9 @@ void I_Error (const char *error, ...)
     va_end(args);
     va_start(args, error);
 #endif
+
+    if (demorecording)
+        G_CheckDemoStatus();
 
     I_ShutdownGraphics();
     UI_Error(error, args);

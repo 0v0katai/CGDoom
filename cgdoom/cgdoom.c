@@ -8,6 +8,7 @@
 #include "m_misc.h"
 #include "d_main.h"
 #include "v_video.h"
+#include "g_game.h"
 
 #include "cgdoom-alloc.h"
 #include "cgdoom-kbd.h"
@@ -127,6 +128,7 @@ int CGD_SingleEpisodeUltimate = 0;
 int CGD_2MBLineMemory = 0;
 int CGD_Frameskip = 1;
 const char *CGD_WADFileName = NULL;
+const char *CGD_RecordDemoName = NULL;
 
 /* Delayed file accesses */
 CGD_DelayedFileWrite CGD_DelayedSaves[6] = { 0 };
@@ -583,6 +585,7 @@ int main(void)
 	int wad_count = FindWADs(wads, 16);
 
 	int dev_info = 0;
+	int recorddemo = -1;
 
 	/* Set initial keyboard layout to thumbs-only */
 	CGD_LoadKeymap(CGD_Keymap_ThumbsOnly);
@@ -600,7 +603,7 @@ int main(void)
 
 	int choice = UI_Main(wads, wad_count, &dev_info, &CGD_WADMethod,
 		&startmap, &startepisode, &CGD_TrustUnalignedLumps, &autostart_,
-		&CGD_EnableDemos, enable_2MBline);
+		&CGD_EnableDemos, enable_2MBline, &recorddemo);
 	if(choice < 0)
 		return 1;
 
@@ -711,6 +714,13 @@ int main(void)
 
 	/* Initialize the PRAM allocator */
 	CGD_PRAM_Init(PRAM0_alloc_start, PRAM0_END);
+
+	/* Set up demo recording for this session */
+	if(recorddemo >= 0) {
+		static char demoname[20];
+		sprintf(demoname, "DEMO%02d", recorddemo);
+		CGD_RecordDemoName = demoname;
+	}
 
 	memset(VRAM, 0, WIDTH*HEIGHT*2);
 	D_DoomMain();

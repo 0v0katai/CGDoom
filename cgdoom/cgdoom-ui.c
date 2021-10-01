@@ -543,7 +543,7 @@ void UI_Controls(void)
 
 int UI_Main(CGD_WADFileInfo *wads, int wad_count, int *dev_info, int *use_mmap,
 	int *startmap, int *startepisode, int *trustunaligned,
-	int *autostart, int *enabledemos, int *enable2MBline)
+	int *autostart, int *enabledemos, int *enable2MBline, int *recorddemo)
 {
 	Layout l;
 	Layout_Init(&l);
@@ -588,6 +588,8 @@ int UI_Main(CGD_WADFileInfo *wads, int wad_count, int *dev_info, int *use_mmap,
 		Layout_Spacing(&l, 10);
 		if(enable2MBline)
 			Layout_Checkbox(&l, "Use experimental RAM:", enable2MBline);
+		int i_demo = Layout_Text(&l, "Record demo:",
+			(*recorddemo < 0) ? "None" : "DEMO%02d.lmp", *recorddemo);
 		int i_controls = Layout_Text(&l, "Customize controls...", "");
 		int i_advanced = Layout_Text(&l, "Advanced options...", "");
 		Layout_EndFrame(&l);
@@ -597,13 +599,14 @@ int UI_Main(CGD_WADFileInfo *wads, int wad_count, int *dev_info, int *use_mmap,
 		GetKey(&key);
 
 		if(Layout_Event(&l, key)) {
-			/* Autostart when changing starting episode/map */
+			/* Set autostart when changing starting episode/map */
 			int startparam = (l.focus == wad_count || l.focus == wad_count+1);
 			int changekey = (key == KEY_CTRL_EXE || key == KEY_CTRL_LEFT ||
                 key == KEY_CTRL_RIGHT);
 			if(startparam && changekey)
 				*autostart = 1;
 		}
+		/* Title screen options */
 		else if(key == KEY_CTRL_EXE && l.focus == i_title) {
 			if (!*autostart && *enabledemos)
 				*autostart = 1;
@@ -612,12 +615,21 @@ int UI_Main(CGD_WADFileInfo *wads, int wad_count, int *dev_info, int *use_mmap,
 			else
 				*autostart = 0, *enabledemos = 0;
 		}
+		/* Submenus */
 		else if(key == KEY_CTRL_EXE && l.focus == i_controls) {
 			UI_Controls();
 		}
 		else if(key == KEY_CTRL_EXE && l.focus == i_advanced) {
 			UI_AdvancedOptions(dev_info, use_mmap, trustunaligned);
 		}
+		/* Select demo file to save */
+		else if(key == KEY_CTRL_LEFT && l.focus == i_demo) {
+			*recorddemo -= (*recorddemo >= 0);
+		}
+		else if(key == KEY_CTRL_RIGHT && l.focus == i_demo) {
+			*recorddemo += (*recorddemo < 99);
+		}
+		/* Start game */
 		else if(key == KEY_CTRL_EXE && l.focus < wad_count) {
 			return l.focus;
 		}

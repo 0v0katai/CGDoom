@@ -34,10 +34,6 @@ Status for other games:
 -> HellRaiser: not tested
 -> Freedoom phase 1: E1 works, E2 crashes
 
-UI improvements TODO:
-* Better keyboard layout (including more keys, eg. Run)
-* Edit messages accordingly ("press y"/etc)
-
 Technical support TODO:
 * Built-in overclocking?
 * Auto frameskip?

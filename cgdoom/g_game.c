@@ -121,13 +121,14 @@ int                gametic;
 int               levelstarttic;          // gametic at level start 
 int               totalkills, totalitems, totalsecret;    // for intermission 
 
-//char     demoname[32]; 
-boolean         demoplayback;
-boolean     netdemo = 0;
+char      demoname[32];
+boolean   demorecording;
+boolean   demoplayback;
+boolean   netdemo = 0;
 byte*     demobuffer;
 byte*     demo_p;
 byte*     demoend; 
-boolean           singledemo;             // quit after playing a demo from cmdline 
+boolean   singledemo;             // quit after playing a demo from cmdline
 
 boolean          precache = false;        // if true, load all graphics at start
 
@@ -500,6 +501,9 @@ void G_Ticker (void)
       G_ReadDemoTiccmd (cmd);
     else
       G_BuildTiccmd (cmd);
+
+    if (demorecording)
+      G_WriteDemoTiccmd (cmd);
 
     if (players[0].cmd.buttons & BT_SPECIAL) 
     { 
@@ -1257,21 +1261,22 @@ void G_ReadDemoTiccmd (ticcmd_t* cmd)
 
 void G_WriteDemoTiccmd (ticcmd_t* cmd) 
 { 
-  if (gamekeydown['q'])           // press q to end demo recording 
+  if (gamekeydown[KEY_ESCAPE])           // press MENU to end demo recording
     G_CheckDemoStatus (); 
   *demo_p++ = (byte)cmd->forwardmove; 
   *demo_p++ = (byte)cmd->sidemove; 
   *demo_p++ = (byte)((cmd->angleturn+128)>>8); 
   *demo_p++ = (byte)cmd->buttons; 
-  demo_p -= 4; 
-  if (demo_p > demoend - 16)
+//  demo_p -= 4;
+  if (demo_p > demoend - 12)
   {
     // no more space 
     G_CheckDemoStatus (); 
     return; 
   } 
 
-  G_ReadDemoTiccmd (cmd);         // make SURE it is exactly the same 
+//  G_ReadDemoTiccmd (cmd);         // make SURE it is exactly the same
+  cmd->angleturn = demo_p[-2] << 8;
 } 
 
 
@@ -1279,6 +1284,43 @@ void G_WriteDemoTiccmd (ticcmd_t* cmd)
 //
 // G_RecordDemo 
 // 
+void G_RecordDemo (const char* name)
+{
+    int maxsize;
+
+    usergame = false;
+    strcpy (demoname, name);
+    strcat (demoname, ".lmp");
+    /* CGDoom: Maximum is 64 kiB instead of 128 kiB */
+    maxsize = 0x10000;
+    demobuffer = Z_Malloc (maxsize,PU_STATIC,NULL);
+
+    if (demobuffer) {
+      demoend = demobuffer + maxsize;
+      demorecording = true;
+    }
+}
+
+
+void G_BeginRecording (void)
+{
+    int             i;
+
+    demo_p = demobuffer;
+
+    *demo_p++ = VERSION;
+    *demo_p++ = gameskill;
+    *demo_p++ = gameepisode;
+    *demo_p++ = gamemap;
+    *demo_p++ = deathmatch;
+    *demo_p++ = respawnparm;
+    *demo_p++ = fastparm;
+    *demo_p++ = nomonsters;
+    *demo_p++ = consoleplayer;
+
+    for (i=0 ; i<MAXPLAYERS ; i++)
+        *demo_p++ = playeringame[i];
+}
 
 
 //
@@ -1389,7 +1431,16 @@ boolean G_CheckDemoStatus (void)
     return true;
   }
 
-  return false; 
+  if (demorecording)
+  {
+    *demo_p++ = DEMOMARKER;
+    M_WriteFile (demoname, demobuffer, demo_p - demobuffer);
+    Z_Free (demobuffer);
+    demorecording = false;
+    printf ("Demo %s recorded", demoname);
+  }
+
+  return false;
 } 
 
 

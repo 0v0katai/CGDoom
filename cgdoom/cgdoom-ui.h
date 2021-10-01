@@ -71,7 +71,8 @@ int UI_Main(CGD_WADFileInfo *wads, int wad_count,
     int *trustunaligned,  /* Trust unaligned lumps */
     int *autostart,       /* Skip title screen, straight to gameplay */
     int *enabledemos,     /* Enable demos on the title screen */
-    int *enable2MBline    /* Enable memory past the 2MB line */
+    int *enable2MBline,   /* Enable memory past the 2MB line */
+    int *recorddemo       /* Number of demo to record (-1 for none) */
 );
 
 /* Show an error with custom formatting. */
