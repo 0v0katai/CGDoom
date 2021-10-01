@@ -131,7 +131,7 @@ const char *CGD_WADFileName = NULL;
 const char *CGD_RecordDemoName = NULL;
 
 /* Delayed file accesses */
-CGD_DelayedFileWrite CGD_DelayedSaves[6] = { 0 };
+CGD_DelayedFileWrite CGD_DelayedSaves[CGD_DELAYEDSAVES_COUNT] = { 0 };
 
 /* Performance counters */
 struct CGD_Perf CGD_Perf;
@@ -435,7 +435,7 @@ static void DelayedWriteFile(int i)
         fc_path[j++] = dfw->filename[i];
     fc_path[j++] = 0x0000;
 
-    UI_DelayedWrites(CGD_DelayedSaves, 6, i, -1);
+    UI_DelayedWrites(CGD_DelayedSaves, CGD_DELAYEDSAVES_COUNT, i, -1);
 
     Bfile_DeleteEntry(fc_path);
 
@@ -463,7 +463,8 @@ static void DelayedWriteFile(int i)
         source += chunk_size;
         size -= chunk_size;
 
-        UI_DelayedWrites(CGD_DelayedSaves, 6, i, dfw->size - size);
+        UI_DelayedWrites(CGD_DelayedSaves, CGD_DELAYEDSAVES_COUNT, i,
+            dfw->size - size);
     }
 
     Bfile_CloseFile_OS(fd);
@@ -728,8 +729,7 @@ int main(void)
 	if(gWADfd >= 0)
 		Bfile_CloseFile_OS(gWADfd);
 
-	int delayed_writes = sizeof(CGD_DelayedSaves) / sizeof(CGD_DelayedSaves[0]);
-	for(int i = 0; i < delayed_writes; i++) {
+	for(int i = 0; i < CGD_DELAYEDSAVES_COUNT; i++) {
 		CGD_DelayedFileWrite *dfw = &CGD_DelayedSaves[i];
 		if(dfw->data != NULL)
 			DelayedWriteFile(i);

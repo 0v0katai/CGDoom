@@ -953,9 +953,10 @@ void G_DoLoadGame (void)
     gameaction = ga_nothing;
 
     /* Read data from yet-unsaved saves */
-    if (CGD_DelayedSaves[saveslotnumber].data != NULL) {
-      savebuffer = (void *)CGD_DelayedSaves[saveslotnumber].data;
-      length = CGD_DelayedSaves[saveslotnumber].size;
+    int n = CGD_DELAYEDSAVES_SAVES + saveslotnumber;
+    if (CGD_DelayedSaves[n].data != NULL) {
+      savebuffer = (void *)CGD_DelayedSaves[n].data;
+      length = CGD_DelayedSaves[n].size;
     }
     else {
       sprintf(savename, "%s_%d.dsg", CGD_WADFileName, saveslotnumber);
@@ -1001,7 +1002,7 @@ void G_DoLoadGame (void)
         I_Error ("Bad savegame");
 
     // done
-    if (CGD_DelayedSaves[saveslotnumber].data == NULL)
+    if (CGD_DelayedSaves[n].data == NULL)
       Z_Free (savebuffer);
 
     if (setsizeneeded)
@@ -1067,7 +1068,8 @@ boolean G_DoSaveGame (void)
     save_now = true;
 #endif
 
-    CGD_DelayedFileWrite *dfw = &CGD_DelayedSaves[savegameslot];
+    int n = CGD_DELAYEDSAVES_SAVES + savegameslot;
+    CGD_DelayedFileWrite *dfw = &CGD_DelayedSaves[n];
 
     /* Allocate memory to hold the data while delaying */
     if (!save_now) {
@@ -1434,8 +1436,10 @@ boolean G_CheckDemoStatus (void)
   if (demorecording)
   {
     *demo_p++ = DEMOMARKER;
-    M_WriteFile (demoname, demobuffer, demo_p - demobuffer);
-    Z_Free (demobuffer);
+    CGD_DelayedFileWrite *dfw = &CGD_DelayedSaves[CGD_DELAYEDSAVES_DEMO];
+    strcpy(dfw->filename, demoname);
+    dfw->data = demobuffer;
+    dfw->size = demo_p - demobuffer;
     demorecording = false;
     printf ("Demo %s recorded", demoname);
   }

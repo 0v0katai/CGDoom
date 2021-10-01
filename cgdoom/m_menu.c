@@ -468,8 +468,9 @@ void M_ReadSaveStrings(void)
     for (i = 0;i < load_end;i++)
     {
         /* Use the pending file write as a bypass */
-        if (CGD_DelayedSaves[i].data != NULL) {
-            memcpy(savegamestrings[i], CGD_DelayedSaves[i].data,
+        int n = CGD_DELAYEDSAVES_SAVES + i;
+        if (CGD_DelayedSaves[n].data != NULL) {
+            memcpy(savegamestrings[i], CGD_DelayedSaves[n].data,
                 SAVESTRINGSIZE);
             LoadMenu[i].status = 1;
             continue;

@@ -69,10 +69,17 @@ extern int CGD_TrustUnalignedLumps;
 extern int startmap, startepisode;
 /* WAD file name (without .wad), used to avoid save file conflicts */
 extern const char *CGD_WADFileName;
-/* Save Game operations delayed until closing the add-in (one per save) */
-extern CGD_DelayedFileWrite CGD_DelayedSaves[6];
 /* Name of record demo file */
 extern const char *CGD_RecordDemoName;
+
+/* IDs for delayed saves */
+enum {
+   CGD_DELAYEDSAVES_SAVES = 0, /* 6 entries */
+   CGD_DELAYEDSAVES_DEMO = 6,
+   CGD_DELAYEDSAVES_COUNT,
+};
+/* Save Game operations delayed until closing the add-in (one per save) */
+extern CGD_DelayedFileWrite CGD_DelayedSaves[CGD_DELAYEDSAVES_COUNT];
 
 
 // Keyboard interface.
