@@ -87,6 +87,7 @@ int Bfile_ReadFile_OS( int HANDLE, void *buf, int size, int readpos );
 int Bfile_WriteFile_OS( int HANDLE, const void *buf, int size );
 void Bfile_NameToStr_ncpy(char* dest, const unsigned short* source, size_t n);
 void Bfile_StrToName_ncpy(unsigned short *dest, const char *source, size_t n);
+int Bfile_GetFileSize_OS(int handle);
 
 //---
 // Other functions
