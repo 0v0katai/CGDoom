@@ -84,7 +84,7 @@ build-cg/$(NAME).bin: build-cg/$(NAME).elf
 all-sdl2: $(NAME)
 
 $(NAME): $(SDL2_OBJ)
-	$(CC) $(SDL2_CFLAGS) $(SDL2_LDFLAGS) $^ -o $@
+	$(CC) $^ $(SDL2_CFLAGS) $(SDL2_LDFLAGS) -o $@
 
 build-sdl2/%.c.o: cgdoom/%.c | build-sdl2/
 	$(CC) $(SDL2_CFLAGS) -c $< -o $@
