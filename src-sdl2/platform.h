@@ -85,7 +85,8 @@ int Bfile_FindNext( int FindHandle, unsigned short *foundfile, void *fileinfo );
 int Bfile_OpenFile_OS(const unsigned short *filename, int mode, int null);
 int Bfile_ReadFile_OS( int HANDLE, void *buf, int size, int readpos );
 int Bfile_WriteFile_OS( int HANDLE, const void *buf, int size );
-
+void Bfile_NameToStr_ncpy(char* dest, const unsigned short* source, size_t n);
+void Bfile_StrToName_ncpy(unsigned short *dest, const char *source, size_t n);
 
 //---
 // Other functions
