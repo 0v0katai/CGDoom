@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <stddef.h>
 #include "keyboard.hpp"
 
 //---
@@ -47,7 +48,46 @@ int Bdisp_FrameAndColor(int, int);
 // Filesystem API emulation
 //---
 
-#include "../../../include/fxcg/file.h"
+// #include "../../../include/fxcg/file.h"
+
+
+enum
+{
+	BFILE_CREATEMODE_FILE = 1,
+	BFILE_CREATEMODE_FOLDER = 5
+};
+
+enum
+{
+	BFILE_READ = 0,
+	BFILE_READ_SHARE = 1,
+	BFILE_WRITE = 2,
+	BFILE_READWRITE = 3,
+	BFILE_READWRITE_SHARE = 4
+};
+
+typedef struct tag_FILE_INFO
+{
+	unsigned short id;
+	unsigned short type;
+	unsigned long fsize;
+	unsigned long datasize;
+	unsigned int property;
+	unsigned long address;
+} Bfile_FileInfo;
+
+int Bfile_CloseFile_OS( int HANDLE );
+int Bfile_CreateEntry_OS( const unsigned short*filename, int mode, size_t *size);
+int Bfile_DeleteEntry( const unsigned short *filename );
+int Bfile_FindClose( int FindHandle );
+int Bfile_FindFirst( const unsigned short *pathname, int *FindHandle, unsigned short *foundfile, void *fileinfo );
+int Bfile_FindNext( int FindHandle, unsigned short *foundfile, void *fileinfo );
+int Bfile_OpenFile_OS(const unsigned short *filename, int mode, int null);
+int Bfile_ReadFile_OS( int HANDLE, void *buf, int size, int readpos );
+int Bfile_WriteFile_OS( int HANDLE, const void *buf, int size );
+void Bfile_NameToStr_ncpy(char* dest, const unsigned short* source, size_t n);
+void Bfile_StrToName_ncpy(unsigned short *dest, const char *source, size_t n);
+int Bfile_GetFileSize_OS(int handle);
 
 //---
 // Other functions
