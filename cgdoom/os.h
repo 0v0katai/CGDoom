@@ -11,7 +11,6 @@ void *CGD_malloc(int size);
 void *CGD_calloc(int size);
 void *CGD_realloc(void *p, int size);
 
-int abs(int x);
 int strnicmp (const char*s1,const char*s2,int iLen);
 
 void I_Error (const char *error, ...);

@@ -362,6 +362,7 @@ static int FindZeroedMemory(void *start)
 	return size & ~0xfff;
 }
 
+__attribute__((used, noinline, noreturn))
 void abort(void){
 	int x=0,y=160;
 	PrintMini(&x,&y,"Abort called",0,0xFFFFFFFF,0,0,0xFFFF,0,1,0);

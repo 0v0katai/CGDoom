@@ -83,17 +83,12 @@ extern int CGD_2MBLineMemory;
 
 //---
 
-#include "keyboard.hpp"
-#include "keyboard_syscalls.h"
-#include "APP_syscalls.h"
-#include "CONVERT_syscalls.h"
-#include "SYSTEM_syscalls.h"
-#include "RTC_syscalls.h"
-#include "MCS_syscalls.h"
 #include "fxcg/display.h"
 #include "fxcg/misc.h"
 #include "fxcg/file.h"
 #include "fxcg/serial.h"
+#include "fxcg/keyboard.h"
+#include "fxcg/rtc.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

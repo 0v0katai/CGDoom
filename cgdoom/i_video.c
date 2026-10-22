@@ -91,6 +91,13 @@ static void WriteLCDReg(unsigned short reg, unsigned short value)
    LCDC = value;
 }
 
+static uint16_t GetVersion(void)
+{
+  SelectLCDReg(0xDA);
+  LCDC;
+  return LCDC;
+}
+
 static void SetWindow(int left, int top, int width, int height)
 {
   WriteLCDReg(LCD_WINDOW_LEFT, left);
@@ -111,10 +118,35 @@ void I_Flip (void)
 
   if (!firstflipdone)
   {
-    SetWindow(0, 0, 396, 224);
-    WriteLCDReg(LCD_GRAM_X, 0);
-    WriteLCDReg(LCD_GRAM_Y, 0);
-    SelectLCDReg(LCD_GRAM);
+    uint16_t version = GetVersion();
+
+    if (version == 50 || version == 82) {
+      SelectLCDReg(0x2A);
+      LCDC = (0 >> 8) & 3;
+      SYNCO();
+      LCDC = 0 & 0xFF;
+      SYNCO();
+      LCDC = (395 >> 8) & 3;
+      SYNCO();
+      LCDC = 395 & 0xFF;
+      SYNCO();
+      SelectLCDReg(0x2B);
+      LCDC = (0 >> 8) & 3;
+      SYNCO();
+      LCDC = 0 & 0xFF;
+      SYNCO();
+      LCDC = (223 >> 8) & 3;
+      SYNCO();
+      LCDC = 223 & 0xFF;
+      SYNCO();
+      SelectLCDReg(0x2C);
+    } else {
+      SetWindow(0, 0, 396, 224);
+      WriteLCDReg(LCD_GRAM_X, 0);
+      WriteLCDReg(LCD_GRAM_Y, 0);
+      SelectLCDReg(LCD_GRAM);
+    }
+
 
     /* Clear 12 lines, render VRAM, then clear 12 */
     for (int n = 0; n < 396 * 12; n++)
