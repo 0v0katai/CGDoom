@@ -421,10 +421,9 @@ int main(void)
 
 	prof_init();
 
-	/* Allow the user to use memory past the 2 MB line on tested OS versions */
+	/* Allow the user to use memory past the 2 MB line on SDRAM models */
 	int allow_experimental_RAM = 0;
-	char const *osv = GetOSVersion();
-	if(!strncmp(osv, "03.", 3) && osv[3] <= '6') // 3.60 or earlier
+	if((uintptr_t)VRAM == 0xAC000000)
 		allow_experimental_RAM = 1;
 	else
 		CGD_Options.EnableExperimentalMemory = 0;
