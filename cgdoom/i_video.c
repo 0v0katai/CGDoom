@@ -100,10 +100,49 @@ static uint16_t GetVersion(void)
 
 static void SetWindow(int left, int top, int width, int height)
 {
-  WriteLCDReg(LCD_WINDOW_LEFT, left);
-  WriteLCDReg(LCD_WINDOW_TOP, top);
-  WriteLCDReg(LCD_WINDOW_RIGHT, left + width - 1);
-  WriteLCDReg(LCD_WINDOW_BOTTOM, top + height - 1);
+  uint16_t xmin = left;
+  uint16_t xmax = left + width - 1;
+  uint16_t ymin = top;
+  uint16_t ymax = top + height - 1;
+  
+  uint16_t version = GetVersion();
+  if (version == 50 || version == 82) {
+    SelectLCDReg(0x2A);
+    LCDC = (xmin >> 8) & 3;
+    SYNCO();
+    LCDC = xmin & 0xFF;
+    SYNCO();
+    LCDC = (xmax >> 8) & 3;
+    SYNCO();
+    LCDC = xmax & 0xFF;
+    SYNCO();
+    SelectLCDReg(0x2B);
+    LCDC = (ymin >> 8) & 3;
+    SYNCO();
+    LCDC = ymin & 0xFF;
+    SYNCO();
+    LCDC = (ymax >> 8) & 3;
+    SYNCO();
+    LCDC = ymax & 0xFF;
+    SYNCO();
+  } else {
+    WriteLCDReg(LCD_WINDOW_LEFT, xmin);
+    WriteLCDReg(LCD_WINDOW_RIGHT, xmax);
+    WriteLCDReg(LCD_WINDOW_TOP, ymin);
+    WriteLCDReg(LCD_WINDOW_BOTTOM, ymax);
+  }
+}
+
+static void SelectGRAM(void)
+{
+  uint16_t version = GetVersion();
+  if (version == 50 || version == 82) {
+    SelectLCDReg(0x2C);
+  } else {
+    WriteLCDReg(LCD_GRAM_X, 0);
+    WriteLCDReg(LCD_GRAM_Y, 0);
+    SelectLCDReg(LCD_GRAM);
+  }
 }
 
 /* Whether the black background has been rendered. We could fill the screen
@@ -118,35 +157,8 @@ void I_Flip (void)
 
   if (!firstflipdone)
   {
-    uint16_t version = GetVersion();
-
-    if (version == 50 || version == 82) {
-      SelectLCDReg(0x2A);
-      LCDC = (0 >> 8) & 3;
-      SYNCO();
-      LCDC = 0 & 0xFF;
-      SYNCO();
-      LCDC = (395 >> 8) & 3;
-      SYNCO();
-      LCDC = 395 & 0xFF;
-      SYNCO();
-      SelectLCDReg(0x2B);
-      LCDC = (0 >> 8) & 3;
-      SYNCO();
-      LCDC = 0 & 0xFF;
-      SYNCO();
-      LCDC = (223 >> 8) & 3;
-      SYNCO();
-      LCDC = 223 & 0xFF;
-      SYNCO();
-      SelectLCDReg(0x2C);
-    } else {
-      SetWindow(0, 0, 396, 224);
-      WriteLCDReg(LCD_GRAM_X, 0);
-      WriteLCDReg(LCD_GRAM_Y, 0);
-      SelectLCDReg(LCD_GRAM);
-    }
-
+    SetWindow(0, 0, 396, 224);
+    SelectGRAM();
 
     /* Clear 12 lines, render VRAM, then clear 12 */
     for (int n = 0; n < 396 * 12; n++)
@@ -173,9 +185,7 @@ void I_Flip (void)
   }
   else
   {
-    WriteLCDReg(LCD_GRAM_X, 0);
-    WriteLCDReg(LCD_GRAM_Y, 0);
-    SelectLCDReg(LCD_GRAM);
+    SelectGRAM();
 
     unsigned j=0, i=320*200;
     while(i--)
