@@ -537,8 +537,7 @@ int main(void)
 		wad_name[i] = wads[choice].name[i];
 	CGD_WADFileName = wad_name;
 
-	/* fx-CG 50 / Graph 90+E: RAM starts at 0x0c000000 in physical memory */
-	SystemStack = (void *)0xac0f0000;
+	SystemStack = (void *)((uintptr_t)VRAM + 0xE3000);
 
 	//---
 	// Setup access to the WAD file

@@ -1,10 +1,10 @@
 #include "platform.h"
 
-#define SYSTEM_STACK_SAFE (64*1024)
+#define SYSTEM_STACK_SAFE (80*1000)
 #define USER_STACK_SAFE (32*1024)
 
 // system stack (512 kB).
-#define SYSTEM_STACK_SIZE (512*1024-SYSTEM_STACK_SAFE)
+#define SYSTEM_STACK_SIZE (512*1000-SYSTEM_STACK_SAFE)
 extern unsigned char *SystemStack;
 
 void *CGD_malloc(int size);
