@@ -79,34 +79,9 @@ int strnicmp(const char *s1,const char *s2,int count)
 // See <src-cg/platform.h> for Flash traversal parameters.
 ///////////////////////////////////////////////////////////////////////////////
 
-/* Index of most likely ROM sectors. */
 typedef struct {
-	const void *sector;
-	uint32_t start_bytes;
-} SectorIndexInfo;
-
-/* Description of a fragment of a WAD file, in Flash. This is placed in PRAM0
-   to save RAM elsewhere. PRAM0 only supports 32-bit accesses, so we make this
-   structure a volatile bitfield where each entry has a 32-bit supporting type,
-   and build with -fstrict-volatile-bitfields which instructs GCC to use
-   accesses of the size of the supporting type without compromising on the
-   naming of the fields. */
-typedef volatile struct {
-	/* Index of first sector in Flash (0...64k) */
-	uint32_t flash_address :16;
-	/* Corresponding sector in the WAD file */
-	uint32_t file_address :16;
-} FileMappingItem;
-
-/* Maximum number of fragments in the file map. Fragment information is stored
-   in PRAM0, so up to ~40k entries can be stored; this limit is mostly to catch
-   failures in fragment detection. (I have witnessed Ultimate Doom WADs with
-   up to 500 fragments.)*/
-#define MAX_FRAGMENTS 2048
-
-typedef struct {
-	/* Table of fragments */
-	FileMappingItem *mTable;
+	/* Table of file blocks */
+	const void *blocks[WAD_MAX_BLOCKS];
 	int miItemCount;
 	/* Length of the file */
 	int miTotalLength;
@@ -116,9 +91,6 @@ typedef struct {
 static int gWADfd = -1;
 /* Memory map of WAD file. (CGDOOM_WAD_MMAP) */
 static FileMapping gWADMap;
-/* Index of most likely sectors for fragment search. (CGDOOM_WAD_MMAP) */
-static SectorIndexInfo *gIndex = NULL;
-
 CGDoom_Options CGD_Options;
 CGDoom_Perf CGD_Perf;
 CGDoom_Stats CGD_Stats;
@@ -136,188 +108,37 @@ CGDoom_DelayedFileWrite CGD_DelayedSaves[CGD_DELAYEDSAVES_COUNT] = { 0 };
 
 #ifndef CG_EMULATOR
 
-//The whole sound doesn't fir onto the RAM.
-//Reading per partes is not possible as this is synchronnous player (there would be silences when reading).
-
-/* Fast memcmp() for 512-byte sectors. */
-int CGD_sector_memcmp(const void *fast_ram, const void *rom, size_t _512);
-
-/* Caching structure to read WAD files by larger chunks than Flash sectors. */
-typedef struct {
-	int fd;
-	int size, offset;
-	char *data; /* of size FLASH_BFILE_UNIT */
-} FileAccessCache;
-
-/* Read next sector from file, while caching into a buffer. */
-const void *ReadNextSector(FileAccessCache *fc, int *size)
-{
-	if(fc->size == 0)
-	{
-		fc->size = Bfile_ReadFile_OS(fc->fd, fc->data, FLASH_BFILE_UNIT, -1);
-		fc->offset = 0;
-	}
-	if(fc->size <= 0)
-	{
-		*size = -1;
-		return NULL;
-	}
-
-	*size = (fc->size < FLASH_PAGE_SIZE) ? fc->size : FLASH_PAGE_SIZE;
-	fc->size -= *size;
-	const void *sector = fc->data + fc->offset;
-	fc->offset += *size;
-	return sector;
-}
-
-/* Compare two sectors in ROM for the index. */
-int IndexCompareSectors(const void *p1, const void *p2)
-{
-	const SectorIndexInfo *i1 = p1;
-	const SectorIndexInfo *i2 = p2;
-	return i1->start_bytes - i2->start_bytes;
-}
-
-/* Find all matching sectors in index (returns in-out interval). */
-void IndexSearchSector(SectorIndexInfo *index, const void *buf, int *lo_ptr, int *hi_ptr)
-{
-	uint32_t needle = *(const uint32_t *)buf;
-	*lo_ptr = *hi_ptr = -1;
-
-	/* Find the first occurrence, set it in *lo_ptr */
-	int lo=0, hi=FLASH_INDEX_SIZE;
-
-	while(lo < hi) {
-		int m = (lo + hi) / 2;
-		if(index[m].start_bytes < needle) lo = m + 1;
-		else hi = m;
-	}
-
-	if(lo >= FLASH_INDEX_SIZE || index[lo].start_bytes != needle) return;
-	*lo_ptr = hi = lo;
-
-	/* Store last occurrence in *hi_ptr */
-	do hi++;
-	while(hi < FLASH_INDEX_SIZE && index[hi].start_bytes == needle);
-
-	*hi_ptr = hi;
-}
-
-/* Find a flash sector which contains the same data as buf. */
-int FindSectorInFlash(const void *buf, int size)
-{
-	typeof(&memcmp) memcmp_fun = &memcmp;
-	if(size == FLASH_PAGE_SIZE) memcmp_fun = &CGD_sector_memcmp;
-
-	CGD_Stats.WADFragments++;
-
-#ifdef FLASH_INDEX
-	/* If an index has been built, search in it */
-	int lo, hi;
-	IndexSearchSector(gIndex, buf, &lo, &hi);
-	for(int i = lo; i < hi; i++) {
-		if(!memcmp_fun(buf, gIndex[i].sector, size)) {
-			CGD_Stats.WADIndexHits++;
-			return (gIndex[i].sector - FLASH_START) / FLASH_PAGE_SIZE;
-		}
-	}
-#endif
-
-	const void *sector = FLASH_FS_HINT;
-	do {
-		if(!memcmp_fun(buf, sector, size))
-			return (sector - FLASH_START) / FLASH_PAGE_SIZE;
-
-		sector += FLASH_PAGE_SIZE;
-		if(sector == FLASH_END)
-			sector = FLASH_START;
-	}
-	while(sector != FLASH_FS_HINT);
-	return -1;
-}
-
 int CreateFileMapping(int fd, FileMapping *pMap)
 {
-	/* Cache accesses through a larger buffer */
-	FileAccessCache fc = {
-		.data = (void *)0xe5007000, /* XRAM */
-		.fd = fd
-	};
-	int iLength = 0;
 	int iFileSize = Bfile_GetFileSize_OS(fd);
 
 	pMap->miItemCount = 0;
-	pMap->miTotalLength = 0;
+	pMap->miTotalLength = iFileSize;
 
-	int iLastProgress = 0;
-
-	const void *pFileData = ReadNextSector(&fc, &iLength);
-	while(iLength > 0)
-	{
-		/* Don't show this too often, or it will eat several seconds */
-		if((pMap->miTotalLength - iLastProgress) * 20 > iFileSize) {
-			UI_ProgressBar(HEIGHT-10, pMap->miTotalLength, iFileSize);
-			iLastProgress = pMap->miTotalLength;
-		}
-
-		int iSectorID = FindSectorInFlash(pFileData, iLength);
-		if(iSectorID == -1)
-			return -2; // Page not found!
-
-		pMap->miItemCount++;
-		if(pMap->miItemCount >= MAX_FRAGMENTS)
-			return -3; // File too fragmented!
-
-		pMap->mTable[pMap->miItemCount-1].flash_address = iSectorID;
-		pMap->mTable[pMap->miItemCount-1].file_address = pMap->miTotalLength / FLASH_PAGE_SIZE;
-
-		/* Look for consecutive sectors in the same fragment */
-		const void *pFragment = FLASH_START + (iSectorID * FLASH_PAGE_SIZE);
-		if(!CGD_Stats.WADLowestFragment || pFragment<CGD_Stats.WADLowestFragment)
-			CGD_Stats.WADLowestFragment = pFragment;
-
-		for(;;)
-		{
-			pMap->miTotalLength += iLength;
-			iSectorID++;
-			pFragment += FLASH_PAGE_SIZE;
-
-			if(iLength < FLASH_PAGE_SIZE)
-			{
-				//this was the last page
-				return pMap->miTotalLength;
-			}
-			pFileData = ReadNextSector(&fc, &iLength);
-			if(iLength <= 0)
-				break;
-
-			#pragma GCC diagnostic push
-			#pragma GCC diagnostic ignored "-Wstringop-overread"
-			if((iLength == FLASH_PAGE_SIZE)
-				? CGD_sector_memcmp(pFileData, pFragment, iLength)
-				: memcmp(pFileData, pFragment, iLength))
-					break;
-			#pragma GCC diagnostic pop
-		}
-	}
-	if(iLength < 0)
+	if(iFileSize <= 0 || iFileSize > WAD_MAX_SIZE)
 		return -1;
-	return pMap->miTotalLength;
-}
 
-/* Find a fragment in the file map by binary search. */
-int FindFragmentInMap(FileMapping *map, int sector_number)
-{
-	int lo=0, hi=map->miItemCount;
+	pMap->miItemCount =
+		(iFileSize + WAD_BLOCK_SIZE - 1) / WAD_BLOCK_SIZE;
 
-	while (lo < hi)
-	{
-		int m = (lo + hi) / 2;
-		if (map->mTable[m].file_address > sector_number) hi = m;
-		else lo = m + 1;
+	for(int i = 0; i < pMap->miItemCount; i++) {
+		void *uncached;
+		int rc = Bfile_GetBlockAddress(fd, i * WAD_BLOCK_SIZE, &uncached);
+		if(rc < 0 || !uncached)
+			return -2;
+
+		uintptr_t address = (uintptr_t)uncached;
+		if(address < (uintptr_t)FLASH_START ||
+		   address > (uintptr_t)FLASH_END - WAD_BLOCK_SIZE)
+			return -2;
+
+		pMap->blocks[i] = (const void *)(
+			(uintptr_t)FLASH_CACHED_START + address -
+			(uintptr_t)FLASH_START);
 	}
 
-	return hi - 1;
+	CGD_Stats.WADFragments = pMap->miItemCount;
+	return iFileSize;
 }
 
 int FindInFlash(const void **buf, int size, int readpos)
@@ -325,27 +146,20 @@ int FindInFlash(const void **buf, int size, int readpos)
 	if(CGD_Options.WADMethod == CGDOOM_WAD_BFILE)
 		return 0;
 
-	ASSERT(readpos >= 0);
-	if (readpos + size > gWADMap.miTotalLength)
+	if(readpos < 0 || size < 0 ||
+	   readpos > gWADMap.miTotalLength ||
+	   readpos + size > gWADMap.miTotalLength)
 		return -1;
 
-	int iFragIndx = FindFragmentInMap(&gWADMap, readpos / FLASH_PAGE_SIZE);
-	int iFragOffset = gWADMap.mTable[iFragIndx].file_address * FLASH_PAGE_SIZE;
-	int iSubOffset = readpos - iFragOffset;
+	int iBlockCount = readpos / WAD_BLOCK_SIZE;
+	int iBlockOffset = readpos % WAD_BLOCK_SIZE;
+	int iAvailableLen = WAD_BLOCK_SIZE - iBlockOffset;
 
-	int iFragEnd;
-	if (iFragIndx+1 < gWADMap.miItemCount)
-		iFragEnd = gWADMap.mTable[iFragIndx+1].file_address * FLASH_PAGE_SIZE;
-	else
-		iFragEnd = gWADMap.miTotalLength;
+	if(iBlockCount >= gWADMap.miItemCount)
+		return -1;
 
-	*buf = FLASH_CACHED_START + (gWADMap.mTable[iFragIndx].flash_address * FLASH_PAGE_SIZE) + iSubOffset;
-
-	/* Return how many bytes can be read off the fragment (up to size). */
-	int iAvailableLen = (iFragEnd-readpos < size) ? iFragEnd-readpos : size;
-
-	ASSERT(iAvailableLen > 0);
-	return iAvailableLen;
+	*buf = (const char *)gWADMap.blocks[iBlockCount] + iBlockOffset;
+	return iAvailableLen < size ? iAvailableLen : size;
 }
 
 static int FindZeroedMemory(void *start)
@@ -721,7 +535,7 @@ int main(void)
 	// Setup access to the WAD file
 	//---
 
-	int time, ms_index=0, ms_mmap=0;
+	int time, ms_mmap=0;
 
 	if(CGD_Options.WADMethod == CGDOOM_WAD_BFILE)
 	{
@@ -729,28 +543,11 @@ int main(void)
 	}
 	else
 	{
-		#ifdef FLASH_INDEX
-		/* Index most likely flash sectors into a sorted array, so that
-		   sectors can be hit quickly. The index contains every sector
-		   on a 4-kiB boundary (where fragments are most likely to
-		   start) between FLASH_FS_HINT and FLASH_END. */
 		time = RTC_GetTicks();
-		gIndex = (void *)SystemStack;
-		for(int i = 0; i < FLASH_INDEX_SIZE; i++) {
-			SectorIndexInfo *info = &gIndex[i];
-			info->sector = FLASH_FS_HINT + (i * 4096);
-			info->start_bytes = *(const uint32_t *)info->sector;
-		}
-		qsort(gIndex, FLASH_INDEX_SIZE, sizeof *gIndex, IndexCompareSectors);
-		ms_index = (RTC_GetTicks() - time) * 8;
-		#endif /* FLASH_INDEX */
-
-		time = RTC_GetTicks();
-		gWADMap.mTable = PRAM0_START;
 		int fd = Bfile_OpenFile_OS(wads[choice].path, 0, 0);
 		int size = CreateFileMapping(fd, &gWADMap);
 		Bfile_CloseFile_OS(fd);
-		UI_ProgressBar(HEIGHT-10, 1, 1);
+		// UI_ProgressBar(HEIGHT-10, 1, 1);
 		ms_mmap = (RTC_GetTicks() - time) * 8;
 
 		if(size == -1) {
@@ -772,22 +569,14 @@ int main(void)
 			Layout_CenteredText(&l, "Developer info");
 			Layout_Spacing(&l, 12);
 			Layout_Text(&l, "Fragments:", "%d", CGD_Stats.WADFragments);
-			Layout_Text(&l, "Index hits:", "%d (%d%%)", CGD_Stats.WADIndexHits,
-				(CGD_Stats.WADIndexHits * 100 / CGD_Stats.WADFragments));
-			Layout_Text(&l, "Lowest fragment:", "%p",
-				CGD_Stats.WADLowestFragment);
 			Layout_Spacing(&l, 12);
-			Layout_Text(&l, "Index build time:", "%d ms", ms_index);
 			Layout_Text(&l, "File mapping time:", "%d ms", ms_mmap);
 			Layout_Spacing(&l, 12);
 			Layout_Text(&l, "Memory beyond the 2MB line:", "%d kB",
 				CGD_2MBLineMemory >> 10);
 			Bdisp_PutDisp_DD();
-			int key;
-			GetKey(&key);
+			GetKey(&(int){});
 		}
-
-		PRAM0_alloc_start += gWADMap.miItemCount * sizeof(FileMappingItem);
 	}
 
 	/* Initialize the PRAM allocator */

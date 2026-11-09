@@ -143,10 +143,6 @@ typedef struct
 {
    /* Fragments in the WAD file */
    int WADFragments;
-   /* Lowest fragment address (hints at filesystem entry point) */
-   void const *WADLowestFragment;
-   /* Number of index hits during fragment search */
-   int WADIndexHits;
 
    /* Total memory allocated with Z_Malloc (bytes) */
    uint32_t MemoryAllocated;

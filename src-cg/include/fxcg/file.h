@@ -45,6 +45,7 @@ int Bfile_FindFirst( const unsigned short *pathname, int *FindHandle, const unsi
 int Bfile_FindFirst_NON_SMEM( const unsigned short *pathname, int *FindHandle, const unsigned short *foundfile, void *fileinfo );
 int Bfile_FindNext( int FindHandle, const unsigned short *foundfile, void *fileinfo );
 int Bfile_FindNext_NON_SMEM( int FindHandle, unsigned short *foundfile, void *fileinfo );
+int Bfile_GetBlockAddress( int FindHandle, int whence, void **block_ptr );
 int Bfile_GetFileSize_OS( int handle );
 int Bfile_OpenFile_OS( const unsigned short*filename, int mode, int null );
 int Bfile_ReadFile_OS( int HANDLE, void *buf, int size, int readpos );
