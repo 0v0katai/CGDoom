@@ -159,6 +159,16 @@ int FindInFlash(const void **buf, int size, int readpos)
 		return -1;
 
 	*buf = (const char *)gWADMap.blocks[iBlockCount] + iBlockOffset;
+
+	/* Coalesce physically consecutive blocks */
+	while(iAvailableLen < size &&
+	      iBlockCount + 1 < gWADMap.miItemCount &&
+	      (uintptr_t)gWADMap.blocks[iBlockCount + 1] ==
+	      (uintptr_t)gWADMap.blocks[iBlockCount] + WAD_BLOCK_SIZE) {
+		iBlockCount++;
+		iAvailableLen += WAD_BLOCK_SIZE;
+	}
+
 	return iAvailableLen < size ? iAvailableLen : size;
 }
 
