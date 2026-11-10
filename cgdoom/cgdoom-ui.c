@@ -111,11 +111,11 @@ static int Font_ReverseStringLength(char const *text, int width)
 		if(text[i] < 32)
 			continue;
 
-		int cw = font_width[text[i]-32] + 1;
-		if(cw > width)
+		int cwidth = font_width[text[i]-32] + 1;
+		if(cwidth > width)
 			break;
 
-		width -= cw;
+		width -= cwidth;
 	}
 	return i;
 }
@@ -441,7 +441,7 @@ static void UI_AdvancedOptions(CGDoom_Options *o)
 static void UI_Controls(CGDoom_Keymap map)
 {
 	int focus_x=0, focus_y=-1;
-	int dflt = 0;
+	int dflt = _(0,3);
 	int editing = -1;
 
 	CGDoom_Keymap saved_map;
@@ -453,14 +453,15 @@ static void UI_Controls(CGDoom_Keymap map)
 		UI_Print(LAYOUT_RIGHT, 10, 0x0000, UI_RIGHT,
 			(dflt == 0) ? "Thumbs only >" :
 			(dflt == 1) ? "< Full hands >" :
-			(dflt == 2) ? "< CGDoom 0.3" :
+			(dflt == 2) ? "< CGDoom 0.3 >" :
+			(dflt == 3) ? "< fx-CG100" :
 			"?", -1);
 		if(focus_y == -1)
 			UI_AreaReverse(0, 10-2, WIDTH-1, 10+11);
 
 		for(int i = 0; i < CGDOOM_KEYMAP_SIZE; i++) {
-			int x1 = (i < 14) ? LAYOUT_LEFT - 20 : WIDTH/2 + 15;
-			int x2 = (i < 14) ? WIDTH/2 - 15 : LAYOUT_RIGHT + 20;
+			int x1 = (i < 14) ? LAYOUT_LEFT - _(20,30) : WIDTH/2 + _(15,5);
+			int x2 = (i < 14) ? WIDTH/2 - _(15,5) : LAYOUT_RIGHT + _(20,30);
 			int y = 29 + 12 * (i % 14);
 
 			/* Skip a row before special keys */
@@ -480,11 +481,10 @@ static void UI_Controls(CGDoom_Keymap map)
 			if(focus_y >= 0 && 14 * focus_x + focus_y == i)
 				UI_AreaReverse(x1-4, y-1, x2+4, y+10);
 		}
-
 		UI_Print(LAYOUT_LEFT, HEIGHT-11, 0x0000, UI_LEFT,
-			"F1: Save and quit", -1);
+			_("F1","SETTINGS") ": Save and quit", -1);
 		UI_Print(LAYOUT_RIGHT, HEIGHT-11, 0x0000, UI_RIGHT,
-			"F6: Cancel", -1);
+			_("F6","BACK") ": Cancel", -1);
 		Bdisp_PutDisp_DD();
 
 		/* This is quite hackish */
@@ -507,16 +507,16 @@ static void UI_Controls(CGDoom_Keymap map)
 		GetKey(&key);
 
 		/* Exit */
-		if(key == KEY_CTRL_F1)
+		if(key == _(KEY_CTRL_F1,KEY_CTRL_SETUP))
 			break;
-		if(key == KEY_CTRL_F6) {
+		if(key == _(KEY_CTRL_F6,KEY_CTRL_EXIT)) {
 			CGD_CopyKeymap(map, saved_map);
 			break;
 		}
 		/* Default selection */
 		else if(key == KEY_CTRL_LEFT && focus_y == -1 && dflt > 0)
 			dflt--;
-		else if(key == KEY_CTRL_RIGHT && focus_y == -1 && dflt < 2)
+		else if(key == KEY_CTRL_RIGHT && focus_y == -1 && dflt < 3)
 			dflt++;
 		else if(key == KEY_CTRL_EXE && focus_y == -1) {
 			if(dflt == 0)
@@ -525,6 +525,8 @@ static void UI_Controls(CGDoom_Keymap map)
 				CGD_CopyKeymap(map, CGD_Keymap_FullHands);
 			else if(dflt == 2)
 				CGD_CopyKeymap(map, CGD_Keymap_CGDoom_0_03);
+			else if(dflt == 3)
+				CGD_CopyKeymap(map, CGD_Keymap_fxCG100);
 		}
 		/* Focus movement */
 		else if(key == KEY_CTRL_UP && focus_y >= 0)
@@ -685,6 +687,10 @@ CGDoom_FileInfo *UI_Main(
 		/* Start game */
 		else if(key == KEY_CTRL_EXE && l.focus < wad_count) {
 			return &wads[l.focus];
+		}
+		/* Exit (fx-CG100 only) */
+		else if(_(0,key == KEY_CTRL_EXIT)) {
+			break;
 		}
 
 		if(*startmap < 1)

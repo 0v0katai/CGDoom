@@ -3,6 +3,19 @@
 #define PLATFORM_H
 
 //---
+// Platform selection
+//---
+
+#define cg 0
+#define cw 1
+#define PLATFORM @PLATFORM@
+#if PLATFORM == cg
+# define _(CG, CW) CG
+#else
+# define _(CG, CW) CW
+#endif
+
+//---
 // WAD file access in Flash
 //---
 

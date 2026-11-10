@@ -129,6 +129,36 @@ const CGDoom_Keymap CGD_Keymap_FullHands = {
     KEYCODE_SIN,
     KEYCODE_RIGHTP,
 };
+/* Default keymap: fx-CG100 */
+const CGDoom_Keymap CGD_Keymap_fxCG100 = {
+    CW_KEYCODE_LEFT,
+    CW_KEYCODE_RIGHT,
+    CW_KEYCODE_UP,
+    CW_KEYCODE_DOWN,
+    CW_KEYCODE_ALPHA,
+    CW_KEYCODE_SHIFT,
+    KEYCODE_1,
+    KEYCODE_2,
+    KEYCODE_3,
+    KEYCODE_4,
+    KEYCODE_5,
+    KEYCODE_6,
+    KEYCODE_7,
+    CW_KEYCODE_BACK,
+    KEYCODE_ACON,
+    CW_KEYCODE_XOT,
+    CW_KEYCODE_FRAC,
+    CW_KEYCODE_PGUP,
+    KEYCODE_MINUS,
+    KEYCODE_PLUS,
+    CW_KEYCODE_LEFTP,
+    CW_KEYCODE_RIGHTP,
+    CW_KEYCODE_COMMA,
+    CW_KEYCODE_SIN,
+    CW_KEYCODE_COS,
+    CW_KEYCODE_VARIABLE,
+    CW_KEYCODE_CATALOG,
+};
 
 void CGD_CopyKeymap(CGDoom_Keymap dest, const CGDoom_Keymap src)
 {
@@ -205,8 +235,8 @@ static int DoomKeyToKeycode(int key)
     switch(key)
     {
     /* Interface constants */
-    case KEY_ESCAPE:        return KEYCODE_MENU;
-    case KEY_ENTER:         return KEYCODE_EXE;
+    case KEY_ESCAPE:        return _(KEYCODE_MENU,CW_KEYCODE_SETTINGS);
+    case KEY_ENTER:         return _(KEYCODE_EXE,CW_KEYCODE_OK);
 
     /* Alphabetic keys */
     case 'A':               return KEYCODE_XOT;
@@ -288,15 +318,23 @@ int CGD_KeyWasJustReleased(int key)
 //---
 
 static const char * const display_keynames[] = {
+#if PLATFORM == cg
     "F1",      "F2",      "F3",      "F4",      "F5",      "F6",
     "SHIFT",   "OPTN",    "VARS",    "MENU",    "Left",    "Up",
     "ALPHA",   "x^2",     "^",       "EXIT",    "Down",    "Right",
     "X,O,T",   "log",     "ln",      "sin",     "cos",     "tan",
     "Frac",    "S<>D",    "(",       ")",       ",",       "->",
+#else
+    "ON",      "HOME",    "|<-",     "Up",      "->|",     "PgUp",
+    "SETTINGS","Back",    "Left",    "OK",      "Right",   "PgDn",
+    "SHIFT",   "ALPHA",   "VARS",    "Down",    "CATALOG", "TOOLS",
+    "X,O,T",   "Frac",    "Sqrt",    "^",       "x^2",     "e^x",
+    ",",       "sin",     "cos",     "tan",     "(",       ")",
+#endif
     "7",       "8",       "9",       "DEL",     "AC/ON",   "(None)",
     "4",       "5",       "6",       "x",       "/",       NULL,
     "1",       "2",       "3",       "+",       "-",       NULL,
-    "0",       ".",       "x10^x",   "(-)",     "EXE",     NULL,
+    "0",       ".",       "x10^x",   _("(-)","FORMAT"),  "EXE",     NULL,
 };
 static const char * const technical_keynames[] = {
     "F1",      "F2",      "F3",      "F4",      "F5",      "F6",
@@ -364,8 +402,8 @@ struct DoomkeyInfo {
 static const struct DoomkeyInfo doomkeys[] = {
     { KEY_LEFTARROW,     "Left",                "Look left"         },
     { KEY_RIGHTARROW,    "Right",               "Look right"        },
-    { KEY_UPARROW,       "Up",                  "Move forward"      },
-    { KEY_DOWNARROW,     "Down",                "Move backward"     },
+    { KEY_UPARROW,       "Up",                  "Forward"           },
+    { KEY_DOWNARROW,     "Down",                "Backward"          },
     { ' ',               "Inteact",             "Interact"          },
     { KEY_RCTRL,         "Shoot",               "Shoot"             },
     { '1',               "Weapon1",             "1-Hand"            },

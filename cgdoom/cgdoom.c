@@ -440,7 +440,7 @@ int main(void)
 		.EnableDemos				= 0,
 		.EnableExperimentalMemory	= 0,
 	};
-	CGD_CopyKeymap(o.Keymap, CGD_Keymap_ThumbsOnly);
+	CGD_CopyKeymap(o.Keymap, _(CGD_Keymap_ThumbsOnly,CGD_Keymap_fxCG100));
 
 	/* Override with settings read from file if there is one */
 	LoadSettings(&o);

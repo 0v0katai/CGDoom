@@ -10,9 +10,15 @@ file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
   "${CMAKE_CURRENT_SOURCE_DIR}/src-cg/cgdoom-asm.s")
 
 function(build_platform BUILD_NAME PLATFORM)
+  set(PLATFORM_INCLUDE_DIR "${CMAKE_CURRENT_BINARY_DIR}/include/${BUILD_NAME}")
+  file(MAKE_DIRECTORY "${PLATFORM_INCLUDE_DIR}")
+  configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/src-cg/platform.h.in"
+    "${PLATFORM_INCLUDE_DIR}/platform.h")
   add_executable(${BUILD_NAME} ${SOURCES})
 
-  include_directories(${BUILD_NAME} PRIVATE
+  target_include_directories(${BUILD_NAME} PRIVATE
+    ${PLATFORM_INCLUDE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/src-cg
     ${CMAKE_CURRENT_SOURCE_DIR}/src-cg/include
     ${CMAKE_CURRENT_SOURCE_DIR}/cgdoom)
@@ -26,7 +32,7 @@ function(build_platform BUILD_NAME PLATFORM)
   target_link_options(${BUILD_NAME} PRIVATE
     -L ${CMAKE_CURRENT_SOURCE_DIR}
     -T "${CMAKE_CURRENT_SOURCE_DIR}/prizm.ld"
-    -Wl,-print-memory-usage -Wl,-Map=map -Wl,-gc-sections)
+    -Wl,-print-memory-usage -Wl,-Map=${BUILD_NAME}-map -Wl,-gc-sections)
 
   target_link_libraries(${BUILD_NAME} PRIVATE -lc -lgcc -lsyscall-${PLATFORM})
 endfunction()

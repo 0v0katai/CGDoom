@@ -34,6 +34,7 @@ typedef int16_t CGDoom_Keymap[CGDOOM_KEYMAP_SIZE];
 extern const CGDoom_Keymap CGD_Keymap_CGDoom_0_03;
 extern const CGDoom_Keymap CGD_Keymap_ThumbsOnly;
 extern const CGDoom_Keymap CGD_Keymap_FullHands;
+extern const CGDoom_Keymap CGD_Keymap_fxCG100;
 
 /* Load/copy a keymap. */
 void CGD_CopyKeymap(CGDoom_Keymap dest, const CGDoom_Keymap src);
@@ -140,5 +141,37 @@ int CGD_PhysicalKey_FromTechnicalName(const char *technical_name, int length);
 #define KEYCODE_NEG     0x14
 #define KEYCODE_EXE     0x15
 #define KEYCODE_ACON    0x07
+
+#define CW_KEYCODE_ON         KEYCODE_F1
+#define CW_KEYCODE_HOME       KEYCODE_F2
+#define CW_KEYCODE_PREVTAB    KEYCODE_F3
+#define CW_KEYCODE_UP         KEYCODE_F4
+#define CW_KEYCODE_NEXTTAB    KEYCODE_F5
+#define CW_KEYCODE_PGUP       KEYCODE_F6
+#define CW_KEYCODE_SETTINGS   KEYCODE_SHIFT
+#define CW_KEYCODE_BACK       KEYCODE_OPTN
+#define CW_KEYCODE_LEFT       KEYCODE_VARS
+#define CW_KEYCODE_OK         KEYCODE_MENU
+#define CW_KEYCODE_RIGHT      KEYCODE_LEFT
+#define CW_KEYCODE_PGDN       KEYCODE_UP
+#define CW_KEYCODE_SHIFT      KEYCODE_ALPHA
+#define CW_KEYCODE_ALPHA      KEYCODE_SQUARE
+#define CW_KEYCODE_VARIABLE   KEYCODE_POWER
+#define CW_KEYCODE_DOWN       KEYCODE_EXIT
+#define CW_KEYCODE_CATALOG    KEYCODE_DOWN
+#define CW_KEYCODE_TOOLS      KEYCODE_RIGHT
+#define CW_KEYCODE_XOT        KEYCODE_XOT
+#define CW_KEYCODE_FRAC       KEYCODE_LOG
+#define CW_KEYCODE_SQRT       KEYCODE_LN
+#define CW_KEYCODE_POW        KEYCODE_SIN
+#define CW_KEYCODE_SQUARE     KEYCODE_COS
+#define CW_KEYCODE_EPOWER     KEYCODE_TAN
+#define CW_KEYCODE_COMMA      KEYCODE_FRAC
+#define CW_KEYCODE_SIN        KEYCODE_FD
+#define CW_KEYCODE_COS        KEYCODE_LEFTP
+#define CW_KEYCODE_TAN        KEYCODE_RIGHTP
+#define CW_KEYCODE_LEFTP      KEYCODE_COMMA
+#define CW_KEYCODE_RIGHTP     KEYCODE_ARROW
+#define CW_KEYCODE_FORMAT     KEYCODE_NEG
 
 #endif /* CGDOOM_KBD_H */
