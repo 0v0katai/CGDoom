@@ -79,9 +79,14 @@ int strnicmp(const char *s1,const char *s2,int count)
 // See <src-cg/platform.h> for Flash traversal parameters.
 ///////////////////////////////////////////////////////////////////////////////
 
+typedef volatile struct {
+	/* Cached address of a file block */
+	const void *address;
+} FileMappingItem;
+
 typedef struct {
 	/* Table of file blocks */
-	const void *blocks[WAD_MAX_BLOCKS];
+	FileMappingItem *mTable;
 	int miItemCount;
 	/* Length of the file */
 	int miTotalLength;
@@ -132,7 +137,7 @@ int CreateFileMapping(int fd, FileMapping *pMap)
 		   address > (uintptr_t)FLASH_END - WAD_BLOCK_SIZE)
 			return -2;
 
-		pMap->blocks[i] = (const void *)(
+		pMap->mTable[i].address = (const void *)(
 			(uintptr_t)FLASH_CACHED_START + address -
 			(uintptr_t)FLASH_START);
 	}
@@ -158,13 +163,13 @@ int FindInFlash(const void **buf, int size, int readpos)
 	if(iBlockCount >= gWADMap.miItemCount)
 		return -1;
 
-	*buf = (const char *)gWADMap.blocks[iBlockCount] + iBlockOffset;
+	*buf = (const char *)gWADMap.mTable[iBlockCount].address + iBlockOffset;
 
 	/* Coalesce physically consecutive blocks */
 	while(iAvailableLen < size &&
 	      iBlockCount + 1 < gWADMap.miItemCount &&
-	      (uintptr_t)gWADMap.blocks[iBlockCount + 1] ==
-	      (uintptr_t)gWADMap.blocks[iBlockCount] + WAD_BLOCK_SIZE) {
+	      (uintptr_t)gWADMap.mTable[iBlockCount + 1].address ==
+	      (uintptr_t)gWADMap.mTable[iBlockCount].address + WAD_BLOCK_SIZE) {
 		iBlockCount++;
 		iAvailableLen += WAD_BLOCK_SIZE;
 	}
@@ -551,6 +556,7 @@ int main(void)
 	}
 	else
 	{
+		gWADMap.mTable = PRAM0_START;
 		time = RTC_GetTicks();
 		int fd = Bfile_OpenFile_OS(wads[choice].path, 0, 0);
 		int size = CreateFileMapping(fd, &gWADMap);
@@ -585,6 +591,8 @@ int main(void)
 			Bdisp_PutDisp_DD();
 			GetKey(&(int){});
 		}
+		PRAM0_alloc_start +=
+			gWADMap.miItemCount * sizeof(*gWADMap.mTable);
 	}
 
 	/* Initialize the PRAM allocator */
