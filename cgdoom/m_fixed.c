@@ -35,51 +35,11 @@
 #include "m_fixed.h"
 
 
-// Fixme. __USE_C_FIXED__ or something.
 //CGD: Bastl impl of int*int=>int64 , (int64 >>16) => int
 fixed_t FixedMul( fixed_t	a, fixed_t	b )
 {
-  int iResult;
-  unsigned int iNegative = (a<0) != (b <0);
-  unsigned int iMask = 1;
-  unsigned int iResLo = 0;
-  unsigned int iResHi = 0;
-  unsigned int iaHi = 0;
-  unsigned int ua = abs(a);
-  unsigned int ub = abs(b);
-  if(ua<ub)	//swap
-  {
-    unsigned int uc = ua;
-    ua = ub;
-    ub = uc;
-  }
-  ASSERT((ub & 0x80000000)==0);
-  while(ub)
-  {
-    if(ub & iMask)
-    {
-      unsigned int iLo = iResLo + ua;
-      if(iLo < iResLo)
-      {
-        iResHi ++;
-      }
-      iResLo = iLo;
-      iResHi += iaHi;
-      ub &= ~iMask;
-    }
-    iMask <<= 1;
-    iaHi <<= 1;
-    if(ua & 0x80000000)
-    {
-      iaHi |= 1;
-    }
-    ua <<= 1;
-  }
-  iResLo >>= FRACBITS;
-  iResHi <<= FRACBITS;
-  iResult = iResHi | iResLo;
-  if(iNegative) iResult= -iResult;
-  return iResult;
+  int64_t p = (int64_t)a * b;
+  return (int32_t)(p >> 16);
 }
 
 
@@ -89,15 +49,18 @@ fixed_t FixedMul( fixed_t	a, fixed_t	b )
 
 unsigned int FixedDivU(unsigned int ua, unsigned int ub )
 {
-  unsigned int uRes = 0;
+  unsigned int uRes = ua / ub;
+  unsigned int uRem = ua - uRes * ub;
   int i;
   for(i=0;i<FRACBITS;i++)
   {
-    unsigned int uDiv = ua / ub;
-    ua = ua % ub;
-    uRes += uDiv;
     uRes <<= 1;
-    ua <<= 1;
+    uRem <<= 1;
+    if (uRem >= ub)
+    {
+      uRem -= ub;
+      uRes++;
+    }
   }
   return uRes;
 }
