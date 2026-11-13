@@ -509,11 +509,8 @@ void D_DoomMain()
     V_Init ();
     printf ("Z_Init: Init zone memory allocation daemon \n");
     //Z_Init ();
-    printf ("W_Init: Init WADfiles\n");
-
-    W_InitMultipleFiles ();
     //Just in case we haven't found the WAD files...
-    if (fuck)
+    if (!ok_wad || fuck)
       return;
 
     // Check and print which version is executed.
