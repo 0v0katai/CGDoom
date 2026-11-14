@@ -381,7 +381,13 @@ const byte* R_GetColumn ( int	tex, int col )
   }
 #endif
   if (lump > 0)
+  {
+    const byte *cached = (const byte *)lumpcache[lump];
+    if (cached)
+      return cached + ofs;
+
     return (const byte *)W_CacheLumpNumConst(lump,PU_CACHE)+ofs;
+  }
   
   if (!texturecomposite[tex])
     R_GenerateComposite (tex);
