@@ -572,10 +572,6 @@ int main(void)
 			I_Error ("Page not found");
 			return 1;
 		}
-		else if(size == -3) {
-			I_Error ("File too fragmented");
-			return 1;
-		}
 		else if(CGD_Options.DeveloperInfo) {
 			Layout l;
 			Layout_Init(&l);

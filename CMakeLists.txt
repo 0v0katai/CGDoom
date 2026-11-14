@@ -30,8 +30,8 @@ function(build_platform BUILD_NAME PLATFORM)
     -Wno-implicit-function-declaration)
 
   target_link_options(${BUILD_NAME} PRIVATE
-    -L ${CMAKE_CURRENT_SOURCE_DIR}
-    -T "${CMAKE_CURRENT_SOURCE_DIR}/prizm.ld"
+    -L "${CMAKE_CURRENT_SOURCE_DIR}/src-cg"
+    -T "${CMAKE_CURRENT_SOURCE_DIR}/src-cg/prizm.ld"
     -Wl,-print-memory-usage -Wl,-Map=${BUILD_NAME}-map -Wl,-gc-sections)
 
   target_link_libraries(${BUILD_NAME} PRIVATE -lc -lgcc -lsyscall-${PLATFORM})
@@ -41,8 +41,8 @@ build_platform(cgdoom cg)
 build_platform(cwdoom cw)
 
 if("${FXSDK_PLATFORM_LONG}" STREQUAL fxCG50)
-  generate_g3a(TARGET cgdoom OUTPUT "CGDoom.g3a"
-    NAME "CGDoom" ICONS icon-uns.png icon-sel.png)
-  generate_g3a(TARGET cwdoom OUTPUT "CWDoom.g3a"
-    NAME "CWDoom" ICONS icon-uns.png icon-sel.png)
+  generate_g3a(TARGET cgdoom VERSION "01.00.0000" OUTPUT "CGDoom.g3a"
+    NAME "CGDoom" ICONS src-cg/icon-uns.png src-cg/icon-sel.png)
+  generate_g3a(TARGET cwdoom VERSION "01.00.0000" OUTPUT "CWDoom.g3a"
+    NAME "CWDoom" ICONS src-cg/icon-uns.png src-cg/icon-sel.png)
 endif()

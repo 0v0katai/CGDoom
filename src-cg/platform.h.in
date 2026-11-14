@@ -37,7 +37,7 @@
 /* Block size for WAD files */
 #define WAD_BLOCK_SIZE 4096
 #define WAD_MAX_SIZE (16 * 1024 * 1024)
-#define WAD_MAX_BLOCKS (WAD_MAX_SIZE / WAD_BLOCK_SIZE)
+
 //---
 // Display driver access
 //---

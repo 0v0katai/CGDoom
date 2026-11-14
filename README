@@ -1,4 +1,4 @@
-This is CGDoom, a DOOM engine for the fx-CG 50 that brings new levels of DOOM
+This is CGDoom, a DOOM engine for fx-CG that brings new levels of DOOM
 performance, compatibility and goodness to the platform!
 
 CGDoom is one iteration of a pretty long lineage of DOOM source ports:
@@ -10,6 +10,7 @@ CGDoom is one iteration of a pretty long lineage of DOOM source ports:
 * ComputerNerd made the first attempts at an fx-CG 50 version of CGDoom.
 * Lephe created this fx-CG 50 version with a fair number of improvements,
   supported by extensive feedback and guidance from Computer_Freak_2004.
+* CalcLoverHK ported CGDoom to fx-CG 100 and applied a few more optimizations.
 
 CGDoom is licensed under GPLv2 as a derivative work of both the original DOOM
 sources (GPL) and nDoom (GPLv2). See LICENSE.

@@ -599,7 +599,10 @@ CGDoom_FileInfo *UI_Main(
 	{
 		Bdisp_AllClr_VRAM();
 		Layout_StartFrame(&l);
-		Layout_CenteredText(&l, "CGDoom for fx-CG 50 and Graph 90+E");
+		Layout_CenteredText(&l, _(
+			"CGDoom for fx-CG 50 and Graph 90+E",
+			"CGDoom for fx-CG 100 and Graph Math+"
+		));
 		Layout_Spacing(&l, 10);
 
 		for(int i = 0; i < wad_count; i++)
